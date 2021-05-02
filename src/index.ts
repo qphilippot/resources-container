@@ -1,6 +1,6 @@
 import ContainerService from "./container.service";
 import HelloService from "./services/hello.service";
-import ReflexionService from "./reflexion.service";
+import ReflexionService from "./core/reflexion.service";
 import AutowirableContainerService from "./autowirable-container.service";
 import TrevorService from "./services/trevor.service";
 const containerService : ContainerService = new ContainerService();

@@ -1,8 +1,4 @@
-import Container from "./container.model";
-import FlexibleService from "./flexible.service";
-import Component from "./component.model";
-import Mixed from "./mixed.interface";
-import MixedInterface from "./mixed.interface";
+import MixedInterface from "./core/mixed.interface";
 import ContainerService from "./container.service";
 
 // todo: return an error instead of null when a component is not found

@@ -1,5 +1,5 @@
-import Component from "../component.model";
-import MixedInterface from "../mixed.interface";
+import Component from "../core/component.model";
+import MixedInterface from "../core/mixed.interface";
 import HelloService from "./hello.service";
 
 class TrevorService extends Component {

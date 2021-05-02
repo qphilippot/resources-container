@@ -1,5 +1,5 @@
-import Component from "../component.model";
-import MixedInterface from "../mixed.interface";
+import Component from "../core/component.model";
+import MixedInterface from "../core/mixed.interface";
 
 class RexService extends Component {
     constructor({ service_hello }: MixedInterface, settings: MixedInterface = {}) {
