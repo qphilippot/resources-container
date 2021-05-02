@@ -1,5 +1,5 @@
 import Mixed from "./mixed.interface";
-import Component from "./component.model";
+import Component from "./models/component/component.model";
 
 class Container extends Component {
     resources: Mixed;

@@ -1,4 +1,4 @@
-import Component from "../core/component.model";
+import Component from "../core/models/component/component.model";
 import MixedInterface from "../core/mixed.interface";
 import HelloService from "./hello.service";
 

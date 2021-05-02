@@ -26,7 +26,7 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 exports.__esModule = true;
-var component_model_1 = require("../core/component.model");
+var component_model_1 = require("../core/models/component/component.model");
 var HelloService = /** @class */ (function (_super) {
     __extends(HelloService, _super);
     function HelloService(settings) {

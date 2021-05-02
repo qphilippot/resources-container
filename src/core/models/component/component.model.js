@@ -15,17 +15,26 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 exports.__esModule = true;
-var component_model_1 = require("./models/component/component.model");
-var Container = /** @class */ (function (_super) {
-    __extends(Container, _super);
-    function Container(settings) {
+var mixed_model_1 = require("../../mixed.model");
+var feature_collection_1 = require("../../features/feature.collection");
+var component_state_1 = require("./component.state");
+var counter = 0;
+var prefix = 'component_';
+var Component = /** @class */ (function (_super) {
+    __extends(Component, _super);
+    function Component(settings) {
         if (settings === void 0) { settings = {}; }
-        var _this = _super.call(this, settings) || this;
-        _this.resources = {};
-        _this.aliases = {};
-        _this.parameters = {};
+        var _this = _super.call(this) || this;
+        _this.features = new feature_collection_1["default"]();
+        var core_id = "" + prefix + counter++;
+        _this.name = settings.name || core_id;
+        _this.id = settings.id || core_id;
+        _this.state = new component_state_1["default"](core_id);
         return _this;
     }
-    return Container;
-}(component_model_1["default"]));
-exports["default"] = Container;
+    Component.prototype.addMethod = function (name, method) {
+        this[name] = method.bind(this);
+    };
+    return Component;
+}(mixed_model_1["default"]));
+exports["default"] = Component;

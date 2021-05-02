@@ -1,6 +1,6 @@
 import Container from "./core/container.model";
 import FlexibleService from "./core/flexible.service";
-import Component from "./core/component.model";
+import Component from "./core/models/component/component.model";
 import Mixed from "./core/mixed.interface";
 import MixedInterface from "./core/mixed.interface";
 import ReflexionService from "./core/reflexion.service";

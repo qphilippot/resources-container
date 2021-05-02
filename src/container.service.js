@@ -28,7 +28,7 @@ var __assign = (this && this.__assign) || function () {
 exports.__esModule = true;
 var container_model_1 = require("./core/container.model");
 var flexible_service_1 = require("./core/flexible.service");
-var component_model_1 = require("./core/component.model");
+var component_model_1 = require("./core/models/component/component.model");
 var reflexion_service_1 = require("./core/reflexion.service");
 // todo: return an error instead of null when a component is not found
 /**

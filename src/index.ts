@@ -3,6 +3,7 @@ import HelloService from "./services/hello.service";
 import ReflexionService from "./core/reflexion.service";
 import AutowirableContainerService from "./autowirable-container.service";
 import TrevorService from "./services/trevor.service";
+import Component from "./core/models/component/component.model";
 const containerService : ContainerService = new ContainerService();
 
 containerService.addResource(new HelloService(), 'service.hello');
@@ -24,5 +25,9 @@ containerService.addAlias('hello', 'service.hello');
 // const autowirableContainerService = new AutowirableContainerService();
 
 
-containerService.addDefinition('service.trevor', TrevorService);
-containerService.process();
+// containerService.addDefinition('service.trevor', TrevorService);
+// containerService.process();
+
+const component = new Component({ id: 'hello-component' });
+component.addMethod('sayHello', function () { console.log(`hello from ${this.name}`)} );
+component.sayHello();
