@@ -26,10 +26,10 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 exports.__esModule = true;
-var container_model_1 = require("./container.model");
-var flexible_service_1 = require("./flexible.service");
-var component_model_1 = require("./component.model");
-var reflexion_service_1 = require("./reflexion.service");
+var container_model_1 = require("./core/container.model");
+var flexible_service_1 = require("./core/flexible.service");
+var component_model_1 = require("./core/component.model");
+var reflexion_service_1 = require("./core/reflexion.service");
 // todo: return an error instead of null when a component is not found
 /**
  * Container Service have to use definitions concept in order to check if some resources dependancies are availables before instantiate it
