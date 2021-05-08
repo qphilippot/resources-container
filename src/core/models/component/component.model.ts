@@ -3,17 +3,20 @@ import FeatureCollection from "../../features/feature.collection";
 import ComponentState from "./component.state";
 import MixedInterface from "../../mixed.interface";
 import FunctionCollection from "../function.collection";
-import SubscriptionInterface from "../subscription.interface";
+import SubscriptionInterface from "../../../publisher-subscriber/interfaces/subscription.interface";
+import PublisherSubscriberInterface from "../../../publisher-subscriber/interfaces/publisher-subscriber.interface";
+import PublisherSubscriber from "../../../publisher-subscriber/model/publisher-subscriber.model";
 let counter = 0;
 const prefix = 'component_';
 
-
-class Component extends Mixed {
+class Component extends Mixed implements PublisherSubscriberInterface {
     name: string;
     id: string;
     state: ComponentState;
     features: FeatureCollection = new FeatureCollection();
     behavior: FunctionCollection = new FunctionCollection();
+
+    publisherSubscriber: PublisherSubscriberInterface;
 
     constructor(settings: MixedInterface = {}) {
         super();
@@ -22,7 +25,8 @@ class Component extends Mixed {
         this.name = settings.name || core_id;
         this.id = settings.id || core_id;
 
-        this.state = new ComponentState(core_id);
+        this.state = new ComponentState();
+        this.publisherSubscriber = new PublisherSubscriber(this.id);
     }
 
     addBehavior(name: string, behavior: Function) {
@@ -34,11 +38,49 @@ class Component extends Mixed {
         return behavior(parameters);
     }
 
-    subscribe(component: Component, notification: string, handler: Function) {
-        const nbSubscriptions = this.state.su
-        const subscription: SubscriptionInterface = {
-            id: `sub_${this.id}_to_${component.id}_`
-        }
+
+    subscribe(component: PublisherSubscriberInterface, notification: string, handler: Function) {
+       this.publisherSubscriber.subscribe(component, notification, handler);
+    }
+
+    unsubscribe(selector: MixedInterface) {
+      this.publisherSubscriber.unsubscribe(selector);
+    }
+
+    publish(notification: string, data: any) {
+        this.publisherSubscriber.publish(notification, data);
+    }
+
+    destroy() {
+        this.publisherSubscriber.destroy();
+    }
+
+    addSubscriber(notification: string, subscription: SubscriptionInterface) {
+        this.publisherSubscriber.addSubscriber(notification, subscription);
+    }
+
+    addSubscription(notification: string, subscription: SubscriptionInterface) {
+        this.publisherSubscriber.addSubscriber(notification, subscription);
+    }
+
+    getId(): string {
+        return this.id;
+    }
+
+    getNbSubscribers(): number {
+        return this.publisherSubscriber.getNbSubscribers();
+    }
+
+    getNbSubscriptions(): number {
+        return this.publisherSubscriber.getNbSubscriptions();
+    }
+
+    removeSubscriber(notification: string, subscription_id: string) {
+        this.publisherSubscriber.removeSubscriber(notification, subscription_id);
+    }
+
+    removeSubscription(notification: string, subscription_id: string) {
+        this.publisherSubscriber.removeSubscription(notification, subscription_id);
     }
 }
 

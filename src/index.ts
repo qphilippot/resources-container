@@ -29,5 +29,19 @@ containerService.addAlias('hello', 'service.hello');
 // containerService.process();
 
 const component = new Component({ id: 'hello-component' });
-component.addMethod('sayHello', function () { console.log(`hello from ${this.name}`)} );
-component.sayHello();
+// component.addMethod('sayHello', function () { console.log(`hello from ${this.name}`)} );
+// component.sayHello();
+
+const publisher = new Component({ name: 'publisher-component' });
+const subscriber = new Component({ name: 'subscriber-component' });
+
+subscriber.subscribe(publisher, 'hello', function (data) { console.log(subscriber.name, 'hello', data)} );
+
+publisher.publish('hello', 'world');
+publisher.publish('hello', 'world');
+publisher.publish('hello', 'world');
+
+subscriber.unsubscribe({ notification: 'hello' });
+
+
+publisher.publish('hello', 'world');
