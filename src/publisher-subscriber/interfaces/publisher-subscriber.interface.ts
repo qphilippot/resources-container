@@ -1,23 +1,6 @@
-import MixedInterface from "../../core/mixed.interface";
-import SubscriptionInterface from "./subscription.interface";
+import PublisherInterface from "./publisher.interface";
+import SubscriberInterface from "./subscriber.interface";
 
-interface PublisherSubscriberInterface {
-    subscribe(publisher: PublisherSubscriberInterface, notification: string, handler: Function);
-    unsubscribe(selector: MixedInterface);
-
-    getNbSubscriptions(): number;
-    getNbSubscribers(): number;
-
-    publish(notification: string, data: any);
-
-    addSubscriber(notification: string, subscription: SubscriptionInterface);
-    removeSubscriber(notification: string, subscription_id: string);
-
-    addSubscription(notification: string, subscription: SubscriptionInterface);
-    removeSubscription(notification: string, subscription_id: string)
-
-    getId(): string;
-    destroy();
-}
+interface PublisherSubscriberInterface extends PublisherInterface, SubscriberInterface {}
 
 export default PublisherSubscriberInterface;
