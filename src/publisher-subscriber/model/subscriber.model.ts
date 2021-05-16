@@ -1,7 +1,8 @@
 import SubscriptionInterface from "../interfaces/subscription.interface";
-import MixedInterface from "../../core/mixed.interface";
+import MixedInterface from "../../utils/mixed.interface";
 import SubscriberInterface from "../interfaces/subscriber.interface";
 import PublisherInterface from "../interfaces/publisher.interface";
+import NotificationRecord from "../interfaces/notification-record.interface";
 
 class Subscriber implements SubscriberInterface {
     private readonly id: string;
@@ -84,7 +85,7 @@ class Subscriber implements SubscriberInterface {
                 // callback may contains some references to existing objects.
                 // by deleting reference to this function, all reference into function will be destroyed
                 // it could prevent some memory leaks
-                delete removedSubscription.unsubscribe;
+                // delete removedSubscription.unsubscribe;
 
                 if (this.subscriptions[notification].length === 0) {
                     delete this.subscriptions[notification];
@@ -109,6 +110,33 @@ class Subscriber implements SubscriberInterface {
         else {
             throw `Unable to add subscription. A subscription with same id found`;
         }
+    }
+
+    // todo implement a "unsubscribeById" method
+    waitUntil(notifications: Array<NotificationRecord>): Promise<Array<any>> {
+        const dedicatedSubSubscriber = new Subscriber({ id:  `wait-until-${notifications.map(item => item.name).join('-and-')}` });
+        return new Promise(resolve => {
+            Promise.all(
+                notifications.map(notification  => {
+                    return new Promise(resolve1 => {
+                        dedicatedSubSubscriber.subscribe(
+                            notification.from,
+                            notification.name,
+                            resolve1
+                        );
+                    });
+                })
+            ).then((data: Array<any>) => {
+                try {
+                    // destroy to avoid memory leak with unused references to PublisherInterface from `notification.from`
+                    dedicatedSubSubscriber.destroy();
+                } catch (error) {
+                    console.error(error);
+                }
+
+                resolve(data);
+            });
+        });
     }
 }
 

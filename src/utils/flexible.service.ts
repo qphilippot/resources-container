@@ -1,10 +1,10 @@
-import Mixed from "./mixed.interface";
+import MixedInterface from "./mixed.interface";
 
 class FlexibleService {
-    set(propertyPath: string, value: any, instance: Mixed, separator:string = '.') {
+    set(propertyPath: string, value: any, instance: MixedInterface, separator:string = '.') {
         const tokens = propertyPath.split(separator);
 
-        let node: Mixed = instance;
+        let node: MixedInterface = instance;
         let lastNode = instance;
         let lastToken;
 

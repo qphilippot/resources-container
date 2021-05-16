@@ -3,10 +3,18 @@ class ReflexionService {
      * Inspired from: https://davidwalsh.name/javascript-arguments
      * @param func
      */
-    getFunctionArgumentsName(func: Function) {
-        console.log(func.toString());
+    getFunctionArgumentsName(func: Function): Array<string> {
         // First match everything inside the function argument parens.
-        const args = func.toString().match(/function\s.*?\(([^)]*)\)/)[1];
+        console.log(func.toString());
+
+        const tokens = func.toString().match(/function\s.*?\(([^)]*)\)/) || [];
+
+        console.log('tokens', func.toString().match(/function\s.*?\(([^)]*)\)/), tokens);
+        if (tokens.length < 1) {
+            return tokens;
+        }
+
+        const args = tokens[1];
 
         // Split the arguments string into an array comma delimited.
         return args.split(',').map(function(arg) {

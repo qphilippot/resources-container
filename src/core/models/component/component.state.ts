@@ -1,4 +1,4 @@
-import MixedInterface from "../../mixed.interface";
+import MixedInterface from "../../../utils/mixed.interface";
 
 
 class ComponentState {

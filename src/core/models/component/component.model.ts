@@ -1,15 +1,16 @@
-import Mixed from "../../mixed.model";
+import Mixed from "../../../utils/mixed.model";
 import FeatureCollection from "../../features/feature.collection";
 import ComponentState from "./component.state";
-import MixedInterface from "../../mixed.interface";
+import MixedInterface from "../../../utils/mixed.interface";
 import FunctionCollection from "../function.collection";
 import SubscriptionInterface from "../../../publisher-subscriber/interfaces/subscription.interface";
 import PublisherSubscriberInterface from "../../../publisher-subscriber/interfaces/publisher-subscriber.interface";
 import PublisherSubscriber from "../../../publisher-subscriber/model/publisher-subscriber.model";
+import NotificationRecord from "../../../publisher-subscriber/interfaces/notification-record.interface";
 let counter = 0;
 const prefix = 'component_';
 
-class Component extends Mixed implements PublisherSubscriberInterface {
+class Component implements PublisherSubscriberInterface {
     name: string;
     id: string;
     state: ComponentState;
@@ -19,8 +20,6 @@ class Component extends Mixed implements PublisherSubscriberInterface {
     publisherSubscriber: PublisherSubscriberInterface;
 
     constructor(settings: MixedInterface = {}) {
-        super();
-
         const core_id = `${prefix}${counter++}`;
         this.name = settings.name || core_id;
         this.id = settings.id || core_id;
@@ -81,6 +80,10 @@ class Component extends Mixed implements PublisherSubscriberInterface {
 
     removeSubscription(notification: string, subscription_id: string) {
         this.publisherSubscriber.removeSubscription(notification, subscription_id);
+    }
+
+    waitUntil(notifications: Array<NotificationRecord>): Promise<Array<any>> {
+        return this.publisherSubscriber.waitUntil(notifications);
     }
 }
 

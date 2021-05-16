@@ -1,9 +1,9 @@
-import MixedInterface from "./core/mixed.interface";
-import ContainerService from "./container.service";
+import MixedInterface from "./utils/mixed.interface";
+import ContainerBuilder from "./core/container-builder.model";
 
 // todo: return an error instead of null when a component is not found
 
-class AutowirableContainerService extends ContainerService {
+class AutowirableContainerService extends ContainerBuilder {
     isAutowireEnabled: boolean;
 
     constructor(settings: MixedInterface = {}) {

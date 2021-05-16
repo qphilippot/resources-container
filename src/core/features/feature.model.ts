@@ -21,7 +21,7 @@ class Feature {
 
 
     toggle() {
-        if (this.isEnabled) {
+        if (this.isEnabled()) {
             this.disable();
         }
 

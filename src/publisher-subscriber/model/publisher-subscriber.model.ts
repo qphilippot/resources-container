@@ -1,10 +1,11 @@
 import PublisherSubscriberInterface from "../interfaces/publisher-subscriber.interface";
 import SubscriptionInterface from "../interfaces/subscription.interface";
-import MixedInterface from "../../core/mixed.interface";
+import MixedInterface from "../../utils/mixed.interface";
 import PublisherInterface from "../interfaces/publisher.interface";
 import Publisher from "./publisher.model";
 import Subscriber from "./subscriber.model";
 import SubscriberInterface from "../interfaces/subscriber.interface";
+import NotificationRecord from "../interfaces/notification-record.interface";
 
 class PublisherSubscriber implements PublisherSubscriberInterface {
     private readonly id: string;
@@ -57,6 +58,10 @@ class PublisherSubscriber implements PublisherSubscriberInterface {
 
     addSubscription(notification: string, subscription: SubscriptionInterface) {
         this.subscriber.addSubscription(notification, subscription);
+    }
+
+    waitUntil(notifications: Array<NotificationRecord>): Promise<Array<any>> {
+        return this.subscriber.waitUntil(notifications);
     }
 
     destroy() {

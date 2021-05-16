@@ -57,10 +57,10 @@ class Publisher implements PublisherInterface {
         if (subscriptionIndex >= 0) {
             const removedSubscription: SubscriptionInterface = subscribers.splice(subscriptionIndex, 1)[0];
 
-            // handler may contains some references to existing objects.
-            // by deleting reference to this function, all reference into function will be destroyed
-            // it could prevent some memory leaks
-            delete removedSubscription.handler;
+            // // handler may contains some references to existing objects.
+            // // by deleting reference to this function, all reference into function will be destroyed
+            // // it could prevent some memory leaks
+            // delete removedSubscription.handler;
 
             this.nbSubscribers--;
 
@@ -74,7 +74,8 @@ class Publisher implements PublisherInterface {
         const subscriptions = this.subscribers[notification];
 
         if (Array.isArray(subscriptions)) {
-            subscriptions.forEach(
+            // shallow copy in order to avoid iteration on modifiable collection
+            subscriptions.slice(0).forEach(
                 (subscription: SubscriptionInterface) => {
                     subscription.handler(data);
                 }

@@ -45,7 +45,7 @@ describe('Subscribers and Publisher integration', () => {
         })
 
         it('Notification with parameters', () => {
-            let receivedData = null;
+            let receivedData: any = null;
             subscriber.subscribe(publisher, 'get-my-param', data => receivedData = data);
             publisher.publish('get-my-param', 'hello');
 
