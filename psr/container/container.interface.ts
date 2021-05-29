@@ -6,7 +6,7 @@
  * Describes the interface of a container that exposes methods to read its entries.
  */
 
-interface ContainerInterface {
+interface PSRContainerInterface {
     /**
      * Finds an entry of the container by its identifier and returns it.
      *

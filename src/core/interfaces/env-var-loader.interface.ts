@@ -1,0 +1,10 @@
+/**
+ * EnvVarLoaderInterface objects return key/value pairs that are added to the list of available env vars.
+ */
+export default interface EnvVarLoaderInterface
+{
+    /**
+     * @return string[] Key/value pairs that can be accessed using the regular "%env()%" syntax
+     */
+    loadEnvVars(): string[];
+}

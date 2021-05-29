@@ -23,7 +23,7 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
     factories: Mixed;
     reflector: ReflexionService;
     // definitions: Array<MixedInterface> = [];
-    definitions: Array<ResourceDefinition> = [];
+    definitions: Record<string, ResourceDefinition> = {};
 
     constructor(settings: MixedInterface = {}) {
         super({
@@ -122,6 +122,10 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         return this.getParameter(key);
     }
 
+
+    getDefinitions(): Array<ResourceDefinition> {
+        return Object.values(this.definitions);
+    }
     // addDefinition(resource_id, type: InstanceType<any>, settings: MixedInterface = {}) {
     //     this.definitions.push({
     //         resource_id,
@@ -131,8 +135,9 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
     // }
 
     addDefinition(definition: ResourceDefinition) {
-        this.definitions.push(definition);
+        this.definitions[definition.getId()] = definition;
     }
+
 
 
     // autowiring first tentative

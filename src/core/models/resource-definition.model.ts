@@ -5,10 +5,11 @@ import OutOfBoundsException from "../exception/out-of-bounds.exception";
 const flexible = new FlexibleService();
 
 export default class ResourceDefinition {
-    id: string;
-    private type: InstanceType<any>;
+    private id: string;
+    private type?: InstanceType<any>;
     settings: MixedInterface = {};
     arguments: Array<any> = [];
+    private tags: MixedInterface;
 
     constructor(type?: InstanceType<any>, settings: MixedInterface = {}) {
         if (typeof type !== 'undefined') {
@@ -16,6 +17,18 @@ export default class ResourceDefinition {
         }
 
         this.settings = settings;
+    }
+
+    setId(id) {
+        this.id = id;
+    }
+
+    getId(): string {
+        return this.id;
+    }
+
+    hasTag(tag: string): boolean {
+        return typeof this.tags[tag] !== 'undefined';
     }
 
     setResourceType(type: InstanceType<any>) {

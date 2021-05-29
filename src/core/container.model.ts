@@ -1,6 +1,6 @@
 import Mixed from "../utils/mixed.interface";
 import Component from "./models/component/component.model";
-import ContainerInterface from "../../psr/container/container.interface";
+import ContainerInterface from "./interfaces/container.interface";
 import ResourceNotFoundException from "./exception/resource-not-found.exception";
 
 class Container extends Component implements ContainerInterface {
@@ -32,6 +32,14 @@ class Container extends Component implements ContainerInterface {
             resource !== null &&
             typeof resource !== 'undefined'
         );
+    }
+
+    hasParameter(name: string): boolean {
+        return typeof this.parameters[name] !== 'undefined';
+    }
+
+    getParameter(name: string): any {
+        return this.parameters[name];
     }
 }
 
