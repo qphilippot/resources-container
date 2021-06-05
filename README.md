@@ -40,6 +40,10 @@ Permet de créer un service capable d'injecter d'appliquer un traitement sur les
 ## Implémenter ##
 - ResolveNamedArgumentsPassTest
 
+# EnvVarProcessor
+## ConstEnvVarProcessor
+
+Actuellement il n'est pas possible d'implémenter nativement un processor qui récupère une constante de classe. La raison est que nous ne connaissons pas les classes qui ne sont pas importées. Il n'y a pas d'auto-wiring. Il faudrait donc un implémenter au préalable un système qui enregistre toutes les constantes disponibles dans le programme. 
 
 #todo
 - finir le file.env-var-processor

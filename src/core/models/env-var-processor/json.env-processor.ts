@@ -6,23 +6,22 @@ import RuntimeException from "../../exception/runtime.exception";
 
 
 
-export default class FloatEnvProcessor extends EnvAwareProcessorModel implements EnvVarProcessorInterface {
+export default class JsonEnvProcessor extends EnvAwareProcessorModel implements EnvVarProcessorInterface {
      process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
         let env = this.retrieveEnv(prefix, name, getEnv, manager);
-        const number = parseFloat(env);
-
-        if (Number.isNaN(number)) {
-            throw new RuntimeException(`Non-numeric env var "${name}" cannot be cast to float.`);
+        try {
+            return JSON.parse(env);
         }
-
-        return number;
+         catch (error) {
+             throw new RuntimeException(`Invalid JSON in env var "${name}": ${error.message}`);
+         }
     }
 
-    getTarget(): string {
-        return 'float';
+    getTarget() {
+        return 'json';
     }
 
     getProcessedTypeName(): string {
-        return 'float';
+        return 'object';
     }
 }

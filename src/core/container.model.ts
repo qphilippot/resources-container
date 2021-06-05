@@ -41,6 +41,10 @@ class Container extends Component implements ContainerInterface {
     getParameter(name: string): any {
         return this.parameters[name];
     }
+
+    setParameter(name: string, value: any): void {
+        this.parameters[name] = value;
+    }
 }
 
 export default Container;

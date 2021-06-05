@@ -4,5 +4,6 @@ export default interface EnvVarProcessorInterface
 {
     process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface);
     match(prefix: string): boolean;
+    getTarget(): string;
     getProcessedTypeName(): string;
 }

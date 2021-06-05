@@ -4,8 +4,9 @@ import EnvNotFoundException from "../../exception/env-not-found.exception";
 import ContainerInterface from "../../interfaces/container.interface";
 import InvalidArgumentException from "../../exception/invalid-argument.exception";
 import EnvVarProcessorManagerInterface from "../../interfaces/env-var-processor-manager.interface";
+import EnvAwareProcessorModel from "./env-aware-processor.model";
 
-export default class DefaultEnvProcessor implements EnvVarProcessorInterface {
+export default class DefaultEnvProcessor extends EnvAwareProcessorModel{
     process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
         const i = name.indexOf(':');
 
@@ -40,8 +41,8 @@ export default class DefaultEnvProcessor implements EnvVarProcessorInterface {
 
     }
 
-    match(prefix: string): boolean {
-        return prefix === 'default';
+    getTarget(): string {
+        return 'default';
     }
 
     getProcessedTypeName(): string {

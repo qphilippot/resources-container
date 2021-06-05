@@ -1,6 +1,5 @@
 import ContainerBuilder from "./core/container-builder.model";
 import HelloService from "./services/hello.service";
-import ReflexionService from "./utils/reflexion.service";
 import AutowirableContainerService from "./autowirable-container.service";
 import TrevorService from "./services/trevor.service";
 import Component from "./core/models/component/component.model";
@@ -39,10 +38,10 @@ trevorDefinition.setId('service.trevor');
 
 containerService.addDefinition(trevorDefinition);
 
-containerService.process();
+containerService.compile();
 
+// const reflexionService = Object.create();
 console.log("end --", containerService.getContainer().resources);
-
 // const component = new Component({ id: 'hello-component' });
 // component.addMethod('sayHello', function () { console.log(`hello from ${this.name}`)} );
 // component.sayHello();

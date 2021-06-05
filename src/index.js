@@ -1,10 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const container_service_1 = require("./container.service");
+const container_builder_model_1 = require("./core/container-builder.model");
 const hello_service_1 = require("./services/hello.service");
 const trevor_service_1 = require("./services/trevor.service");
+const resource_definition_model_1 = require("./core/models/resource-definition.model");
 //
-const containerService = new container_service_1.default();
+const containerService = new container_builder_model_1.default();
 //
 //
 containerService.addResource(new hello_service_1.default(), 'service.hello');
@@ -21,12 +22,16 @@ containerService.addAlias('hello', 'service.hello');
 // console.log(Reflect.getMetadata('design:paramtypes', function({ a: string = "a", b: number = 0, c: any = null}){}));
 // const autowirableContainerService = new AutowirableContainerService();
 // new TrevorService(...[undefined, undefined]);
-containerService.addDefinition('service.trevor', trevor_service_1.default, {
+// Maybe create a DefinitionBuilder to create definition or add createDefinition(id, class, settings) to container-builder
+const trevorDefinition = new resource_definition_model_1.default(trevor_service_1.default, {
     dependencies: {
         'helloService': 'service.hell0'
     }
 });
-containerService.process();
+trevorDefinition.setId('service.trevor');
+containerService.addDefinition(trevorDefinition);
+containerService.compile();
+// const reflexionService = Object.create();
 console.log("end --", containerService.getContainer().resources);
 // const component = new Component({ id: 'hello-component' });
 // component.addMethod('sayHello', function () { console.log(`hello from ${this.name}`)} );

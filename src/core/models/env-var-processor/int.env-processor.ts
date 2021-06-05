@@ -19,7 +19,8 @@ export default class IntEnvProcessor extends EnvAwareProcessorModel implements E
 
     process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
         let env = this.retrieveEnv(prefix, name, getEnv, manager);
-        const number = parseInt(env, 10);
+        // Use parseFloat instead of parseInt cause parseInt does not resolve '1e1' correctly
+        const number = Math.trunc(parseFloat(env));
 
         if (Number.isNaN(number)) {
             throw new RuntimeException(`Non-numeric env var "${name}" cannot be cast to int.`);
@@ -28,8 +29,8 @@ export default class IntEnvProcessor extends EnvAwareProcessorModel implements E
         return number;
     }
 
-    match(prefix: string): boolean {
-        return prefix === 'int';
+    getTarget(): string {
+        return 'int';
     }
 
     getProcessedTypeName(): string {

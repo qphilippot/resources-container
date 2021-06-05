@@ -44,18 +44,18 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
     }
 
 
-    addResource(resource, id: string) {
+    addResource(resource, id: string = '') {
         // let _id: string;
-        //
-        // if (id === null) {
-        //     _id = resource.id;
-        // }
+
+        if (id === '') {
+            id = resource.id;
+        }
         //
         // else {
         //     _id = id;
         // }
 
-        this.flexible.set(id || resource.id, resource, this.container.resources);
+        this.flexible.set(id, resource, this.container.resources);
     }
 
     createResource(resource_id: string, resourceType: InstanceType<any>, injection: MixedInterface) {
@@ -102,8 +102,8 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         }
     }
 
-    getParameter(parameterName: string): any | null {
-        return this.container.parameters[parameterName] || null;
+    getParameter(parameterName: string): any {
+        return this.container.getParameter(parameterName);
     }
 
     get(key: string): Component | null {
@@ -239,6 +239,14 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
             this.findById(id) ||
             this.findByAlias(id)
         );
+    }
+
+    hasParameter(name: string): boolean {
+        return this.container.hasParameter(name);
+    }
+
+    setParameter(name: string, value: any): void {
+        this.container.setParameter(name, value);
     }
 }
 

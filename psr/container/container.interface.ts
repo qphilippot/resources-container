@@ -6,7 +6,7 @@
  * Describes the interface of a container that exposes methods to read its entries.
  */
 
-interface PSRContainerInterface {
+export default interface PSRContainerInterface {
     /**
      * Finds an entry of the container by its identifier and returns it.
      *
@@ -32,5 +32,3 @@ interface PSRContainerInterface {
      */
     has(id: string);
 }
-
-export default ContainerInterface;

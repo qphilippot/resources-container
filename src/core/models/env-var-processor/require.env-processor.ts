@@ -3,8 +3,9 @@ import ContainerInterface from "../../interfaces/container.interface";
 import RuntimeException from "../../exception/runtime.exception";
 import EnvNotFoundException from "../../exception/env-not-found.exception";
 import EnvVarProcessorManagerInterface from "../../interfaces/env-var-processor-manager.interface";
+import EnvAwareProcessorModel from "./env-aware-processor.model";
 
-export default class FileEnvProcessor implements EnvVarProcessorInterface {
+export default class RequireEnvProcessor extends EnvAwareProcessorModel{
     process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
         const file = getEnv(name);
         if (!Number.isSafeInteger(file)) {
@@ -19,8 +20,8 @@ export default class FileEnvProcessor implements EnvVarProcessorInterface {
 
     }
 
-    match(prefix: string): boolean {
-        return prefix === 'require';
+    getTarget(): string {
+        return 'require';
     }
 
     getProcessedTypeName(): string {

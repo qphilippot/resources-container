@@ -1,12 +1,11 @@
 import EnvVarProcessorInterface from "../../interfaces/env-var-processor.interface";
-import ContainerInterface from "../../interfaces/container.interface";
 import EnvVarProcessorManagerInterface from "../../interfaces/env-var-processor-manager.interface";
 import EnvAwareProcessorModel from "./env-aware-processor.model";
 
 let base64_decode: Function = (typeof window === 'undefined') ?
     str => {
-        return (new Buffer(str)).toString('base64');
-    } : window.btoa;
+        return Buffer.from(str, 'base64').toString('ascii');
+    } : window.atob;
 
 export default class Base64EnvProcessor extends EnvAwareProcessorModel implements EnvVarProcessorInterface {
     process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
@@ -14,8 +13,8 @@ export default class Base64EnvProcessor extends EnvAwareProcessorModel implement
         return base64_decode(env.replace('-', '+').replace('_', '/'));
     }
 
-    match(prefix: string): boolean {
-        return prefix === 'base64';
+    getTarget(): string {
+        return 'base64';
     }
 
     getProcessedTypeName(): string {

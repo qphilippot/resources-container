@@ -2,8 +2,9 @@ import EnvVarProcessorInterface from "../../interfaces/env-var-processor.interfa
 import RuntimeException from "../../exception/runtime.exception";
 import EnvNotFoundException from "../../exception/env-not-found.exception";
 import EnvVarProcessorManagerInterface from "../../interfaces/env-var-processor-manager.interface";
+import EnvAwareProcessorModel from "./env-aware-processor.model";
 
-export default class KeyEnvProcessor implements EnvVarProcessorInterface {
+export default class KeyEnvProcessor extends EnvAwareProcessorModel{
     process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
         let i = name.indexOf(':');
         if (prefix === 'key') {
@@ -30,8 +31,8 @@ export default class KeyEnvProcessor implements EnvVarProcessorInterface {
         }
     }
 
-    match(prefix: string): boolean {
-        return prefix === 'key';
+    getTarget(): string {
+        return 'key';
     }
 
     getProcessedTypeName(): string {

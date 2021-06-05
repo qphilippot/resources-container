@@ -6,8 +6,8 @@ import Publisher from "../publisher-subscriber/model/publisher.model";
 import PassesManager from "./passes-manager.model";
 
 class Compiler extends Publisher implements CompilerInterface {
-    private passesManager: PassesManager;
-    private steps: Array<string>;
+    private passesManager: PassesManager = new PassesManager({ id: 'passes-manager' });
+    private steps: Array<string> = [];
 
     constructor() {
         super('compiler-publisher');

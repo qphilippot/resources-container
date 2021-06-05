@@ -3,9 +3,7 @@ import ContainerInterface from "../../interfaces/container.interface";
 import EnvVarProcessorManagerInterface from "../../interfaces/env-var-processor-manager.interface";
 import EnvAwareProcessorModel from "./env-aware-processor.model";
 
-
-
-export default class StringEnvProcessor extends EnvAwareProcessorModel implements EnvVarProcessorInterface {
+export default class BooleanEnvProcessor extends EnvAwareProcessorModel implements EnvVarProcessorInterface {
     isTrue(value) {
         return (
             value === 1 ||
@@ -17,13 +15,12 @@ export default class StringEnvProcessor extends EnvAwareProcessorModel implement
     }
 
     process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
-        let env = this.retrieveEnv(prefix, name, getEnv, manager);
-        env = this.isTrue(env);
-        return 'not' === prefix ? !env : env;
+        const env = this.retrieveEnv(prefix, name, getEnv, manager);
+        return this.isTrue(env);
     }
 
-    match(prefix: string): boolean {
-        return prefix.includes('bool') || prefix.includes('not');
+    getTarget(): string {
+        return 'bool';
     }
 
     getProcessedTypeName(): string {

@@ -61,8 +61,8 @@ import PublisherInterface from "../publisher-subscriber/interfaces/publisher.int
 //             new AliasDeprecatedPublicServicesPass(),
 //         ]];
 
-class PassesManager extends Subscriber {
-    passesByStep: Collection;
+export default class PassesManager extends Subscriber {
+    passesByStep: Collection = new Collection();
 
     recordStep(step: string, compiler: PublisherInterface) {
         if (!this.passesByStep.has(step)) {
@@ -104,5 +104,3 @@ class PassesManager extends Subscriber {
         this.passesByStep.add(step, recordedSteps);
     }
 }
-
-export default PassesManager;

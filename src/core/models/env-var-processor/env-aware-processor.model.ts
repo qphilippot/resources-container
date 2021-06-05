@@ -2,6 +2,14 @@ import EnvNotFoundException from "../../exception/env-not-found.exception";
 import EnvVarProcessorManagerInterface from "../../interfaces/env-var-processor-manager.interface";
 
 export default class EnvAwareProcessorModel {
+    getTarget(): string {
+        return 'unknown';
+    }
+
+    match(prefix: string): boolean {
+        return prefix === this.getTarget();
+    }
+
     retrieveEnv(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
         const i = name.indexOf(':');
         let env : any = null;
@@ -11,7 +19,7 @@ export default class EnvAwareProcessorModel {
         else if (typeof process.env[name] !== 'undefined') {
             env = process.env[name];
         }
-        else if (getEnv(name) === false) {
+        else {
             // ?????
             // foreach ($this->loadedVars as $vars) {
             //     if (false !== $env = ($vars[$name] ?? false)) {
