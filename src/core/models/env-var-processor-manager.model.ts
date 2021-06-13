@@ -3,6 +3,7 @@ import ContainerInterface from "../interfaces/container.interface";
 import EnvVarLoaderInterface from "../interfaces/env-var-loader.interface";
 import RuntimeException from "../exception/runtime.exception";
 import EnvVarProcessorManagerInterface from "../interfaces/env-var-processor-manager.interface";
+import EnvProcessorNotFoundException from "../exception/env-processor-not-found.exception";
 
 export default class EnvVarProcessorManager implements EnvVarProcessorManagerInterface {
     private container: ContainerInterface;
@@ -45,7 +46,7 @@ export default class EnvVarProcessorManager implements EnvVarProcessorManagerInt
     getEnv(prefix: string, name: string, getEnv: Function) {
         let processor = this.processors.find(p => p.match(prefix));
         if (typeof processor === 'undefined') {
-            throw new RuntimeException(`Unsupported env var prefix "${prefix}".`);
+            throw new EnvProcessorNotFoundException(`Unsupported env var prefix "${prefix}".`);
         } else {
             return processor.process(prefix, name, getEnv, this);
         }
