@@ -4,11 +4,15 @@ import Component from "./models/component/component.model";
 import Mixed from "../utils/mixed.interface";
 import MixedInterface from "../utils/mixed.interface";
 import ReflexionService from "../utils/reflexion.service";
-import TrevorService from "../services/trevor.service";
 import ResourceDefinition from "./models/resource-definition.model";
 import ContainerBuilderInterface from "./interfaces/container-builder.interface";
 import CompilerInterface from "./interfaces/compiler.interface";
 import Compiler from "./compiler.model";
+import ContainerInterface from "./interfaces/container.interface";
+import BadMethodCallException from "./exception/bad-method-call.exception";
+import InvalidArgumentException from "./exception/invalid-argument.exception";
+import {isValidResourceId} from "./helpers/resource-definition.helper";
+import ResourceNotFoundException from "./exception/resource-not-found.exception";
 
 // todo: return an error instead of null when a component is not found
 
@@ -18,7 +22,8 @@ import Compiler from "./compiler.model";
 class ContainerBuilder extends Component implements ContainerBuilderInterface {
     container: Container;
     compiler: Compiler;
-
+    private noCompilationIsNeeded: boolean = false;
+    removedIds: Set<string> = new Set<string>();
     flexible: FlexibleService;
     factories: Mixed;
     reflector: ReflexionService;
@@ -43,6 +48,18 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         return this.container;
     }
 
+
+    register(id: string, aClass: InstanceType<any> | undefined = undefined): ResourceDefinition {
+        const definition = new ResourceDefinition();
+        definition.setId(id);
+
+        if (typeof aClass !== undefined) {
+            definition.setResourceType(aClass);
+        }
+
+        this.addDefinition(definition);
+        return definition;
+    }
 
     addResource(resource, id: string = '') {
         // let _id: string;
@@ -84,6 +101,21 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         this.flexible.set(alias, id, this.container.aliases);
     }
 
+    getAliases(): Record<string, string> {
+        return this.container.getAliases();
+    }
+
+
+    getAlias(alias: string): string {
+        return this.container.getAlias(alias);
+    }
+
+    hasAlias(alias: string): boolean {
+        return this.container.hasAlias(alias);
+    }
+
+
+
     addParameter(id, value) {
         this.flexible.set(id, value, this.container.parameters);
     }
@@ -122,6 +154,13 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         return this.getParameter(key);
     }
 
+    setAlias(alias: string, id: string): ContainerInterface {
+        this.container.setAlias(alias, id);
+        delete this.definitions[alias];
+        this.removedIds.delete(alias);
+
+        return this;
+    }
 
     getDefinitions(): Array<ResourceDefinition> {
         return Object.values(this.definitions);
@@ -133,6 +172,33 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
     //         settings: settings || {}
     //     });
     // }
+
+    isCompiled(): boolean {
+        return this.noCompilationIsNeeded;
+    }
+
+    setDefinition(definitionId: string, definition: ResourceDefinition) {
+        if (this.isCompiled()) {
+            throw new BadMethodCallException('Adding definition to a compiled container is not allowed.')
+        }
+
+        if (!isValidResourceId(definitionId)) {
+            throw new InvalidArgumentException(`Invalid resource id ${definitionId}`)
+        }
+
+        delete this.container.aliases[definitionId];
+        this.removedIds.delete(definitionId);
+        this.definitions[definitionId] = definition;
+    }
+
+    getDefinition(definitionId: string): ResourceDefinition {
+        const definition = this.definitions[definitionId];
+        if (typeof definition === 'undefined') {
+            throw new ResourceNotFoundException(definitionId);
+        }
+
+        return definition;
+    }
 
     addDefinition(definition: ResourceDefinition) {
         this.definitions[definition.getId()] = definition;
@@ -232,6 +298,7 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
 
     compile() {
         this.getCompiler().compile(this);
+        this.noCompilationIsNeeded = true;
     }
 
     has(id: string) {

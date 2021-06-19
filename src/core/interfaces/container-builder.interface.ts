@@ -9,8 +9,22 @@ interface ContainerBuilderInterface extends ContainerInterface {
 
     getDefinitions(): Array<ResourceDefinition>;
 
+    /**
+     * Gets a resource definition.
+     *
+     * @return {ResourceDefinition} A Definition instance
+     *
+     * @throws {ResourceNotFoundException} if the service definition does not exist
+     */
+    getDefinition(definitionId: string): ResourceDefinition;
+
+
+    register(id: string, aClass: InstanceType<any> | undefined): ResourceDefinition;
+
+
     addResource(resource, id: string);
     compile();
+    isCompiled(): boolean;
 }
 
 export default ContainerBuilderInterface;

@@ -1,6 +1,8 @@
 import MixedInterface from "../../utils/mixed.interface";
 import FlexibleService from "../../utils/flexible.service";
 import OutOfBoundsException from "../exception/out-of-bounds.exception";
+import InvalidArgumentException from "../exception/invalid-argument.exception";
+import Reference from "./reference.model";
 
 const flexible = new FlexibleService();
 
@@ -9,6 +11,9 @@ export default class ResourceDefinition {
     private type?: InstanceType<any>;
     settings: MixedInterface = {};
     arguments: Array<any> = [];
+    properties: Array<any> = [];
+    calls: Array<any> = [];
+    private factory: any;
     private tags: MixedInterface;
 
     constructor(type?: InstanceType<any>, settings: MixedInterface = {}) {
@@ -19,8 +24,18 @@ export default class ResourceDefinition {
         this.settings = settings;
     }
 
+    setFactory(factory: any) {
+        this.factory = factory;
+        return this;
+    }
+
+    getFactory():any {
+        return this.factory;
+    }
+
     setId(id) {
         this.id = id;
+        return this;
     }
 
     getId(): string {
@@ -33,6 +48,7 @@ export default class ResourceDefinition {
 
     setResourceType(type: InstanceType<any>) {
         this.type = type;
+        return this;
     }
 
     getResourceType(): InstanceType<any> {
@@ -87,4 +103,94 @@ export default class ResourceDefinition {
     getArguments(): Array<any> {
         return this.arguments.slice(0);
     }
+
+    getProperties(): Array<any> {
+        return this.properties.slice(0);
+    }
+
+    setProperties(properties: Array<any>): ResourceDefinition {
+        this.properties = properties;
+        return this;
+    }
+
+    getMethodCalls(): Array<any> {
+        return this.calls.slice(0);
+    }
+
+    setMethodCalls(calls: Array<any>): ResourceDefinition {
+        this.calls = [];
+
+        calls.forEach(call => {
+            this.addMethodCall(call[0], call[1], call[2] || false)
+        });
+
+        return this;
+    }
+
+    addMethodCall(methodName: string, args: Array<any>, shouldReturnClone: boolean = false) : ResourceDefinition {
+        if (methodName.length === 0) {
+            throw  new InvalidArgumentException('Method name cannot be empty');
+        }
+
+        this.calls.push([ methodName, args, shouldReturnClone ]);
+
+        return this;
+    }
+
+//
+//     /**
+//      * Removes a method to call after service initialization.
+//      *
+//      * @return $this
+//      */
+//     public function removeMethodCall(string $method)
+//     {
+//         foreach ($this->calls as $i => $call) {
+//             if ($call[0] === $method) {
+//                 unset($this->calls[$i]);
+//             }
+//         }
+//
+//         return $this;
+//     }
+//
+//     /**
+//      * Check if the current definition has a given method to call after service initialization.
+//      *
+//      * @return bool
+//      */
+//     public function hasMethodCall(string $method)
+//     {
+//         foreach ($this->calls as $call) {
+//             if ($call[0] === $method) {
+//                 return true;
+//             }
+//         }
+//
+//         return false;
+//     }
+//
+//     /**
+//      * Gets the methods to call after service initialization.
+//      *
+//      * @return array An array of method calls
+//      */
+//     public function getMethodCalls()
+//     {
+//         return $this->calls;
+//     }
+//
+//     /**
+//      * Sets the definition templates to conditionally apply on the current definition, keyed by parent interface/class.
+//      *
+//      * @param ChildDefinition[] $instanceof
+//      *
+//      * @return $this
+//      */
+//     public function setInstanceofConditionals(array $instanceof)
+//     {
+//         $this->instanceof = $instanceof;
+//
+//         return $this;
+//     }
 }
