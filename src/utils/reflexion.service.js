@@ -1,19 +1,21 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-class ReflexionService {
+exports.__esModule = true;
+var ReflexionService = /** @class */ (function () {
+    function ReflexionService() {
+    }
     /**
      * Inspired from: https://davidwalsh.name/javascript-arguments
      * @param func
      */
-    getFunctionArgumentsName(func) {
+    ReflexionService.prototype.getFunctionArgumentsName = function (func) {
         // First match everything inside the function argument parens.
         console.log(func.toString());
-        const tokens = func.toString().match(/function\s.*?\(([^)]*)\)/) || [];
+        var tokens = func.toString().match(/function\s.*?\(([^)]*)\)/) || [];
         console.log('tokens', func.toString().match(/function\s.*?\(([^)]*)\)/), tokens);
         if (tokens.length < 1) {
             return tokens;
         }
-        const args = tokens[1];
+        var args = tokens[1];
         // Split the arguments string into an array comma delimited.
         return args.split(',').map(function (arg) {
             console.log(arg);
@@ -23,8 +25,8 @@ class ReflexionService {
             // Ensure no undefined values are added.
             return arg;
         });
-    }
-    getFunctionOptionalsArgumentsName(func) {
+    };
+    ReflexionService.prototype.getFunctionOptionalsArgumentsName = function (func) {
         // const namedArguments = this.getFunctionArgumentsName(func);
         //
         // const optionalsArguments = [];
@@ -41,7 +43,7 @@ class ReflexionService {
         //     // Ensure no undefined values are added.
         //     return arg;
         // });
-    }
-}
-exports.default = ReflexionService;
-//# sourceMappingURL=reflexion.service.js.map
+    };
+    return ReflexionService;
+}());
+exports["default"] = ReflexionService;

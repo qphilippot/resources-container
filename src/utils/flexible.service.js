@@ -1,15 +1,18 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-class FlexibleService {
-    set(propertyPath, value, instance, separator = '.') {
-        const tokens = propertyPath.split(separator);
-        let node = instance;
-        let lastNode = instance;
-        let lastToken;
-        for (let i = 0; i < tokens.length; i++) {
-            const token = tokens[i];
+exports.__esModule = true;
+var FlexibleService = /** @class */ (function () {
+    function FlexibleService() {
+    }
+    FlexibleService.prototype.set = function (propertyPath, value, instance, separator) {
+        if (separator === void 0) { separator = '.'; }
+        var tokens = propertyPath.split(separator);
+        var node = instance;
+        var lastNode = instance;
+        var lastToken;
+        for (var i = 0; i < tokens.length; i++) {
+            var token = tokens[i];
             if (token.length === 0) {
-                throw `Invalid instance id`;
+                throw "Invalid instance id";
             }
             if (typeof node[token] === 'undefined') {
                 node[token] = {};
@@ -20,14 +23,15 @@ class FlexibleService {
         }
         lastNode[lastToken] = value;
         return instance;
-    }
-    get(id, instance, separator = '.') {
-        const tokens = id.split(separator);
-        let node = instance;
-        for (let i = 0; i < tokens.length; i++) {
-            const token = tokens[i];
+    };
+    FlexibleService.prototype.get = function (id, instance, separator) {
+        if (separator === void 0) { separator = '.'; }
+        var tokens = id.split(separator);
+        var node = instance;
+        for (var i = 0; i < tokens.length; i++) {
+            var token = tokens[i];
             if (token.length === 0) {
-                throw `Invalid instance id`;
+                throw "Invalid instance id";
             }
             if (typeof node[token] === 'undefined') {
                 return null;
@@ -35,7 +39,7 @@ class FlexibleService {
             node = node[token];
         }
         return node;
-    }
-}
-exports.default = FlexibleService;
-//# sourceMappingURL=flexible.service.js.map
+    };
+    return FlexibleService;
+}());
+exports["default"] = FlexibleService;

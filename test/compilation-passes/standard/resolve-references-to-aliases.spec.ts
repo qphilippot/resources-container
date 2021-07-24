@@ -1,11 +1,11 @@
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
-import ContainerBuilder from "../../src/core/container-builder.model";
-import ResolveReferencesToAliasesPass from "../../src/core/compilation-pass/resolve-references-to-aliases.pass";
-import CompilerInterface from "../../src/core/interfaces/compiler.interface";
-import Reference from "../../src/core/models/reference.model";
-import CircularReferenceException from "../../src/core/exception/circular-reference.exception";
-import ResourceDefinition from "../../src/core/models/resource-definition.model";
+import ContainerBuilder from "../../../src/core/container-builder.model";
+import ResolveReferencesToAliasesPass from "../../../src/core/compilation-pass/standard/resolve-references-to-aliases.pass";
+import CompilerInterface from "../../../src/core/interfaces/compiler.interface";
+import Reference from "../../../src/core/models/reference.model";
+import CircularReferenceException from "../../../src/core/exception/circular-reference.exception";
+import ResourceDefinition from "../../../src/core/models/resource-definition.model";
 
 const createTestContainer = () => {
     const container = new ContainerBuilder();

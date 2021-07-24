@@ -10,11 +10,58 @@ export default class ResourceDefinition {
     private id: string;
     private type?: InstanceType<any>;
     settings: MixedInterface = {};
-    arguments: Array<any> = [];
+    arguments: MixedInterface = [];
     properties: Array<any> = [];
+    changes: MixedInterface = {};
     calls: Array<any> = [];
     private factory: any;
+    private public: boolean;
     private tags: MixedInterface;
+    private synthetic: boolean = false;
+
+    /**
+     * Whether this definition is synthetic, that is not constructed by the
+     * container, but dynamically injected.
+     *
+     * @return boolean
+     */
+    isSynthetic(): boolean {
+        return this.synthetic;
+    }
+
+    /**
+     * Sets whether this definition is synthetic, that is not constructed by the
+     * container, but dynamically injected.
+     *
+     * @return $this
+     */
+    setSynthetic(isSynthetic: boolean): ResourceDefinition {
+        this.synthetic = isSynthetic;
+
+        if (typeof this.changes['public'] === 'undefined') {
+            this.setPublic(true);
+        }
+        return this;
+    }
+
+    /**
+     * Sets the visibility of this resource.
+     * @return {ResourceDefinition}
+     */
+    setPublic(isPublic: boolean): ResourceDefinition {
+        this.changes['public'] = true;
+        this.public = isPublic;
+        return this;
+    }
+
+    /**
+     * Whether this service is public facing.
+     *
+     * @return {Boolean}
+     */
+    isPublic(): boolean {
+        return this.public;
+    }
 
     constructor(type?: InstanceType<any>, settings: MixedInterface = {}) {
         if (typeof type !== 'undefined') {
@@ -70,38 +117,42 @@ export default class ResourceDefinition {
         return { ...this.settings };
     }
 
-    setArguments(args: Array<any>) {
+    setArguments(args: MixedInterface) {
         this.arguments = args;
         return this;
     }
 
-    setArgument(index: number, arg: any) {
+    setArgument(index: number|string, arg: any) {
         this.arguments[index] = arg;
         return this;
     }
 
     addArgument(arg: any) {
-        this.arguments.push(arg);
-        return this;
-    }
-
-    replaceArgument(index: number, arg: any) {
-        if (this.arguments.length === 0) {
-            throw new OutOfBoundsException('Cannot replace arguments if none have been configured yet.');
-        }
-
-        if (this.arguments.length <= index) {
-            throw new OutOfBoundsException(
-                `The index "${index}" is not in the range [0, ${this.arguments.length - 1}].`
-            );
-        }
-
+        const index = Object.keys(this.arguments).length;
         this.arguments[index] = arg;
         return this;
     }
 
-    getArguments(): Array<any> {
-        return this.arguments.slice(0);
+    replaceArgument(index: number, arg: any) {
+        const keys = Object.keys(this.arguments);
+        const length = keys.length;
+        if (length === 0) {
+            throw new OutOfBoundsException('Cannot replace arguments if none have been configured yet.');
+        }
+
+        if (length <= index) {
+            throw new OutOfBoundsException(
+                `The index "${index}" is not in the range [0, ${length - 1}].`
+            );
+        }
+
+        const key = keys[index];
+        this.arguments[key] = arg;
+        return this;
+    }
+
+    getArguments(): MixedInterface {
+        return { ...this.arguments };
     }
 
     getProperties(): Array<any> {
@@ -127,7 +178,7 @@ export default class ResourceDefinition {
         return this;
     }
 
-    addMethodCall(methodName: string, args: Array<any>, shouldReturnClone: boolean = false) : ResourceDefinition {
+    addMethodCall(methodName: string, args: MixedInterface, shouldReturnClone: boolean = false) : ResourceDefinition {
         if (methodName.length === 0) {
             throw  new InvalidArgumentException('Method name cannot be empty');
         }

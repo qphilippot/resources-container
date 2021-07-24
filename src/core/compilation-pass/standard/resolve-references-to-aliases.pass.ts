@@ -1,8 +1,8 @@
-import CompilerPassInterface from "../interfaces/compiler-pass.interface";
-import ContainerBuilderInterface from "../interfaces/container-builder.interface";
+import CompilerPassInterface from "../../interfaces/compiler-pass.interface";
+import ContainerBuilderInterface from "../../interfaces/container-builder.interface";
 import AbstractRecursivePassModel from "./abstract-recursive-pass.model";
-import { ContainerHelperSingleton } from "../container.helper";
-import Reference from "../models/reference.model";
+import ContainerHelper from "../../container.helper";
+import Reference from "../../models/reference.model";
 
 /**
  * Replaces all references to aliases with references to the actual service.
@@ -29,19 +29,7 @@ export default class ResolveReferencesToAliasesPass extends AbstractRecursivePas
             return id;
         }
 
-        const alias = containerBuilder.getAlias(id);
-
-        // todo : not supported yet
-        // if ($alias->isDeprecated()) {
-        //     $referencingDefinition = $container->hasDefinition($this->currentId) ? $container->getDefinition($this->currentId) : $container->getAlias($this->currentId);
-        //     if (!$referencingDefinition->isDeprecated()) {
-        //         $deprecation = $alias->getDeprecation($id);
-        //         trigger_deprecation($deprecation['package'], $deprecation['version'], rtrim($deprecation['message'], '. ').'. It is being referenced by the "%s" '.($container->hasDefinition($this->currentId) ? 'service.' : 'alias.'), $this->currentId);
-        //     }
-        // }
-
-
-        return ContainerHelperSingleton.resolveAlias(id, containerBuilder);
+        return ContainerHelper.resolveAlias(id, containerBuilder);
     }
 
     protected processValue(value: any, isRoot: boolean = false): any {

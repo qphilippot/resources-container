@@ -1,3 +1,7 @@
+# Principe
+## Autoload
+La possibilité d'autoload les classes et de les enregistrer automatiquement dans le conteneur n'est pas nécessairement une bonne idée. Dans un contexte browser, le module bundler packagera toutes les classes disponibles, même celles qui ne sont pas utilisée par la configuration de build courante (puisqu'on importe toutes les classes, le client les téléchargera toutes). Côté serveur cela est moins pénalisant.
+
 ## Workflow
 
 ### 1. ContainerBuilder
@@ -49,3 +53,10 @@ Actuellement il n'est pas possible d'implémenter nativement un processor qui r�
 - finir d'implémenter les env-processors
 - finir le file.env-var-processor
 - finir le require.env-var-processor
+- possibilité de rajouter des règles custom dans l'auto-configure / auto-wiring
+- implémenter les tag_iterator
+
+# Choix techniques
+## Pas de deprecated dans les alias
+L'idée derrière les deprecated dans le container est de préparer les projets aux breaking-changes prévus dans les montées de versions majeures. Dans le cadre d'un container plus simple, censé être plus facilement customisable, la gestion des deprecation ne doit pas être une feature par défaut. L'idée n'est pas d'avoir un container builder identique dans 99% des projets (comme pour les projets symfony) mais adapaté à chaque app. Ainsi, uniformiser les deprecations n'est peut-être pas utile.
+

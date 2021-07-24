@@ -1,7 +1,7 @@
 import ContainerInterface from "./interfaces/container.interface";
 import CircularReferenceException from "./exception/circular-reference.exception";
 
-class ContainerHelper {
+export default {
     /**
      * @throws {CircularReferenceException}
      * @param {string} id
@@ -22,7 +22,4 @@ class ContainerHelper {
 
         return currentIdCheck;
     }
-}
-
-export default ContainerHelper;
-export const ContainerHelperSingleton = new ContainerHelper();
+};

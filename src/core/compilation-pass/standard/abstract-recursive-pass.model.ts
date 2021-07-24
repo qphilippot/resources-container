@@ -1,6 +1,6 @@
-import CompilerPassInterface from "../interfaces/compiler-pass.interface";
-import ContainerBuilderInterface from "../interfaces/container-builder.interface";
-import ResourceDefinition from "../models/resource-definition.model";
+import CompilerPassInterface from "../../interfaces/compiler-pass.interface";
+import ContainerBuilderInterface from "../../interfaces/container-builder.interface";
+import ResourceDefinition from "../../models/resource-definition.model";
 
 export default abstract class AbstractRecursivePassModel implements CompilerPassInterface {
     protected containerBuilder: ContainerBuilderInterface;
