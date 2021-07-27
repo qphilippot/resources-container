@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "scripts": {
     "test": "mocha -r ts-node/register test/*.spec.ts",
-    "build": "webpack"
+    "build": "webpack",
+    "server:start": "ts-node src/test-load.ts"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"
