@@ -13,7 +13,6 @@ import { subscribeFromObject } from '../../helper/subscriber.helper';
 class Prompter extends PublisherSubscriber {
     private counter = 0;
     prompt({ a, b }) {
-        console.log('prompt', 'a', a , 'b', b);
         this.counter++;
     }
 

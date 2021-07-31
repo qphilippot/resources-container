@@ -1,11 +1,9 @@
 import HandlerInterface from "../src/core/interfaces/handler.interface";
-import ManagerInterface from "../src/core/interfaces/manager.interface";
-import Manager from "../src/core/models/manager.model";
-import FileLoaderNotFoundException from "../src/core/exception/file-loader-not-found.exception";
 import { readFileSync } from 'fs';
 import Publisher from "../src/publisher-subscriber/model/publisher.model";
+import PublisherInterface from "../src/publisher-subscriber/interfaces/publisher.interface";
 
-export default abstract class FileLoader extends Publisher implements HandlerInterface
+export default abstract class FileLoader extends Publisher implements HandlerInterface, PublisherInterface
 {
     protected supportedExtensions: string[] = [];
     private currentDir: string = '';
@@ -26,6 +24,7 @@ export default abstract class FileLoader extends Publisher implements HandlerInt
 
     match(key: string): boolean {
         const extension = this.getExtension(key);
+        console.log(this.getId(), extension, this.supportedExtensions);
         return this.supportedExtensions.includes(extension);
     }
 

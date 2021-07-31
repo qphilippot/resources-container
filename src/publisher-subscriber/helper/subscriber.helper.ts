@@ -18,15 +18,12 @@ export function subscribeFromObject(subscriber, publisher, subscriptions) {
                 let parameters = {};
                 if (typeof subscription.mapAttributes !== 'undefined') {
                     const mappage =  subscription.mapAttributes;
-                    console.log(mappage);
                     Object.keys(mappage).forEach(attributeName => {
                         const propertyToRetrieve: string = mappage[attributeName] ?? '';
                         parameters[attributeName] = flexible.get(
                             propertyToRetrieve,
                             data
                         );
-
-                        console.log( attributeName,  parameters[attributeName]);
                     });
 
 

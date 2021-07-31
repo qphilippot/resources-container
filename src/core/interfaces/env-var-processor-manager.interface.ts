@@ -12,14 +12,14 @@ export default interface EnvVarProcessorManagerInterface
      * @param {string}   name   The name of the variable within the namespace
      * @param {Function} getEnv A closure that allows fetching more env vars
      *
-     * @return mixed
+     * @returns {mixed}
      *
      * @throws RuntimeException on error
      */
     getEnv(prefix: string, name: string, getEnv: Function);
 
     /**
-     * @return string[] The types managed by getEnv(), keyed by prefixes
+     * @returns {string[]} The types managed by getEnv(), keyed by prefixes
      */
     getProvidedTypes(): Record<string, string>;
 

@@ -41,7 +41,6 @@ containerService.addDefinition(trevorDefinition);
 containerService.compile();
 
 // const reflexionService = Object.create();
-console.log("end --", containerService.getContainer().resources);
 // const component = new Component({ id: 'hello-component' });
 // component.addMethod('sayHello', function () { console.log(`hello from ${this.name}`)} );
 // component.sayHello();

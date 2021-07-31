@@ -4,8 +4,7 @@ import { load } from 'js-yaml';
 export default class YamlLoader extends FileLoader {
     constructor() {
         super('yaml-loader');
-        console.log('construct yaml')
-        this.supportedExtensions.push('yaml');
+        this.supportedExtensions.push('yaml', 'yml');
     }
 
     load(path: string) {

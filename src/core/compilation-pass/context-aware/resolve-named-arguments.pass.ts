@@ -13,7 +13,6 @@ import MixedInterface from "../../../utils/mixed.interface";
  */
 export default class ResolveNamedArgumentsPass extends AbstractRecursivePassModel implements CompilerPassInterface {
     protected processValue(value: any, isRoot: boolean = false): any {
-        console.log('process value', value);
         if (value instanceof AbstractArgument && !value.hasContext()) {
             value.setContext(`A value found in service ${this.currentId}`);
         }
@@ -32,11 +31,9 @@ export default class ResolveNamedArgumentsPass extends AbstractRecursivePassMode
             let parameters = null;
             const resolvedArgs: MixedInterface = {};
 
-            console.log('call', method, args);
             Object.keys(args).forEach((keyName: string) => {
                 // may be an integer (array index) or string according to named parameter usage
                 const key: string | number = (Number.isNaN(parseInt(keyName))) ? keyName : parseInt(keyName);
-                console.log('key', key, typeof key === 'number');
                 const arg = args[key];
                 if (arg instanceof AbstractArgument && !arg.hasContext()) {
                     const caller = method === 'constructor'
@@ -46,8 +43,6 @@ export default class ResolveNamedArgumentsPass extends AbstractRecursivePassMode
                     arg.setContext(`Argument ${key} of ${caller}`);
                 }
 
-
-                console.log('reflexion', value, method);
                 if (typeof key === 'number') {
                     resolvedArgs[key] = arg;
                     return;

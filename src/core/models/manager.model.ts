@@ -1,11 +1,11 @@
 import HandlerInterface from "../interfaces/handler.interface";
 import ManagerInterface from "../interfaces/manager.interface";
-import FileLoaderNotFoundException from "../exception/file-loader-not-found.exception";
 import PublisherSubscriber from "../../publisher-subscriber/model/publisher-subscriber.model";
+import HandlerNotFoundException from "../exception/handler-not-found.exception";
 
-export default abstract class Manager extends PublisherSubscriber implements ManagerInterface
+export default class Manager extends PublisherSubscriber implements ManagerInterface
 {
-    protected handlers: Record<string, HandlerInterface>;
+    protected handlers: Record<string, HandlerInterface> = {};
 
     public addHandler(handler: HandlerInterface, name: string) {
         this.handlers[name] = handler;
@@ -22,20 +22,29 @@ export default abstract class Manager extends PublisherSubscriber implements Man
      * @param {string} obj.path
      */
     process(data) {
-        console.log('manager process');
+
         const path = data.path;
-        const handler = Object.values(this.handlers).find(handler => handler.match(path));
+        const dataForHandlers = this.retrieveDataForHandlers(data);
+        const handler = Object.values(this.handlers).find(handler => handler.match(dataForHandlers));
+
+
+
+        console.log('manager process', dataForHandlers);
 
         if (handler) {
             return this.delegate(handler, data);
         }
 
         else {
-            throw new FileLoaderNotFoundException(path);
+            throw new HandlerNotFoundException(path);
         }
     }
 
-    protected delegate(handler: HandlerInterface, { path }) {
-        return handler.process(path);
+    retrieveDataForHandlers(data) {
+        return data;
+    }
+
+    protected delegate(handler: HandlerInterface, data) {
+        return handler.process(data);
     }
 }

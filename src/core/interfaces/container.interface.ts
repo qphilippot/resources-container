@@ -16,7 +16,7 @@ export default interface ContainerInterface extends PSRContainerInterface {
      * @param {string} alias The alias to create
      * @param {string} id The service to alias
      *
-     * @return {ContainerInterface} the container interface (for method chaining)
+     * @returns {ContainerInterface} the container interface (for method chaining)
      *
      * @throws {InvalidArgumentException} if the id is not a string or an Alias
      * @throws {InvalidArgumentException} if the alias is for itself

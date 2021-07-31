@@ -4,7 +4,7 @@
 export default interface EnvVarLoaderInterface
 {
     /**
-     * @return string[] Key/value pairs that can be accessed using the regular "%env()%" syntax
+     * @returns {string[]} Key/value pairs that can be accessed using the regular "%env()%" syntax
      */
     loadEnvVars(): string[];
 }

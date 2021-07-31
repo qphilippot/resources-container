@@ -16,7 +16,7 @@ export default abstract class AbstractRecursivePassModel implements CompilerPass
      *
      * @param {Object} value
      * @param {boolean} isRoot
-     * @return {Object} The processed value
+     * @returns {Object} The processed value
      */
     protected processValue(value: any, isRoot: boolean = false): any {
         if (typeof value === 'object' && value !== null) {

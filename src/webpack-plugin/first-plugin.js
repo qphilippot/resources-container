@@ -8,7 +8,6 @@ class MyFirstWebpackPlugin {
     }
 
     apply(compiler) {
-        console.log("My First webpack plugin");
         // compiler.hooks.done.tap("MyFirstWebpackPlugin", (stats) => {
         //     console.log(`My first webpack plugin is running on ${this.options.env}`)
         //     console.log("stats", stats);
@@ -22,8 +21,6 @@ class MyFirstWebpackPlugin {
                     console.error(err)
                 }
             );
-
-            console.log(params);
 
             // callback();
         });
@@ -50,8 +47,6 @@ class MyFirstWebpackPlugin {
                                     })
                                 }
                             }
-
-                            console.log(JSON.stringify(data));
 
                             if (data.name === 'B') {
                                 fs.writeFile(

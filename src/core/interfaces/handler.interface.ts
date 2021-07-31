@@ -1,6 +1,6 @@
 import PublisherInterface from "../../publisher-subscriber/interfaces/publisher.interface";
 
 export default interface HandlerInterface extends PublisherInterface {
-    match(key: string): boolean;
+    match(data: any): boolean;
     process(data: any);
 }

@@ -23,7 +23,7 @@ export default class ResourceDefinition {
      * Whether this definition is synthetic, that is not constructed by the
      * container, but dynamically injected.
      *
-     * @return boolean
+     * @returns {boolean}
      */
     isSynthetic(): boolean {
         return this.synthetic;
@@ -33,7 +33,7 @@ export default class ResourceDefinition {
      * Sets whether this definition is synthetic, that is not constructed by the
      * container, but dynamically injected.
      *
-     * @return $this
+     * @returns this
      */
     setSynthetic(isSynthetic: boolean): ResourceDefinition {
         this.synthetic = isSynthetic;
@@ -46,7 +46,7 @@ export default class ResourceDefinition {
 
     /**
      * Sets the visibility of this resource.
-     * @return {ResourceDefinition}
+     * @returns {ResourceDefinition}
      */
     setPublic(isPublic: boolean): ResourceDefinition {
         this.changes['public'] = true;
@@ -57,7 +57,7 @@ export default class ResourceDefinition {
     /**
      * Whether this service is public facing.
      *
-     * @return {Boolean}
+     * @returns {boolean}
      */
     isPublic(): boolean {
         return this.public;
@@ -111,7 +111,7 @@ export default class ResourceDefinition {
     }
 
     /**
-     * @return {MixedInterface} a shallow copy of settings. To update settings, use `setup`.
+     * @returns {MixedInterface} a shallow copy of settings. To update settings, use `setup`.
      */
     getSettings(): MixedInterface {
         return { ...this.settings };
@@ -192,7 +192,7 @@ export default class ResourceDefinition {
 //     /**
 //      * Removes a method to call after service initialization.
 //      *
-//      * @return $this
+//      * @returns $this
 //      */
 //     public function removeMethodCall(string $method)
 //     {
@@ -208,7 +208,7 @@ export default class ResourceDefinition {
 //     /**
 //      * Check if the current definition has a given method to call after service initialization.
 //      *
-//      * @return bool
+//      * @returns bool
 //      */
 //     public function hasMethodCall(string $method)
 //     {
@@ -224,7 +224,7 @@ export default class ResourceDefinition {
 //     /**
 //      * Gets the methods to call after service initialization.
 //      *
-//      * @return array An array of method calls
+//      * @returns array An array of method calls
 //      */
 //     public function getMethodCalls()
 //     {
@@ -236,7 +236,7 @@ export default class ResourceDefinition {
 //      *
 //      * @param ChildDefinition[] $instanceof
 //      *
-//      * @return $this
+//      * @returns $this
 //      */
 //     public function setInstanceofConditionals(array $instanceof)
 //     {

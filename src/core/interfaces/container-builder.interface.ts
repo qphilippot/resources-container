@@ -12,7 +12,7 @@ interface ContainerBuilderInterface extends ContainerInterface {
     /**
      * Gets a resource definition.
      *
-     * @return {ResourceDefinition} A Definition instance
+     * @returns {ResourceDefinition} A Definition instance
      *
      * @throws {ResourceNotFoundException} if the service definition does not exist
      */

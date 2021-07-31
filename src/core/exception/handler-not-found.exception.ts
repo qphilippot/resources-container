@@ -1,9 +1,8 @@
 import NotFoundExceptionInterface from "../../../psr/container/not-found-exception.interface";
-import HandlerNotFoundException from "./handler-not-found.exception";
 
-export default class FileLoaderNotFoundException extends HandlerNotFoundException {
+export default class HandlerNotFoundException extends Error  implements NotFoundExceptionInterface {
     constructor(path) {
-        super(`No file loader not found for "${path}"`);
+        super(`No handler found for "${path}"`);
         // Ensure the name of this error is the same as the class name
         this.name = this.constructor.name;
         // This clips the constructor invocation from the stack trace.

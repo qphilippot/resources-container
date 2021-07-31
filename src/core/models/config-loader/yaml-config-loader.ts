@@ -6,8 +6,34 @@ import InvalidArgumentException from "../../exception/invalid-argument.exception
 import { dirname } from 'path';
 import Publisher from "../../../publisher-subscriber/model/publisher.model";
 import CONFIG_LOADER_HANDLER_EVENTS from "./config-loader-handler.event";
-export default class YamlConfigLoader extends Publisher implements ConfigLoaderHandlerInterface {
+import ManagerInterface from "../../interfaces/manager.interface";
+import Manager from "../manager.model";
+import handlerInterface from "../../interfaces/handler.interface";
+import DefaultResolver from "./yaml-value-resolver-handlers/default.resolver";
+
+export default class YamlConfigLoader
+    extends Publisher
+    implements ConfigLoaderHandlerInterface, ManagerInterface {
+
     private fileLoader: YamlLoader = new YamlLoader();
+    protected readonly valueResolver: Manager = new Manager('yaml-value-manager');
+
+    constructor(id) {
+        super(id);
+        this.initializeHandler();
+    }
+
+    initializeHandler() {
+        this.addHandler(new DefaultResolver(this.valueResolver, 'default-resolver'), 'default-resolver');
+    }
+
+    addHandler(handler: handlerInterface, name: string) {
+        this.valueResolver.addHandler(handler, name);
+    }
+
+    removeHandler(name: string) {
+        this.valueResolver.removeHandler(name);
+    }
 
     load(path: string, container: ContainerBuilderInterface) {
         const content = this.fileLoader.load(path);
@@ -17,16 +43,46 @@ export default class YamlConfigLoader extends Publisher implements ConfigLoaderH
         }
 
         this.parseImport(content, path, container);
-
-        console.log('content', content);
-        console.log("container", container);
+        this.parseParameters(content.parameters, path, container);
+        // this.parseExtensions(content.extensions) // not yet
+        this.parseResources(content.resources, path, container);
     }
 
-    parseImport(content, path: string, container: ContainerBuilderInterface) {
-        if (typeof content === 'undefined') {
+    parseResources(parameters, path, container: ContainerBuilderInterface) {
+        if (typeof parameters === 'undefined') {
+            return;
+        }
+    }
+
+    parseParameters(parameters, path, container: ContainerBuilderInterface) {
+        if (typeof parameters === 'undefined') {
             return;
         }
 
+        if (typeof parameters !== 'object') {
+            throw new InvalidArgumentException(
+                `The "parameters" key should contain an array in "${path}". Check your YAML syntax.`
+            );
+        }
+
+        Object.keys(parameters).forEach(name => {
+            // difference
+            //  $this->container->setParameter($key, $this->resolveServices($value, $path, true));
+            container.setParameter(name, this.resolveParameter(parameters[name]));
+        });
+
+    }
+
+    resolveParameter(value) {
+        return this.valueResolver.process(value);
+    }
+
+    parseImport(content, path: string, container: ContainerBuilderInterface) {
+        if (typeof content.imports === 'undefined') {
+            return;
+        }
+
+        // warning : array or js object ?
         if (!Array.isArray(content.imports)) {
             throw new InvalidArgumentException(
                 `The "imports" key should contain an array in "${path}". Check your YAML syntax.`
@@ -35,7 +91,6 @@ export default class YamlConfigLoader extends Publisher implements ConfigLoaderH
 
         const defaultDirectory = dirname(path);
         content.imports.forEach(entry => {
-            console.log(entry);
             if (typeof entry === 'string') {
                 entry = { resource: entry};
             }
@@ -58,13 +113,6 @@ export default class YamlConfigLoader extends Publisher implements ConfigLoaderH
                     path
                 }
             );
-            // this.import(
-            //     entry.resource,
-            //     entry.type ?? null,
-            //     entry.ignore_errors ?? false,
-            //     path
-            // );
-           // if (Array.isArray(entry[ ]))
         });
     }
 
@@ -78,7 +126,6 @@ export default class YamlConfigLoader extends Publisher implements ConfigLoaderH
      * @param {ContainerBuilderInterface} obj.container
      */
     process({ path, container }) {
-        console.log('bad process')
         this.load(path, container);
     }
 }

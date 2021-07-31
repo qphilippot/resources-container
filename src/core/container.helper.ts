@@ -6,7 +6,7 @@ export default {
      * @throws {CircularReferenceException}
      * @param {string} id
      * @param {ContainerInterface} container
-     * @return {string} the resolved definition id
+     * @returns {string} the resolved definition id
      */
     resolveAlias(id: string, container: ContainerInterface): string {
         const seen = {};

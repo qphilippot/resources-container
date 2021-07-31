@@ -20,6 +20,8 @@ import ResourceNotFoundException from "./exception/resource-not-found.exception"
  * Container Service have to use definitions concept in order to check if some resources dependancies are availables before instantiate it
  */
 class ContainerBuilder extends Component implements ContainerBuilderInterface {
+
+
     container: Container;
     compiler: Compiler;
     private noCompilationIsNeeded: boolean = false;

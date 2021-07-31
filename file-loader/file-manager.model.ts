@@ -5,4 +5,7 @@ import FileLoaderNotFoundException from "../src/core/exception/file-loader-not-f
 
 export default class FileManager extends Manager
 {
+    retrieveDataForHandlers({ path }) {
+        return path;
+    }
 }

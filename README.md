@@ -60,3 +60,8 @@ Actuellement il n'est pas possible d'implémenter nativement un processor qui r�
 ## Pas de deprecated dans les alias
 L'idée derrière les deprecated dans le container est de préparer les projets aux breaking-changes prévus dans les montées de versions majeures. Dans le cadre d'un container plus simple, censé être plus facilement customisable, la gestion des deprecation ne doit pas être une feature par défaut. L'idée n'est pas d'avoir un container builder identique dans 99% des projets (comme pour les projets symfony) mais adapaté à chaque app. Ainsi, uniformiser les deprecations n'est peut-être pas utile.
 
+## Ne pas supporter l'ExpressionLanguage
+Pour l'instant je n'en voit pas l'intérêt. Je préfère d'abord me concentrer sur le développement d'un conteneur plus simple, mais fonctionnel ET pratique.
+https://symfony.com/doc/current/components/expression_language.html
+
+## Ne pas implémenter de système d'extensions poue l'instant

@@ -5,11 +5,8 @@ class ReflexionService {
      */
     getFunctionArgumentsName(func: Function): Array<string> {
         // First match everything inside the function argument parens.
-        console.log(func.toString());
-
         const tokens = func.toString().match(/function\s.*?\(([^)]*)\)/) || [];
 
-        console.log('tokens', func.toString().match(/function\s.*?\(([^)]*)\)/), tokens);
         if (tokens.length < 1) {
             return tokens;
         }
@@ -18,7 +15,6 @@ class ReflexionService {
 
         // Split the arguments string into an array comma delimited.
         return args.split(',').map(function(arg) {
-            console.log(arg)
             // Ensure no inline comments are parsed and trim the whitespace.
             return arg.replace(/\/\*.*\*\//, '').trim();
         }).filter(function(arg) {

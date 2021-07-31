@@ -15,7 +15,7 @@ export default interface PSRContainerInterface {
      * @throws {NotFoundExceptionInterface} No entry was found for **this** identifier.
      * @throws {ContainerExceptionInterface} Error while retrieving the entry.
      *
-     * @return mixed Entry.
+     * @returns {mixed} Entry.
      */
     get(id: string);
 
@@ -28,7 +28,7 @@ export default interface PSRContainerInterface {
      *
      * @param id {string} Identifier of the entry to look for.
      *
-     * @return bool
+     * @returns {boolean}
      */
     has(id: string);
 }
