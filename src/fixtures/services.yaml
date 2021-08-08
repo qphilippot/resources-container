@@ -7,29 +7,28 @@ imports:
 #  - { resource: "../xml/services13.xml" }
 #  - { resource: "../xml/xml_with_wrong_ext.php", type: xml }
 
-
-configuration:
-  autowire: false # auto-wiring is not supported yet
-  autoconfigure: false # autoconfigure is not supported yet
-
-autoload:
-  App\:
-    resource: '../src/*'
-    exclude: '../src/{wepback-plugin, *.ts, *.js, *.yaml, utils, core, publisher-subscriber}'
-
-resources:
-
-  services:
-    # create service.example alias
-    example: '@App\service\example'
-
-    # create service.another_example definition
-    another_example:
-      class: '<path>'
-      arguments:
-        - '@service.example'
-        - 'plain text example'
-
-  controllers:
-    # create controller.example alias
-    example: '@App\some_controller_dir\example'
+#
+#configuration:
+#  autowire: false # auto-wiring is not supported yet
+#  autoconfigure: false # autoconfigure is not supported yet
+#
+#autoload:
+#  App\:
+#    resource: '../src/*'
+#    exclude: '../src/{wepback-plugin, *.ts, *.js, *.yaml, utils, core, publisher-subscriber}'
+#
+#resources:
+#  services:
+#    # create service.example alias
+#    example: '@App\service\example'
+#
+#    # create service.another_example definition
+#    another_example:
+#      class: '<path>'
+#      arguments:
+#        - '@service.example'
+#        - 'plain text example'
+#
+#  controllers:
+#    # create controller.example alias
+#    example: '@App\some_controller_dir\example'

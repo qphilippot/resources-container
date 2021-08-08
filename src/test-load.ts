@@ -18,8 +18,6 @@ const content = loader.process({
     container
 });
 
-console.log(container);
-// console.log('content', content);
 
 // const loader = new YamlLoader();
 // const filepath = resolve(__dirname, './core/models/config-loader/config-loader-manager.subscriptions.yaml');

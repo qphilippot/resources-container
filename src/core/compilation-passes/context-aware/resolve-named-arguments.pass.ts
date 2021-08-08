@@ -1,20 +1,17 @@
 import CompilerPassInterface from "../../interfaces/compiler-pass.interface";
-import ContainerBuilderInterface from "../../interfaces/container-builder.interface";
 import AbstractRecursivePassModel from "../standard/abstract-recursive-pass.model";
-import ContainerHelper from "../../container.helper";
-import Reference from "../../models/reference.model";
 import AbstractArgument from "../../models/abstract-argument.model";
 import ResourceDefinition from "../../models/resource-definition.model";
-import InvalidArgumentException from "../../exception/invalid-argument.exception";
 import MixedInterface from "../../../utils/mixed.interface";
 
 /**
  * Resolves named arguments to their corresponding numeric index.
+ * TODO: frozen cause we need reflection method to check which name have arguments in methods
  */
 export default class ResolveNamedArgumentsPass extends AbstractRecursivePassModel implements CompilerPassInterface {
     protected processValue(value: any, isRoot: boolean = false): any {
         if (value instanceof AbstractArgument && !value.hasContext()) {
-            value.setContext(`A value found in service ${this.currentId}`);
+            value.setContext(`A value found in service "${this.currentId}"`);
         }
 
         if (!(value instanceof ResourceDefinition)) {
@@ -26,8 +23,7 @@ export default class ResolveNamedArgumentsPass extends AbstractRecursivePassMode
         calls.push(['constructor', value.getArguments()]);
 
         calls.forEach(call => {
-            const method = call[0];
-            const args = call[1];
+            const [ method, args ] = call;
             let parameters = null;
             const resolvedArgs: MixedInterface = {};
 
@@ -43,7 +39,7 @@ export default class ResolveNamedArgumentsPass extends AbstractRecursivePassMode
                     arg.setContext(`Argument ${key} of ${caller}`);
                 }
 
-                if (typeof key === 'number') {
+                if (Number.isInteger(key) && key >= 0) {
                     resolvedArgs[key] = arg;
                     return;
                 }

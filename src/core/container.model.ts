@@ -3,10 +3,11 @@ import Component from "./models/component/component.model";
 import ContainerInterface from "./interfaces/container.interface";
 import ResourceNotFoundException from "./exception/resource-not-found.exception";
 import InvalidArgumentException from "./exception/invalid-argument.exception";
+import Alias from "./models/alias.model";
 
 class Container extends Component implements ContainerInterface {
     resources: Mixed;
-    aliases: Record<string, string>;
+    aliases: Record<string, Alias>;
     parameters: Mixed;
 
     constructor(settings: Mixed = {}) {
@@ -47,20 +48,20 @@ class Container extends Component implements ContainerInterface {
         this.parameters[name] = value;
     }
 
-    getAliases(): Record<string, string> {
-        return { ...this.aliases };
+    getAliases(): Record<string, Alias> {
+        return this.aliases;
     }
 
-    getAlias(alias:string): string {
+    getAlias(alias:string): Alias {
         return this.aliases[alias];
     }
 
-    setAlias(alias: string, id: string): ContainerInterface {
+    setAlias(alias: string, id: Alias): ContainerInterface {
         if (alias.trim().length === 0) {
             throw new InvalidArgumentException(`Invalid alias id: "${alias}"`);
         }
 
-        if (alias === id) {
+        if (alias === id.toString()) {
             throw new InvalidArgumentException(`An alias can not reference itself, got a circular reference on: "${alias}"`);
         }
 
@@ -69,11 +70,13 @@ class Container extends Component implements ContainerInterface {
         return this;
     }
 
+
+    setAliasFromString(alias: string, id: string): ContainerInterface {
+       return this.setAlias(alias, new Alias(id));
+    }
+
     hasAlias(alias: string): boolean {
-        return (
-            typeof this.aliases[alias] === 'string' &&
-            this.aliases[alias].length > 0
-        );
+        return typeof this.aliases[alias] !== 'undefined';
     }
 }
 

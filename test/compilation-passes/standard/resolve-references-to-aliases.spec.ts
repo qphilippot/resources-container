@@ -1,11 +1,12 @@
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import ContainerBuilder from "../../../src/core/container-builder.model";
-import ResolveReferencesToAliasesPass from "../../../src/core/compilation-pass/standard/resolve-references-to-aliases.pass";
+import ResolveReferencesToAliasesPass from "../../../src/core/compilation-passes/standard/resolve-references-to-aliases.pass";
 import CompilerInterface from "../../../src/core/interfaces/compiler.interface";
 import Reference from "../../../src/core/models/reference.model";
 import CircularReferenceException from "../../../src/core/exception/circular-reference.exception";
 import ResourceDefinition from "../../../src/core/models/resource-definition.model";
+import Alias from "../../../src/core/models/alias.model";
 
 const createTestContainer = () => {
     const container = new ContainerBuilder();
@@ -16,10 +17,11 @@ const createTestContainer = () => {
     return container;
 }
 
+// TODO: frozen cause we need reflection method to check which name have arguments in methods
 describe('ResolveReferencesToAliasesPass works as expected', () => {
     it('test "process" method', () => {
         const container = new ContainerBuilder();
-        container.setAlias('bar', 'foo');
+        container.setAliasFromString('bar', 'foo');
 
         const definition = container.register('moo');
         definition.setArguments([ new Reference('bar') ]);
@@ -28,14 +30,15 @@ describe('ResolveReferencesToAliasesPass works as expected', () => {
         pass.process(container);
 
         const args = definition.getArguments();
+        console.log(args);
         expect(args[0].toString()).to.equals('foo');
     });
 
     it('test "process" method recursively', () => {
         const container = new ContainerBuilder();
         container
-            .setAlias('bar', 'foo')
-            .setAlias('moo', 'bar');
+            .setAliasFromString('bar', 'foo')
+            .setAliasFromString('moo', 'bar');
 
         const definition = container.register('foobar');
         definition.setArguments([ new Reference('moo') ]);
@@ -50,8 +53,8 @@ describe('ResolveReferencesToAliasesPass works as expected', () => {
     it('test alias circular reference detection', () => {
         const container = new ContainerBuilder();
         container
-            .setAlias('bar', 'foo')
-            .setAlias('foo', 'bar');
+            .setAlias('bar', new Alias('foo'))
+            .setAlias('foo', new Alias('bar'));
 
 
         const pass = new ResolveReferencesToAliasesPass();
@@ -64,9 +67,10 @@ describe('ResolveReferencesToAliasesPass works as expected', () => {
     it('test resolve factory', () => {
         const container = new ContainerBuilder();
         container.register('factory', 'Factory');
-        container.setAlias('factory_alias', 'factory');
+        container.setAlias('factory_alias', new Alias('factory'));
 
         const foo = new ResourceDefinition();
+        foo.setId('foo'); // for debug
         foo.setFactory([ new Reference('factory_alias'), 'createFoo' ]);
         container.setDefinition('foo', foo);
 
@@ -82,6 +86,8 @@ describe('ResolveReferencesToAliasesPass works as expected', () => {
 
         expect(resolvedFooFactory).to.be.not.null;
         expect(resolvedBarFactory).to.be.not.null;
+
+        console.log(resolvedFooFactory);
         // @ts-ignore
         expect('factory').to.equals(resolvedFooFactory[0].toString())
         // @ts-ignore

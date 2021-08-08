@@ -27,10 +27,6 @@ export default class Manager extends PublisherSubscriber implements ManagerInter
         const dataForHandlers = this.retrieveDataForHandlers(data);
         const handler = Object.values(this.handlers).find(handler => handler.match(dataForHandlers));
 
-
-
-        console.log('manager process', dataForHandlers);
-
         if (handler) {
             return this.delegate(handler, data);
         }

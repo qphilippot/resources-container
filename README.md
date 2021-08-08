@@ -4,6 +4,11 @@ La possibilité d'autoload les classes et de les enregistrer automatiquement dan
 
 ## Workflow
 
+Toutes les instances qui seront générées par le conteneur seront nommées des resources (qu'il s'agisse d'un service, un controller, un personnage dans un jeu-vidéo, peu importe).
+La première étape sera de lire la configuration pour savoir quelles sont les ressources prises en charges par le conteneur. Il s'agit d'une première passe qui va lire nos fichiers de configurations, et selon ces règles, parcourir le filesystem afin de créer des définitions dans le conteneur.
+Une fois cette passe terminée, on va compiler le conteneur, c'est à dire résoudre toutes les définitions, et remplacer celles-ci par de vrai instanciations de classes.
+Lors de la compilation, il y aura des passes pour résoudre les références vers nos resources, les décorer, injecter les diverses dépendances au bon endroit, détecter les dépendances circulaires, et instancier les resources dans le bon ordre.
+
 ### 1. ContainerBuilder
 
 Il permet de créer de compiler le conteneur, c'est à dire instancier les différentes resources à l'aides des définitions, des resources déjà disponibles, et des alias, en injectant les dépendences requises.

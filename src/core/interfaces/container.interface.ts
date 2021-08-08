@@ -1,4 +1,5 @@
 import PSRContainerInterface from  '../../../psr/container/container.interface';
+import Alias from "../models/alias.model";
 
 export default interface ContainerInterface extends PSRContainerInterface {
     hasParameter(name: string): boolean;
@@ -6,9 +7,9 @@ export default interface ContainerInterface extends PSRContainerInterface {
     setParameter(name: string, value: any): void;
 
 
-    getAliases(): Record<string, string>;
+    getAliases(): Record<string, Alias>;
     hasAlias(alias: string): boolean;
-    getAlias(alias: string): string;
+    getAlias(alias: string): Alias;
 
     /**
      * Sets an alias for an existing service.
@@ -22,5 +23,6 @@ export default interface ContainerInterface extends PSRContainerInterface {
      * @throws {InvalidArgumentException} if the alias is for itself
      */
 
-    setAlias(alias: string, id: string): ContainerInterface;
+    setAlias(alias: string, id: Alias): ContainerInterface;
+    setAliasFromString(alias: string, id: string): ContainerInterface;
 };

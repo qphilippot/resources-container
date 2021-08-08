@@ -1,8 +1,9 @@
 import CompilerPassInterface from "../../interfaces/compiler-pass.interface";
 import ContainerBuilderInterface from "../../interfaces/container-builder.interface";
 import AbstractRecursivePassModel from "./abstract-recursive-pass.model";
-import ContainerHelper from "../../container.helper";
+import { resolveAlias, checkDeprecation } from "../../container.helper";
 import Reference from "../../models/reference.model";
+import Alias from "../../models/alias.model";
 
 /**
  * Replaces all references to aliases with references to the actual service.
@@ -11,15 +12,17 @@ export default class ResolveReferencesToAliasesPass extends AbstractRecursivePas
 {
     public process(containerBuilder: ContainerBuilderInterface) {
         super.process(containerBuilder);
-        const aliases = containerBuilder.getAliases();
 
-        Object.keys(aliases).forEach(alias => {
-            const aliasId = aliases[alias];
-            this.currentId = alias;
+        const aliases: Record<string, Alias> = containerBuilder.getAliases();
+
+        Object.keys(aliases).forEach(id => {
+            const alias = aliases[id];
+            const aliasId = alias.toString();
+            this.currentId = id;
 
             const definitionId: string = this.getDefinitionId(aliasId, containerBuilder);
             if (aliasId !== definitionId) {
-                containerBuilder.setAlias(alias, definitionId);
+                containerBuilder.setAlias(id, new Alias(definitionId, alias.isPublic()));
             }
         });
     }
@@ -29,7 +32,11 @@ export default class ResolveReferencesToAliasesPass extends AbstractRecursivePas
             return id;
         }
 
-        return ContainerHelper.resolveAlias(id, containerBuilder);
+        checkDeprecation(id, containerBuilder);
+
+        const resolved =  resolveAlias(id, containerBuilder);
+
+        return resolved;
     }
 
     protected processValue(value: any, isRoot: boolean = false): any {

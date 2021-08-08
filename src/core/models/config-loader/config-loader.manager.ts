@@ -13,9 +13,7 @@ export default class ConfigLoaderManager extends Manager {
             handler,
             CONFIG_LOADER_HANDLER_EVENTS.REQUIRE_CONFIGURATION_IMPORT,
             requirement => {
-                // console.log(this.getId(), 'require', requirement);
-                // do some extra check
-                console.log(requirement);
+                 // do some extra check
                 this.process({
                     path: resolve(requirement.dir, requirement.config.resource),
                     container: requirement.container

@@ -13,6 +13,7 @@ import BadMethodCallException from "./exception/bad-method-call.exception";
 import InvalidArgumentException from "./exception/invalid-argument.exception";
 import {isValidResourceId} from "./helpers/resource-definition.helper";
 import ResourceNotFoundException from "./exception/resource-not-found.exception";
+import Alias from "./models/alias.model";
 
 // todo: return an error instead of null when a component is not found
 
@@ -88,34 +89,22 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         this.addResource(new type(parameters), resource_id)
     }
 
-    recordFactory(id, factory) {
-        // todo
-        this.flexible.set(id, factory, this.factories);
-    }
-
-    processFactories() {
-        Object.keys(this.factories).forEach(factoryName => {
-
-        });
-    }
-
     addAlias(alias, id) {
         this.flexible.set(alias, id, this.container.aliases);
     }
 
-    getAliases(): Record<string, string> {
+    getAliases(): Record<string, Alias> {
         return this.container.getAliases();
     }
 
 
-    getAlias(alias: string): string {
+    getAlias(alias: string): Alias {
         return this.container.getAlias(alias);
     }
 
     hasAlias(alias: string): boolean {
         return this.container.hasAlias(alias);
     }
-
 
 
     addParameter(id, value) {
@@ -126,13 +115,13 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         return this.flexible.get(resource_id, this.container.resources);
     }
 
-    findByAlias(alias: string): Component | null {
-        const instance_id: string | undefined = this.container.aliases[alias];
+    findByAlias(aliasName: string): Component | null {
+        const alias : Alias | undefined = this.container.aliases[aliasName];
 
-        if (typeof instance_id === 'undefined') {
+        if (typeof alias === 'undefined') {
             return null;
         } else {
-            return this.findById(instance_id);
+            return this.findById(alias.toString());
         }
     }
 
@@ -156,12 +145,16 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         return this.getParameter(key);
     }
 
-    setAlias(alias: string, id: string): ContainerInterface {
+    setAlias(alias: string, id: Alias): ContainerInterface {
         this.container.setAlias(alias, id);
         delete this.definitions[alias];
         this.removedIds.delete(alias);
 
         return this;
+    }
+
+    setAliasFromString(alias: string, id: string): ContainerInterface {
+        return this.setAlias(alias, new Alias(id));
     }
 
     getDefinitions(): Array<ResourceDefinition> {
@@ -210,7 +203,6 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
 
     // autowiring first tentative
     // process() {
-    //     console.log("== process ==");
     //     this.definitions.forEach(definition => {
     //         const definitionsDependencies = this.reflector.getFunctionArgumentsName(definition.getResourceType().prototype.constructor);
     //         // const optionalsDependencies = this.reflector.getFunctionArgumentsName(definition.type.prototype.constructor);
@@ -218,7 +210,6 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
     //         let resolvedDependencies: Array<any> = [];
     //
     //         let dependency: any;
-    //         console.log('definitionsDependencies', definitionsDependencies);
     //         definitionsDependencies.forEach((dependencyName: string) => {
     //             const dependencySettings = definition.settings.dependencies[dependencyName];
     //             if (typeof dependencySettings === "object") {
@@ -231,16 +222,13 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
     //                 dependency = this.get(dependencyName);
     //             }
     //             //
-    //             console.log('push', dependencyName, dependency || undefined);
     //             resolvedDependencies.push(dependency || undefined);
     //
     //         });
     //
     //         try {
     //             let resource;
-    //             // console.log('local-1',localDependenciesIndex);
     //             // // @ts-ignore
-    //             console.log('local',...resolvedDependencies);
     //             // // @ts-ignore
     //             resource = new (definition.getResourceType())(...resolvedDependencies);
     //             // resource = new TrevorService(...resolvedDependencies);
@@ -275,10 +263,8 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
     //
     //         try {
     //             let resource;
-    //             // console.log('local-1',localDependenciesIndex);
-    //             // // @ts-ignore
-    //             console.log('local',...resolvedDependencies);
-    //             // // @ts-ignore
+    //            // // @ts-ignore
+    //              // // @ts-ignore
     //             resource = new (definition.getResourceType())(...resolvedDependencies);
     //             // resource = new TrevorService(...resolvedDependencies);
     //             this.addResource(resource, definition.id);

@@ -22,7 +22,6 @@ export default class DefaultResolver extends Publisher implements HandlerInterfa
     }
 
     process(data: any) {
-        console.log('default-resolver-process', data);
         return data;
     }
 };

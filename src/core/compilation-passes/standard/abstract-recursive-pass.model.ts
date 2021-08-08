@@ -19,7 +19,23 @@ export default abstract class AbstractRecursivePassModel implements CompilerPass
      * @returns {Object} The processed value
      */
     protected processValue(value: any, isRoot: boolean = false): any {
-        if (typeof value === 'object' && value !== null) {
+        if (value instanceof ResourceDefinition) {
+            value.setArguments(this.processValue(value.getArguments()));
+            value.setMethodCalls(this.processValue(value.getMethodCalls()));
+
+            if (value.hasFactory()) {
+                value.setFactory(this.processValue(value.getFactory()));
+            }
+        }
+        // cannot check "instanceof Argument interface"
+        else if (
+            typeof value === 'object' && value !== null &&
+            typeof value['setValues'] === 'function' &&
+            typeof value['getValues'] === 'function'
+        ) {
+            value.setValues(this.processValue(value.getValues()));
+        }
+        else if (typeof value === 'object' && value !== null) {
             Object.keys(value).forEach(key => {
                 if (isRoot) {
                     this.currentId = key;
@@ -34,19 +50,7 @@ export default abstract class AbstractRecursivePassModel implements CompilerPass
             });
         }
 
-        // cannot check "instanceof Argument interface"
-        else if (
-            typeof value === 'object' && value !== null &&
-            typeof value['setValues'] === 'function' &&
-            typeof value['getValues'] === 'function'
-        ) {
-            value.setValues(this.processValue(value.getValues()));
-        }
-        // todo support expression
-        else if (value instanceof ResourceDefinition) {
-            value.setArguments(this.processValue(value.getArguments()));
-            value.setMethodCalls(this.processValue(value.getMethodCalls()));
-        }
+
 
         return value;
     }

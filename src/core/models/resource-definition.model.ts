@@ -71,13 +71,17 @@ export default class ResourceDefinition {
         this.settings = settings;
     }
 
+    hasFactory(): boolean {
+        return Object.keys(this.getFactory()).length > 0;
+    }
+
     setFactory(factory: any) {
         this.factory = factory;
         return this;
     }
 
     getFactory():any {
-        return this.factory;
+        return this.factory || {};
     }
 
     setId(id) {

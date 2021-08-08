@@ -24,7 +24,6 @@ export default abstract class FileLoader extends Publisher implements HandlerInt
 
     match(key: string): boolean {
         const extension = this.getExtension(key);
-        console.log(this.getId(), extension, this.supportedExtensions);
         return this.supportedExtensions.includes(extension);
     }
 

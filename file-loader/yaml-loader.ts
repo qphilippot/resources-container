@@ -9,8 +9,6 @@ export default class YamlLoader extends FileLoader {
 
     load(path: string) {
         const data = super.load(path);
-        // console.log('data', data);
-        // console.log('oo', JSON.stringify(load(data), null, 4));
         return load(data);
     }
 }
