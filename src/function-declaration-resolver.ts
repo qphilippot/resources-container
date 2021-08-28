@@ -25,12 +25,15 @@ export default class FunctionDeclarationResolver {
         const annotationNode = node.typeAnnotation?.typeAnnotation;
         if (annotationNode) {
 
-            console.log('annotationNode', annotationNode);
             switch (annotationNode.type) {
                 case 'TSNumberKeyword':
                     return 'number';
                 case 'TSStringKeyword':
                     return 'string';
+                case 'TSAnyKeyword':
+                    return 'any';
+                case 'TSObjectKeyword':
+                    return 'object';
                 default:
                     return annotationNode.typeName.name
             }
@@ -58,13 +61,6 @@ export default class FunctionDeclarationResolver {
     retrieveDefaultValueFromNode(node) {
         if (node.type === 'ObjectExpression') {
             return this.retrieveValueFromObjectExpression(node);
-            // if (parameterNode.right.properties.length === 0) {
-            //     defaultValue = {};
-            // }
-            //
-            // else {
-            //     console.log(parameterNode.right.properties);
-            // }
         }
 
         else {
@@ -74,14 +70,9 @@ export default class FunctionDeclarationResolver {
     }
 
     retrieveSignature(functionNode) {
-        console.log('function node ===>', functionNode);
-        // const functionNode = this.filterNodes(ast);
-
         const name = functionNode.id?.name;
         let parameters: Array<any> = [];
         let returnType = undefined;
-
-        console.log(functionNode);
 
         functionNode.params.forEach(parameterNode => {
             let type: string = 'unknown';
@@ -89,7 +80,6 @@ export default class FunctionDeclarationResolver {
             let defaultValue: any = undefined;
 
             if (parameterNode.type === 'AssignmentPattern') {
-                console.log(parameterNode);
                 // (left) a = 8 (right)
                 parameterName = parameterNode.left.name;
                 defaultValue = this.retrieveDefaultValueFromNode(parameterNode.right);

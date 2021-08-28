@@ -1,6 +1,6 @@
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
-import FunctionDeclarationResolver from "./function-declaration-resolver";
+import FunctionDeclarationResolver from "../../../src/function-declaration-resolver";
 import fixtures from './function-declaration-resolver.fixtures';
 const parser = new FunctionDeclarationResolver();
 
@@ -47,8 +47,6 @@ describe('Test from fixtures', () => {
 
                 testCase.parameters.forEach((param: FunctionParameterDefinitionInterface) => {
                     let foundParam = parameters[param.name];
-                    console.log(foundParam);
-                    console.log(param);
                     expect(foundParam).to.exist;
                     expect(foundParam.name).to.be.equals(param.name);
                     expect(foundParam.type).to.be.equals(param.type);
@@ -71,52 +69,4 @@ describe('Test from fixtures', () => {
             }
         })
     });
-
-    // it('can parse a simple arrow function', () => {
-    //     const functionNode = parser.generateNode('() => {}');
-    //     const meta = parser.retrieveSignature(functionNode);
-    //     expect(meta).to.exist;
-    //     expect(meta?.name).to.be.undefined;
-    //     expect(meta?.async).to.be.false;
-    //     expect(Array.isArray(meta?.parameters)).to.be.true;
-    //     expect(meta?.parameters.length).to.equals(0);
-    //     expect(meta?.returnType).to.be.undefined;
-    // });
-
-    // it('can parse an async arrow function', () => {
-    //     const functionNode = parser.generateNode('(async () => {})');
-    //     const meta = parser.retrieveSignature(functionNode);
-    //
-    //     expect(meta).to.exist;
-    //     expect(meta?.name).to.be.undefined;
-    //     expect(meta?.async).to.be.true;
-    //     expect(Array.isArray(meta?.parameters)).to.be.true;
-    //     expect(meta?.parameters.length).to.equals(0);
-    //     expect(meta?.returnType).to.be.undefined;
-    // });
-
-    // it('can parse a named function', () => {
-    //     const functionNode = parser.generateNode('');
-    //     const meta = parser.retrieveSignature(functionNode);
-    //
-    //     expect(meta).to.exist;
-    //     expect(meta?.name).to.be.equals('bidule');
-    //     expect(meta?.async).to.be.false;
-    //     expect(Array.isArray(meta?.parameters)).to.be.true;
-    //     expect(meta?.parameters.length).to.equals(0);
-    //     expect(meta?.returnType).to.be.undefined;
-    // });
-
-    // it('can parse a function with 1 param', () => {
-    //     const functionNode = parser.generateNode('function machin(chouette) {}');
-    //     const meta = parser.retrieveSignature(functionNode);
-    //
-    //     console.log(meta);
-    //     expect(meta).to.exist;
-    //     expect(meta?.name).to.be.equals('machin');
-    //     expect(meta?.async).to.be.false;
-    //     expect(Array.isArray(meta?.parameters)).to.be.true;
-    //     expect(meta?.parameters.length).to.equals(1);
-    //     expect(meta?.returnType).to.be.undefined;
-    // });
 })

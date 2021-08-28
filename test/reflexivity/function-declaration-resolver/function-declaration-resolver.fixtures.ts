@@ -1,14 +1,6 @@
 export default [
     {
-        it: 'can parse a simple function',
-        expression: 'function(){}',
-        name: undefined,
-        async: false,
-        parameters: [],
-        returnType: undefined
-    },
-    {
-        it: 'can parse a simple arrow function',
+        it: '() => {}',
         expression: '() => {}',
         name: undefined,
         async: false,
@@ -16,7 +8,7 @@ export default [
         returnType: undefined
     },
     {
-        it: 'can parse an async arrow function',
+        it: 'async () => {}',
         expression: 'async () => {}',
         name: undefined,
         async: true,
@@ -24,7 +16,15 @@ export default [
         returnType: undefined
     },
     {
-        it: 'can parse a named function',
+        it: 'function(){}',
+        expression: 'function(){}',
+        name: undefined,
+        async: false,
+        parameters: [],
+        returnType: undefined
+    },
+    {
+        it: 'function bidule() {}',
         expression: 'function bidule() {}',
         name: 'bidule',
         async: false,
@@ -32,7 +32,7 @@ export default [
         returnType: undefined
     },
     {
-        it: 'can parse a function with 1 param',
+        it: 'function machin(chouette) {}',
         expression: 'function machin(chouette) {}',
         name: 'machin',
         async: false,
@@ -45,7 +45,7 @@ export default [
         returnType: undefined
     },
     {
-        it: 'can parse a function with 1 param and default int value',
+        it: 'function badaboum(truc = 8) {}',
         expression: 'function badaboum(truc = 8) {}',
         name: 'badaboum',
         async: false,
