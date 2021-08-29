@@ -34,6 +34,8 @@ export default class FunctionDeclarationResolver {
                     return 'any';
                 case 'TSObjectKeyword':
                     return 'object';
+                case 'TSUnknownKeyword':
+                    return 'unknown';
                 default:
                     return annotationNode.typeName.name
             }

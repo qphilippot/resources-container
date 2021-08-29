@@ -9,4 +9,8 @@ export default class Tom extends ParentClass {
     whatIsIt(): string {
         return this.carabistouille;
     }
+
+    async doSomethingAsync() {
+        // imagine some async stuff
+    }
 }
