@@ -1,9 +1,9 @@
-import { scan } from 'dree';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import {scan} from 'dree';
+import {readFileSync} from 'fs';
+import {resolve} from 'path';
 import FunctionDeclarationResolver from "./function-declaration-resolver";
 
-import { writeFile } from 'fs';
+import {writeFile} from 'fs';
 
 import * as babelParser from "@babel/parser";
 
@@ -19,7 +19,7 @@ interface generateClassesMetadataOptions {
     path: string,
     exclude?: RegExp | RegExp[],
     debug?: boolean,
-    aliasRules?:  { replace:  string | RegExp, by: string }[],
+    aliasRules?: { replace: string | RegExp, by: string }[],
     extensions?: string[]
 }
 
@@ -35,8 +35,8 @@ export function generateClassesMetadata(
             }
         ],
         extensions = ['ts']
-    } : generateClassesMetadataOptions
-) : Record<string, ClassMetadata> {
+    }: generateClassesMetadataOptions
+): Record<string, ClassMetadata> {
     const classesMetadata: Record<string, ClassMetadata> = {};
     const parser = new FunctionDeclarationResolver();
     scan(
@@ -88,7 +88,7 @@ export function generateClassesMetadata(
                 );
 
                 if (exportDefaultDeclaration?.declaration?.type === 'ClassDeclaration') {
-                    allClassDeclarationNodes = [ exportDefaultDeclaration.declaration ];
+                    allClassDeclarationNodes = [exportDefaultDeclaration.declaration];
                 }
             }
 
@@ -98,7 +98,7 @@ export function generateClassesMetadata(
 
             const classDeclarationNode = allClassDeclarationNodes[0];
 
-            const classMeta : ClassMetadata = {
+            const classMeta: ClassMetadata = {
                 name: classDeclarationNode.id.name,
                 superClass: classDeclarationNode.superClass?.name,
                 implements: [],
@@ -107,51 +107,45 @@ export function generateClassesMetadata(
             };
 
 
-            try {
-                    classDeclarationNode?.implements?.forEach(node => {
-                    if (node.type === 'TSExpressionWithTypeArguments') {
-                        classMeta.implements.push(node?.expression?.name);
-                    }
-                });
+            classDeclarationNode?.implements?.forEach(node => {
+                if (node.type === 'TSExpressionWithTypeArguments') {
+                    classMeta.implements.push(node?.expression?.name);
+                }
+            });
 
-            }
 
-            catch (err) {
-                console.log(element.path);
-                console.log(classDeclarationNode);
-                throw err;
-            }
             classDeclarationNode.body.body.filter(node => node.type === 'ClassMethod').forEach(node => {
                 if (node.kind === 'constructor') {
                     const paramters = parser.retrieveSignature(node).parameters;
                     classMeta.constructor = paramters;
-                }
-
-                else if (node.kind === 'method') {
+                } else if (node.kind === 'method') {
                     const methodMeta = {
                         static: node.static,
                         computed: node.computed,
                         async: node.async,
                         name: node.key.name,
                         parameters: node.params.map(param => {
-                            try {
-                                return {
-                                    name: param.name,
-                                    type: parser.retrieveTypeFromNode(param),
-                                    defaultValue: parser.retrieveDefaultValueFromNode(param)
-                                }
+                            const data = {
+                                name: '',
+                                type: 'unkown',
+                                defaultValue: undefined
+                            };
+
+                            const isAssignmentPattern = param.type === 'AssignmentPattern';
+
+                            data.name = isAssignmentPattern ? param.left.name : param.name;
+                            data.type = parser.retrieveTypeFromNode(param);
+
+                            if (isAssignmentPattern) {
+                                data.defaultValue = parser.retrieveDefaultValueFromNode(param)
                             }
 
-                            catch (err) {
-                                console.log(element.path);
-                                console.log(param);
-                                throw err;
-                            }
 
-                        })
+                            return data;
+                        }),
+                        returnType: node.returnType ? parser.retrieveTypeFromNode(node.returnType) : 'unknown'
                     };
 
-                    // const methodSignature = parser.retrieveSignature(node.body.body);
                     classMeta.methods[methodMeta.name] = methodMeta;
                 }
             });

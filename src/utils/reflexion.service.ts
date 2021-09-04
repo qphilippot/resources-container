@@ -1,4 +1,6 @@
 class ReflexionService {
+    protected meta: Record<string, any> = {};
+
     /**
      * Inspired from: https://davidwalsh.name/javascript-arguments
      * @param func
@@ -24,6 +26,10 @@ class ReflexionService {
         //     // Ensure no undefined values are added.
         //     return arg;
         // });
+    }
+
+    setMetadata(meta: Record<string, any>) {
+        this.meta = meta;
     }
 
     parseFunctionDefinition(functionDefinition: string): Array<string> {

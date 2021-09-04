@@ -1,4 +1,5 @@
 import * as babelParser from "@babel/parser";
+import InvalidArgumentException from "./core/exception/invalid-argument.exception";
 
 export default class FunctionDeclarationResolver {
     private parser;
@@ -21,11 +22,24 @@ export default class FunctionDeclarationResolver {
         return ast.program.body.filter(node => node.type === 'FunctionDeclaration');
     }
 
-    retrieveTypeFromNode(node) {
-        const annotationNode = node.typeAnnotation?.typeAnnotation;
-        if (annotationNode) {
+    retrieveTypeFromNode(givenNode) {
+        let node;
+        if (givenNode.typeAnnotation?.typeAnnotation) {
+            node = givenNode.typeAnnotation?.typeAnnotation;
+        }
 
-            switch (annotationNode.type) {
+        else if (givenNode.type === 'TSTypeAnnotation') {
+            node = givenNode.typeAnnotation;
+        }
+
+        else {
+            node = givenNode
+        }
+
+
+        if (node) {
+
+            switch (node.type) {
                 case 'TSNumberKeyword':
                     return 'number';
                 case 'TSStringKeyword':
@@ -36,8 +50,25 @@ export default class FunctionDeclarationResolver {
                     return 'object';
                 case 'TSUnknownKeyword':
                     return 'unknown';
+                case 'TSBooleanKeyword':
+                case 'BooleanLiteral':
+                    return 'boolean';
+                case 'TSArrayType':
+                    return 'array';
+                case 'TSUndefinedKeyword':
+                    return 'undefined';
+                case 'Identifier':
+                    return 'unknown';
+                case 'ObjectPattern':
+                    return 'object';
+                case 'TSNullKeyword':
+                    return 'null';
+                case 'TSUnionType':
+                    return  node.types.map(node => this.retrieveTypeFromNode(node)).join('|');
+                case 'AssignmentPattern':
+                    return this.retrieveTypeFromNode(node.left);
                 default:
-                    return annotationNode.typeName.name
+                    return node.typeName.name
             }
         }
 
@@ -60,13 +91,17 @@ export default class FunctionDeclarationResolver {
         return value;
     }
 
-    retrieveDefaultValueFromNode(node) {
-        if (node.type === 'ObjectExpression') {
-            return this.retrieveValueFromObjectExpression(node);
+    retrieveDefaultValueFromNode(assignmentNode) {
+        if (assignmentNode.type !== 'AssignmentPattern') {
+            throw new InvalidArgumentException(`An AssignmentPattern is expected but "${assignmentNode.type}" is given`);
+        }
+
+        if (assignmentNode.right.type === 'ObjectExpression') {
+            return this.retrieveValueFromObjectExpression(assignmentNode.right);
         }
 
         else {
-            return  node.value;
+            return  assignmentNode.right.value;
         }
 
     }
@@ -84,7 +119,7 @@ export default class FunctionDeclarationResolver {
             if (parameterNode.type === 'AssignmentPattern') {
                 // (left) a = 8 (right)
                 parameterName = parameterNode.left.name;
-                defaultValue = this.retrieveDefaultValueFromNode(parameterNode.right);
+                defaultValue = this.retrieveDefaultValueFromNode(parameterNode);
                 type = this.retrieveTypeFromNode(parameterNode.left);
 
             }

@@ -4,7 +4,11 @@ import { resolve } from 'path';
 import ContainerBuilder from "./core/container-builder.model";
 import ConfigLoaderManager from "./core/models/config-loader/config-loader.manager";
 import YamlContainerConfigLoader from "./core/models/config-loader/yaml-container-config-loader";
+import { generateClassesMetadata } from "./generate-classes-metadata";
 // const loader = new YamlLoader();
+
+import ReflexionService from "./utils/reflexion.service";
+
 const manager = new ConfigLoaderManager('config-loader-manager');
 const loader = new YamlContainerConfigLoader('yaml-config-loader');
 
@@ -13,11 +17,18 @@ manager.addHandler(loader, 'yaml');
 const container = new ContainerBuilder();
 const filepath = resolve(__dirname, './fixtures/services.yaml');
 // console.log(filepath);
-const content = loader.process({
-    path: filepath,
-    container
+// const content = loader.process({
+//     path: filepath,
+//     container
+// });
+
+const reflexionService = new ReflexionService();
+const meta = generateClassesMetadata({
+    path: "C:\\Users\\Quentin\\resources-container\\src\\core\\models\\config-loader\\yaml-config-loader.ts",
+    debug: true
 });
 
+reflexionService.setMetadata(meta);
 
 // const loader = new YamlLoader();
 // const filepath = resolve(__dirname, './core/models/config-loader/config-loader-manager.subscriptions.yaml');
