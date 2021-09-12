@@ -28,5 +28,7 @@ export default class YamlDefinitionParser {
 
             return shouldReturn ? alias : this.container.setAlias(id, alias);
         }
+
+
     }
 }

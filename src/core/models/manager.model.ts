@@ -22,7 +22,6 @@ export default class Manager extends PublisherSubscriber implements ManagerInter
      * @param {string} obj.path
      */
     process(data) {
-
         const path = data.path;
         const dataForHandlers = this.retrieveDataForHandlers(data);
         const handler = Object.values(this.handlers).find(handler => handler.match(dataForHandlers));

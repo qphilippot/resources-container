@@ -91,7 +91,7 @@ export default class YamlConfigLoader
     private instanceOf = [];
     private isLoadingInstanceOf: boolean = false;
 
-    private definitionParser: YamlDefinitionParser;
+    private definitionParser: YamlDefinitionParser = new YamlDefinitionParser();
 
     constructor(id) {
         super(id);
@@ -354,7 +354,7 @@ export default class YamlConfigLoader
      * @param {ContainerBuilderInterface} obj.container
      */
     process({ path, container }) {
-        this.load(path, container);
+        return this.load(path, container);
     }
 
 

@@ -17,18 +17,20 @@ manager.addHandler(loader, 'yaml');
 const container = new ContainerBuilder();
 const filepath = resolve(__dirname, './fixtures/services.yaml');
 // console.log(filepath);
-// const content = loader.process({
-//     path: filepath,
-//     container
-// });
-
-const reflexionService = new ReflexionService();
-const meta = generateClassesMetadata({
-    path: "C:\\Users\\Quentin\\resources-container\\src\\core\\models\\config-loader\\yaml-config-loader.ts",
-    debug: true
+const content = loader.process({
+    path: filepath,
+    container
 });
 
-reflexionService.setMetadata(meta);
+console.log('content', content);
+
+// const reflexionService = new ReflexionService();
+// const meta = generateClassesMetadata({
+//     path: "C:\\Users\\Quentin\\resources-container\\src\\core\\models\\config-loader\\yaml-config-loader.ts",
+//     debug: true
+// });
+//
+// reflexionService.setMetadata(meta);
 
 // const loader = new YamlLoader();
 // const filepath = resolve(__dirname, './core/models/config-loader/config-loader-manager.subscriptions.yaml');

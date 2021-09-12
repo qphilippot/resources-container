@@ -9,14 +9,15 @@ const flexible = new FlexibleService();
 export default class ResourceDefinition {
     private id: string;
     private type?: InstanceType<any>;
+    private _isAbstract: boolean = false;
     settings: MixedInterface = {};
     arguments: MixedInterface = [];
     properties: Array<any> = [];
     changes: MixedInterface = {};
     calls: Array<any> = [];
     private factory: any;
-    private public: boolean;
-    private tags: MixedInterface;
+    private public: boolean = true;
+    private tags: MixedInterface = {};
     private synthetic: boolean = false;
 
     /**
@@ -97,6 +98,40 @@ export default class ResourceDefinition {
         return typeof this.tags[tag] !== 'undefined';
     }
 
+    /**
+     * @return {object} a shallow copy of tags
+     */
+    getTags(): object {
+        return { ...this.tags };
+    }
+
+    /**
+     * @param {string} name the tag name
+     * @return {any}
+     */
+    getTag(name: string): any {
+        return this.tags[name];
+    }
+
+
+    /**
+     * Adds a tag for this definition.
+     * @return {ResourceDefinition} this
+     */
+    addTag(name: string, value: any = {}): ResourceDefinition {
+        this.tags[name] = value;
+        return this;
+    }
+
+    /**
+     * Sets tags for this definition.
+     * @return {ResourceDefinition} this
+     */
+    setTags(tags: MixedInterface): ResourceDefinition {
+        this.tags = tags;
+        return this;
+    }
+
     setResourceType(type: InstanceType<any>) {
         this.type = type;
         return this;
@@ -129,6 +164,27 @@ export default class ResourceDefinition {
     setArgument(index: number|string, arg: any) {
         this.arguments[index] = arg;
         return this;
+    }
+
+    /**
+     * Whether this definition is abstract, that means it merely serves as a
+     * template for other definitions.
+     *
+     * @return {ResourceDefinition} this
+     */
+    setAbstract(isAbstract: boolean): ResourceDefinition {
+        this._isAbstract = isAbstract;
+        return this;
+    }
+
+    /**
+     * Whether this definition is abstract, that means it merely serves as a
+     * template for other definitions.
+     *
+     * @return bool
+     */
+    public isAbstract(): boolean    {
+        return this._isAbstract;
     }
 
     addArgument(arg: any) {

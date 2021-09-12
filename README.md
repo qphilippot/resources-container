@@ -2,6 +2,8 @@
 ## Autoload
 La possibilité d'autoload les classes et de les enregistrer automatiquement dans le conteneur n'est pas nécessairement une bonne idée. Dans un contexte browser, le module bundler packagera toutes les classes disponibles, même celles qui ne sont pas utilisée par la configuration de build courante (puisqu'on importe toutes les classes, le client les téléchargera toutes). Côté serveur cela est moins pénalisant.
 
+**SAUF** si on autoload toutes les classes et qu'on supprimes les définitions qui ne sont pas utilisées, via une passe de compilation, comme fait Symfony.
+
 ## Workflow
 
 Toutes les instances qui seront générées par le conteneur seront nommées des resources (qu'il s'agisse d'un service, un controller, un personnage dans un jeu-vidéo, peu importe).
