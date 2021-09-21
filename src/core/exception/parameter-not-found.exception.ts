@@ -20,6 +20,13 @@ export default class ParameterNotFoundException extends InvalidArgumentException
         super('parameter not found');
         // Ensure the name of this error is the same as the class name
         this.name = this.constructor.name;
+
+        this.key = key;
+        this.sourceId = sourceId;
+        this.sourceKey = sourceKey;
+        this.alternatives = alternatives;
+        this.nonNestedAlternative = nonNestedAlternative;
+
         // This clips the constructor invocation from the stack trace.
         // It's not absolutely essential, but it does make the stack trace a little nicer.
         //  @see Node.js reference (bottom)
@@ -28,22 +35,22 @@ export default class ParameterNotFoundException extends InvalidArgumentException
     }
 
     updateRepr() {
-        if (typeof this.sourceId !== undefined) {
+        if (typeof this.sourceId !== 'undefined') {
             this.message = `The service "${this.sourceId}" has a dependency on a non-existent parameter "${this.key}".`;
-        } else if (typeof this.sourceKey === 'undefined') {
+        } else if (typeof this.sourceKey !== 'undefined') {
             this.message = `The parameter "${this.sourceKey}" has a dependency on a non-existent parameter "${this.key}".`
         } else {
             this.message = `You have requested a non-existent parameter "${this.key}".`;
         }
 
-        if (this.alternatives) {
+        if (this.alternatives.length > 0) {
             if (this.alternatives.length === 1) {
                 this.message += ' Did you mean this: "';
             } else {
                 this.message += ' Did you mean one of these: "';
             }
 
-            this.message += this.alternatives.join('" , "') + '"?';
+            this.message += this.alternatives.join('", "') + '"?';
         } else if (this.nonNestedAlternative) {
             this.message += ` You cannot access nested array items, do you want to inject "${this.nonNestedAlternative}" instead?`;
         }

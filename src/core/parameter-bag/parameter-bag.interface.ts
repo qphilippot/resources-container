@@ -3,8 +3,7 @@
  */
 import MixedInterface from "../../utils/mixed.interface";
 
-export default interface ParameterBagInterface
-{
+export default interface ParameterBagInterface {
     /**
      * Clears all parameters.
      *
@@ -17,7 +16,7 @@ export default interface ParameterBagInterface
      *
      * @throws LogicException if the parameter can not be added
      */
-     add(parameters: MixedInterface);
+    add(parameters: MixedInterface);
 
     /**
      * Gets the service container parameters.
@@ -44,14 +43,14 @@ export default interface ParameterBagInterface
      *
      * @throws LogicException if the parameter can not be set
      */
-    set(name: string, valu: any);
+    set(name: string, valu: any): ParameterBagInterface     ;
 
     /**
      * Returns true if a parameter name is defined.
      *
      * @return boolean true if the parameter name is defined, false otherwise
      */
-    has(name: string):boolean;
+    has(name: string): boolean;
 
     /**
      * Replaces parameter placeholders (%name%) by their values for all parameters.
@@ -63,19 +62,17 @@ export default interface ParameterBagInterface
      *
      * @throws ParameterNotFoundException if a placeholder references a parameter that does not exist
      */
-    resolveValue($value: MixedInterface);
+    resolveValue($value: MixedInterface, resolving: MixedInterface);
 
     /**
      * Escape parameter placeholders %.
-     *
-     * @return MixedInterface
      */
-    escapeValue(mixed: MixedInterface);
+    escapeValue(mixed: any);
 
     /**
      * Unescape parameter placeholders %.
      *
-     * @return MixedInterface mixed
+     * @return any mixed
      */
-    unescapeValue(mixed: MixedInterface):MixedInterface;
+    unescapeValue(mixed: any): any;
 }
