@@ -28,6 +28,35 @@ class Component implements PublisherSubscriberInterface {
         this.publisherSubscriber = new PublisherSubscriber(this.id);
     }
 
+    hasSubscription(subscriptionId: string): boolean {
+        return this.publisherSubscriber.hasSubscription(subscriptionId);
+    }
+    
+    getSubscriptions(): SubscriptionInterface[] {
+        return this.publisherSubscriber.getSubscriptions();
+    }
+    findSubscriptionsByNotification(notification: string): SubscriptionInterface[] {
+       return this.publisherSubscriber.findSubscriptionsByNotification(notification);
+    }
+    findSubscriptionById(subscriptionId: string): SubscriptionInterface | null {
+       return this.publisherSubscriber.findSubscriptionById(subscriptionId);
+    }
+    is(id: string): boolean {
+       return this.publisherSubscriber.is(id);
+    }
+    unsubscribeFromSubscriptionId(subscriptionId: string) {
+       return this.publisherSubscriber.unsubscribeFromSubscriptionId(subscriptionId);
+    }
+    unsubscribeFromPublisherId(publisherId: string) {
+       return this.publisherSubscriber.unsubscribeFromPublisherId(publisherId);
+    }
+    unsubscribeFromNotification(notification: string) {
+       return this.publisherSubscriber.unsubscribeFromNotification(notification);
+    }
+    findSubscriptionsByNotificationAndPublisherId(notification: string, publisherId: string): SubscriptionInterface[] {
+       return this.publisherSubscriber.findSubscriptionsByNotificationAndPublisherId(notification, publisherId);
+    }
+
     addBehavior(name: string, behavior: Function) {
         this.behavior.add(name, behavior.bind(this));
     }
@@ -41,11 +70,7 @@ class Component implements PublisherSubscriberInterface {
     subscribe(component: PublisherSubscriberInterface, notification: string, handler: Function) {
        this.publisherSubscriber.subscribe(component, notification, handler);
     }
-
-    unsubscribe(selector: MixedInterface) {
-      this.publisherSubscriber.unsubscribe(selector);
-    }
-
+    
     publish(notification: string, data: any) {
         this.publisherSubscriber.publish(notification, data);
     }
@@ -74,12 +99,12 @@ class Component implements PublisherSubscriberInterface {
         return this.publisherSubscriber.getNbSubscriptions();
     }
 
-    removeSubscriber(notification: string, subscription_id: string) {
-        this.publisherSubscriber.removeSubscriber(notification, subscription_id);
+    removeSubscriber(subscription_id: string) {
+        this.publisherSubscriber.removeSubscriber(subscription_id);
     }
 
-    removeSubscription(notification: string, subscription_id: string) {
-        this.publisherSubscriber.removeSubscription(notification, subscription_id);
+    removeSubscription(subscription_id: string) {
+        this.publisherSubscriber.removeSubscription(subscription_id);
     }
 
     waitUntil(notifications: Array<NotificationRecord>): Promise<Array<any>> {

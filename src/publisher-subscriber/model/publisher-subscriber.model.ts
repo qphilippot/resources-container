@@ -19,16 +19,23 @@ class PublisherSubscriber implements PublisherSubscriberInterface {
         this.subscriber = new Subscriber(id);
     }
 
+    hasSubscription(subscriptionId: string): boolean {
+        return (
+            this.subscriber.hasSubscription(subscriptionId) ||
+            this.publisher.hasSubscription(subscriptionId)
+        );
+    }
+
     addSubscriber(notification: string, subscription: SubscriptionInterface) {
-       this.publisher.addSubscriber(notification, subscription);
+        this.publisher.addSubscriber(notification, subscription);
     }
 
     getNbSubscribers(): number {
         return this.publisher.getNbSubscribers();
     }
 
-    removeSubscriber(notification: string, subscription_id: string) {
-        this.publisher.removeSubscriber(notification, subscription_id);
+    removeSubscriber(subscription_id: string) {
+        this.publisher.removeSubscriber(subscription_id);
     }
 
 
@@ -44,16 +51,12 @@ class PublisherSubscriber implements PublisherSubscriberInterface {
         this.subscriber.subscribe(publisher, notification, handler);
     }
 
-    unsubscribe(selector: MixedInterface) {
-        this.subscriber.unsubscribe(selector);
-    }
-
     getNbSubscriptions(): number {
         return this.subscriber.getNbSubscriptions();
     }
 
-    removeSubscription(notification: string, subscription_id: string) {
-        this.subscriber.removeSubscription(notification, subscription_id);
+    removeSubscription(subscription_id: string) {
+        this.subscriber.removeSubscription(subscription_id);
     }
 
     addSubscription(notification: string, subscription: SubscriptionInterface) {
@@ -67,6 +70,43 @@ class PublisherSubscriber implements PublisherSubscriberInterface {
     destroy() {
         this.publisher.destroy();
         this.subscriber.destroy();
+    }
+
+    is(id: string): boolean {
+        return this.id === id;
+    }
+
+    findSubscriptionById(subscriptionId: string): SubscriptionInterface | null {
+        return (
+            this.subscriber.findSubscriptionById(subscriptionId) ||
+            this.publisher.findSubscriptionById(subscriptionId)
+        );
+    }
+
+    findSubscriptionsByNotificationAndPublisherId(notification: string, publisherId: string): SubscriptionInterface[] {
+        return this.subscriber.findSubscriptionsByNotificationAndPublisherId(notification, publisherId);
+    }
+
+    findSubscriptionsByNotification(notification: string): SubscriptionInterface[] {
+        return this.subscriber.findSubscriptionsByNotification(notification).concat(
+            this.publisher.findSubscriptionsByNotification(notification)
+        );
+    }
+
+    getSubscriptions(): SubscriptionInterface[] {
+        return this.subscriber.getSubscriptions().concat(this.publisher.getSubscriptions());
+    }
+
+    unsubscribeFromNotification(notification: string) {
+        this.subscriber.unsubscribeFromNotification(notification);
+    }
+
+    unsubscribeFromPublisherId(publisherId: string) {
+        this.subscriber.unsubscribeFromPublisherId(publisherId);
+    }
+
+    unsubscribeFromSubscriptionId(subscriptionId: string) {
+        this.subscriber.unsubscribeFromSubscriptionId(subscriptionId);
     }
 }
 

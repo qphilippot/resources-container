@@ -1,13 +1,15 @@
 import SubscriptionInterface from "./subscription.interface";
+import IdentifiableInterface from "./identifiable.interface";
+import SubscriptionManagerInterface from "./subscription-manager.interface";
 
-interface PublisherInterface {
+interface PublisherInterface extends SubscriptionManagerInterface {
     getNbSubscribers(): number;
     publish(notification: string, data?: any);
 
     addSubscriber(notification: string, subscription: SubscriptionInterface);
-    removeSubscriber(notification: string, subscription_id: string);
+    removeSubscriber(subscription_id: string);
 
-    getId(): string;
+    hasSubscription(subscriptionId: string): boolean;
     destroy();
 }
 

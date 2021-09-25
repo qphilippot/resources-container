@@ -1,33 +1,51 @@
 import SubscriptionInterface from "../interfaces/subscription.interface";
-import MixedInterface from "../../utils/mixed.interface";
 import SubscriberInterface from "../interfaces/subscriber.interface";
 import PublisherInterface from "../interfaces/publisher.interface";
 import NotificationRecord from "../interfaces/notification-record.interface";
+import SubscriptionManager from "./subscription-manager.model";
+import SubscriptionNotFoundException from "../exception/subscription-not-found.exception";
 
-class Subscriber implements SubscriberInterface {
-    private readonly id: string;
-    private subscriptions: Record<string, Array<SubscriptionInterface>> = {};
-    private nbSubscriptions: number = 0;
+class Subscriber extends SubscriptionManager implements SubscriberInterface {
+    unsubscribeFromSubscriptionId(subscriptionId: string) {
+        const subscription = this.findSubscriptionById(subscriptionId);
 
-    constructor(id) {
-        this.id = id;
+        if (subscription === null) {
+            throw new SubscriptionNotFoundException(subscriptionId, this.getId());
+        }
+
+        subscription.unsubscribe();
     }
 
-    public getId(): string {
-        return this.id;
+    unsubscribeFromPublisherId(publisherId: string) {
+        const subscriptions = this.getSubscriptions().filter(subscription => {
+            return subscription.publisher_id === publisherId;
+        });
+
+        const unsubscribesCallback = subscriptions.map(subscription => subscription.unsubscribe);
+        unsubscribesCallback.forEach(callback => {
+            callback();
+        });
+    }
+
+    unsubscribeFromNotification(notification: string) {
+        const subscriptions = this.findSubscriptionsByNotification(notification);
+        const unsubscribesCallback = subscriptions.map(subscription => subscription.unsubscribe);
+        unsubscribesCallback.forEach(callback => {
+            callback();
+        });
     }
 
     subscribe(publisher: PublisherInterface, notification: string, handler: Function) {
         const nbSubscriptions = this.getNbSubscriptions();
+        const subscription_id =  `sub_${this.getId()}_to_${publisher.getId()}_salt_${nbSubscriptions}`;
 
-        const subscription_id =  `sub_${this.id}_to_${publisher.getId()}_salt_${nbSubscriptions}`;
         const subscription: SubscriptionInterface = {
             id: subscription_id,
-            subscriber_id: this.id,
+            subscriber_id: this.getId(),
             publisher_id: publisher.getId(),
             unsubscribe: () => {
-                publisher.removeSubscriber(notification, subscription_id);
-                this.removeSubscription(notification, subscription_id);
+                publisher.removeSubscriber(subscription_id);
+                this.removeSubscription(subscription_id);
             },
             handler
         };
@@ -36,80 +54,29 @@ class Subscriber implements SubscriberInterface {
         publisher.addSubscriber(notification, subscription);
     }
 
-    unsubscribe(selector: MixedInterface) {
-        if (typeof selector.notification === 'string') {
-            selector.notification = [ selector.notification ];
-        }
-
-        if (Array.isArray(selector.notification)) {
-            selector.notification.forEach(notification => {
-                const subscriptions = this.getSubscriptionsByNotificationName(notification);
-                const unsubscribesCallback = subscriptions.map(subscription => subscription.unsubscribe);
-                unsubscribesCallback.forEach(callback => {
-                    callback();
-                });
-            });
-        }
-    }
-
-    destroy() {
-        Object.values(this.subscriptions).forEach(subscriptionsType => {
-            subscriptionsType.forEach(
-                (subscription: SubscriptionInterface) => subscription.unsubscribe()
-            )
-        });
-    }
-
+    // unsubscribe(selector: MixedInterface) {
+    //     if (typeof selector.notification === 'string') {
+    //         selector.notification = [ selector.notification ];
+    //     }
+    //
+    //     if (Array.isArray(selector.notification)) {
+    //         selector.notification.forEach(notification => {
+    //
+    //         });
+    //     }
+    // }
+    //
 
     getNbSubscriptions(): number {
-        return this.nbSubscriptions;
+        return this.nbSubscriptionRecorded;
     }
 
-    getSubscriptionsByNotificationName(notification: string): Array<SubscriptionInterface> {
-        return this.subscriptions[notification] || [];
-    }
-
-    removeSubscription(notification: string, subscription_id: string) {
-        const subscriptions = this.subscriptions[notification];
-        let subscriptionIndex = -1;
-
-        if (Array.isArray(subscriptions)) {
-            subscriptionIndex = subscriptions.findIndex(
-                (recordedSubscription: SubscriptionInterface) => {
-                    return recordedSubscription.id = subscription_id;
-                }
-            );
-
-            if (subscriptionIndex >= 0) {
-                const removedSubscription: SubscriptionInterface = subscriptions.splice(subscriptionIndex, 1)[0];
-                // callback may contains some references to existing objects.
-                // by deleting reference to this function, all reference into function will be destroyed
-                // it could prevent some memory leaks
-                // delete removedSubscription.unsubscribe;
-
-                if (this.subscriptions[notification].length === 0) {
-                    delete this.subscriptions[notification];
-                }
-
-                this.nbSubscriptions--;
-            }
-        }
+    removeSubscription(subscription_id: string) {
+        this.clearSubscription(subscription_id);
     }
 
     addSubscription(notification: string, subscription: SubscriptionInterface) {
-        if (Array.isArray(this.subscriptions[notification]) !== true) {
-            this.subscriptions[notification] = [];
-        }
-
-        const potentialDoublon = this.subscriptions[notification].find(candidate => candidate.id === subscription.id);
-        if (typeof potentialDoublon === 'undefined') {
-            this.subscriptions[notification].push(subscription);
-            this.nbSubscriptions++;
-        }
-
-        else {
-            throw `Unable to add subscription. A subscription with same id found`;
-        }
+        this.bindSubscriptionToNotification(notification, subscription);
     }
 
     // todo implement a "unsubscribeById" method
@@ -136,6 +103,13 @@ class Subscriber implements SubscriberInterface {
 
                 resolve(data);
             });
+        });
+    }
+
+    findSubscriptionsByNotificationAndPublisherId(notification: string, publisherId: string): SubscriptionInterface[] {
+        const subscriptions = this.findSubscriptionsByNotification(notification);
+        return subscriptions.filter(subscription => {
+            subscription.publisher_id === publisherId
         });
     }
 }
