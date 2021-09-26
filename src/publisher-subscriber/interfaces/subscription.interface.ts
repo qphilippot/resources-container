@@ -6,4 +6,5 @@ interface SubscriptionInterface {
     unsubscribe: Function;
 }
 
+
 export default SubscriptionInterface;

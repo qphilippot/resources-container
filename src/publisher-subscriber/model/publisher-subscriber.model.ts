@@ -1,11 +1,11 @@
 import PublisherSubscriberInterface from "../interfaces/publisher-subscriber.interface";
 import SubscriptionInterface from "../interfaces/subscription.interface";
-import MixedInterface from "../../utils/mixed.interface";
 import PublisherInterface from "../interfaces/publisher.interface";
 import Publisher from "./publisher.model";
 import Subscriber from "./subscriber.model";
 import SubscriberInterface from "../interfaces/subscriber.interface";
 import NotificationRecord from "../interfaces/notification-record.interface";
+import {findSubscriptionByRoleAndComponentId, ROLE} from "../helper/subscription-manager.helper";
 
 class PublisherSubscriber implements PublisherSubscriberInterface {
     private readonly id: string;
@@ -107,6 +107,54 @@ class PublisherSubscriber implements PublisherSubscriberInterface {
 
     unsubscribeFromSubscriptionId(subscriptionId: string) {
         this.subscriber.unsubscribeFromSubscriptionId(subscriptionId);
+    }
+
+    continuePublicationOnException() {
+        this.publisher.continuePublicationOnException();
+    }
+
+    findSubscriptionByPublisherId(publisherId: string): SubscriptionInterface[] {
+        const subscriptions = this.subscriber.findSubscriptionByPublisherId(publisherId).concat(
+            findSubscriptionByRoleAndComponentId(
+                this.publisher,
+                ROLE.PUBLISHER_ID,
+                publisherId
+            )
+        );
+
+        if (publisherId === this.getId()) {
+            return Array.from(new Set(subscriptions));
+        }
+
+        // Cause a PubSub can subscribe to itself, we have to dedupe the following subscriptions
+        return subscriptions;
+    }
+
+
+    findSubscriptionsByNotificationAndSubscriberId(notification: string, subscriberId: string): SubscriptionInterface[] {
+        return this.publisher.findSubscriptionsByNotificationAndSubscriberId(notification, subscriberId);
+    }
+
+    findSubscriptionBySubscriberId(subscriberId: string): SubscriptionInterface[] {
+        const subscriptions = this.publisher.findSubscriptionBySubscriberId(subscriberId).concat(
+            findSubscriptionByRoleAndComponentId(
+                this.subscriber,
+                ROLE.SUBSCRIBER_ID,
+                subscriberId
+            )
+        );
+
+
+        if (subscriberId === this.getId()) {
+            return Array.from(new Set(subscriptions));
+        }
+
+        // Cause a PubSub can subscribe to itself, we have to dedupe the following subscriptions
+        return subscriptions;
+    }
+
+    stopPublicationOnException() {
+        this.publisher.stopPublicationOnException();
     }
 }
 

@@ -9,7 +9,7 @@ interface SubscriberInterface extends SubscriptionManagerInterface {
     unsubscribeFromSubscriptionId(subscriptionId: string);
     unsubscribeFromPublisherId(publisherId: string);
     unsubscribeFromNotification(notification: string);
-
+    findSubscriptionByPublisherId(publisherId: string): SubscriptionInterface[];
     getNbSubscriptions(): number;
 
     addSubscription(notification: string, subscription: SubscriptionInterface);

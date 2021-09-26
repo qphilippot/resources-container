@@ -134,30 +134,198 @@ describe('PubSub test suite', () => {
 
 
     describe('retrieve subscription behavior', () => {
-       it('find subscription by notification', () => {
-           const s1 = new Subscriber('s1');
-           const s2 = new Subscriber('s2');
-           const p = new Publisher('p');
+        it('find subscription by notification', () => {
+            const s1 = new Subscriber('s1');
+            const s2 = new Subscriber('s2');
+            const p = new Publisher('p');
 
-           s1.subscribe(p, 'foo', () =>{});
-           s2.subscribe(p, 'foo', () => {});
-           s2.subscribe(p, 'bar', () => {});
-
-           const s1Foo = s1.findSubscriptionsByNotification('foo');
-           const s1Bar = s1.findSubscriptionsByNotification('bar');
-           expect(JSON.stringify(s1Foo)).to.equals('[{"id":"sub_s1_to_p_salt_0","subscriber_id":"s1","publisher_id":"p"}]');
-           expect(JSON.stringify(s1Bar)).to.equals('[]');
-           const s2Foo = s2.findSubscriptionsByNotification('foo');
-           const s2Bar = s2.findSubscriptionsByNotification('bar');
-           expect(JSON.stringify(s2Foo)).to.equals('[{"id":"sub_s2_to_p_salt_0","subscriber_id":"s2","publisher_id":"p"}]');
-           expect(JSON.stringify(s2Bar)).to.equals('[{"id":"sub_s2_to_p_salt_1","subscriber_id":"s2","publisher_id":"p"}]');
+            s1.subscribe(p, 'foo', () => {
+            });
+            s2.subscribe(p, 'foo', () => {
+            });
+            s2.subscribe(p, 'bar', () => {
+            });
 
 
-           const pFoo = p.findSubscriptionsByNotification('foo');
-           const pBar = p.findSubscriptionsByNotification('bar');
-           expect(JSON.stringify(pFoo)).to.equals('[{"id":"sub_s1_to_p_salt_0","subscriber_id":"s1","publisher_id":"p"},{"id":"sub_s2_to_p_salt_0","subscriber_id":"s2","publisher_id":"p"}]');
-           expect(JSON.stringify(pBar)).to.equals('[{"id":"sub_s2_to_p_salt_1","subscriber_id":"s2","publisher_id":"p"}]');
-       }) ;
+            const s1Foo = s1.findSubscriptionsByNotification('foo');
+            const s1Bar = s1.findSubscriptionsByNotification('bar');
+            expect(JSON.stringify(s1Foo)).to.equals('[{"id":"sub_s1_to_p_salt_0","subscriber_id":"s1","publisher_id":"p"}]');
+            expect(JSON.stringify(s1Bar)).to.equals('[]');
+            const s2Foo = s2.findSubscriptionsByNotification('foo');
+            const s2Bar = s2.findSubscriptionsByNotification('bar');
+            expect(JSON.stringify(s2Foo)).to.equals('[{"id":"sub_s2_to_p_salt_0","subscriber_id":"s2","publisher_id":"p"}]');
+            expect(JSON.stringify(s2Bar)).to.equals('[{"id":"sub_s2_to_p_salt_1","subscriber_id":"s2","publisher_id":"p"}]');
+
+
+            const pFoo = p.findSubscriptionsByNotification('foo');
+            const pBar = p.findSubscriptionsByNotification('bar');
+            expect(JSON.stringify(pFoo)).to.equals('[{"id":"sub_s1_to_p_salt_0","subscriber_id":"s1","publisher_id":"p"},{"id":"sub_s2_to_p_salt_0","subscriber_id":"s2","publisher_id":"p"}]');
+            expect(JSON.stringify(pBar)).to.equals('[{"id":"sub_s2_to_p_salt_1","subscriber_id":"s2","publisher_id":"p"}]');
+        });
+        it('return empty array if unknown notification is used with findSubscriptionByNotification', () => {
+            const subscription = new Subscriber('subscription');
+            const publisher = new Publisher('publisher');
+            const pubsub = new PublisherSubscriber('pubsub');
+
+            expect(JSON.stringify(subscription.findSubscriptionsByNotification('nope'))).to.equals('[]');
+            expect(JSON.stringify(publisher.findSubscriptionsByNotification('nope'))).to.equals('[]');
+            expect(JSON.stringify(pubsub.findSubscriptionsByNotification('nope'))).to.equals('[]');
+        });
+        it('find subscription by publisher_id', () => {
+            const p1 = new Publisher('p1');
+            const p2 = new Publisher('p2');
+
+            const subscriber = new Subscriber('subscriber');
+
+            const pubsub = new PublisherSubscriber('pubsub')
+
+            subscriber.subscribe(p1, 'foo', () => {
+            });
+            subscriber.subscribe(p1, 'bar', () => {
+            });
+            subscriber.subscribe(p2, 'foo', () => {
+            });
+            subscriber.subscribe(p2, 'bar', () => {
+            });
+
+            expect(JSON.stringify(subscriber.findSubscriptionByPublisherId('nope'))).to.equals('[]');
+            expect(JSON.stringify(subscriber.findSubscriptionByPublisherId('p1'))).to.equals('[{"id":"sub_subscriber_to_p1_salt_0","subscriber_id":"subscriber","publisher_id":"p1"},{"id":"sub_subscriber_to_p1_salt_1","subscriber_id":"subscriber","publisher_id":"p1"}]');
+            expect(JSON.stringify(subscriber.findSubscriptionByPublisherId('p2'))).to.equals('[{"id":"sub_subscriber_to_p2_salt_2","subscriber_id":"subscriber","publisher_id":"p2"},{"id":"sub_subscriber_to_p2_salt_3","subscriber_id":"subscriber","publisher_id":"p2"}]');
+
+            pubsub.subscribe(p1, 'foo', () => {
+            });
+            expect(JSON.stringify(pubsub.findSubscriptionByPublisherId('p1'))).to.equals('[{"id":"sub_pubsub_to_p1_salt_0","subscriber_id":"pubsub","publisher_id":"p1"}]');
+
+            pubsub.subscribe(p2, 'foo', () => {
+            });
+            expect(JSON.stringify(pubsub.findSubscriptionByPublisherId('p2'))).to.equals('[{"id":"sub_pubsub_to_p2_salt_1","subscriber_id":"pubsub","publisher_id":"p2"}]');
+
+            pubsub.subscribe(pubsub, 'loop', () => {
+            });
+            expect(JSON.stringify(pubsub.findSubscriptionByPublisherId('pubsub'))).to.equals('[{"id":"sub_pubsub_to_pubsub_salt_2","subscriber_id":"pubsub","publisher_id":"pubsub"}]');
+
+            subscriber.subscribe(pubsub, 'toto', () => {
+            });
+            expect(JSON.stringify(subscriber.findSubscriptionByPublisherId('pubsub'))).to.equals('[{"id":"sub_subscriber_to_pubsub_salt_4","subscriber_id":"subscriber","publisher_id":"pubsub"}]');
+        });
+        it('return empty array if unknown publisher_id is used with findSubscriptionByPublisherId', () => {
+            const subscription = new Subscriber('subscription');
+            const pubsub = new PublisherSubscriber('pubsub');
+
+            expect(JSON.stringify(subscription.findSubscriptionByPublisherId('nope'))).to.equals('[]');
+            expect(JSON.stringify(pubsub.findSubscriptionByPublisherId('nope'))).to.equals('[]');
+        });
+        it('find subscriptions by notification and publisher_id', () => {
+            const s1 = new Subscriber('s1');
+            const s2 = new Subscriber('s2');
+            const p = new Publisher('p');
+            const p2 = new Publisher('p2');
+
+            s1.subscribe(p, 'foo', () => {});
+            s2.subscribe(p, 'foo', () => {});
+            s2.subscribe(p, 'bar', () => {});
+            s2.subscribe(p2, 'toto', () => {});
+
+            const s1Foo = s1.findSubscriptionsByNotificationAndPublisherId('foo', 'p');
+            const s1Bar = s1.findSubscriptionsByNotificationAndPublisherId('bar', 'p');
+            expect(JSON.stringify(s1Foo)).to.equals('[{"id":"sub_s1_to_p_salt_0","subscriber_id":"s1","publisher_id":"p"}]');
+            expect(JSON.stringify(s1Bar)).to.equals('[]');
+            const s2Foo = s2.findSubscriptionsByNotificationAndPublisherId('foo', 'p');
+            const s2Bar = s2.findSubscriptionsByNotificationAndPublisherId('bar', 'p');
+            expect(JSON.stringify(s2Foo)).to.equals('[{"id":"sub_s2_to_p_salt_0","subscriber_id":"s2","publisher_id":"p"}]');
+            expect(JSON.stringify(s2Bar)).to.equals('[{"id":"sub_s2_to_p_salt_1","subscriber_id":"s2","publisher_id":"p"}]');
+
+            const s2TotoP = s2.findSubscriptionsByNotificationAndPublisherId('toto', 'p');
+            const s2TotoP2 = s2.findSubscriptionsByNotificationAndPublisherId('toto', 'p2');
+
+            expect(JSON.stringify(s2TotoP)).to.equals('[]');
+            expect(JSON.stringify(s2TotoP2)).to.equals('[{"id":"sub_s2_to_p2_salt_2","subscriber_id":"s2","publisher_id":"p2"}]');
+        });
+        it('find subscriptions by notification and subscriber_id', () => {
+            const s1 = new Subscriber('s1');
+            const s2 = new Subscriber('s2');
+            const p = new Publisher('p');
+            const p2 = new Publisher('p2');
+
+            s1.subscribe(p, 'foo', () => {});
+            s2.subscribe(p2, 'foo', () => {});
+            s2.subscribe(p2, 'bar', () => {});
+
+            const pFoo = p.findSubscriptionsByNotificationAndSubscriberId('foo', 's1');
+            const pBar = p.findSubscriptionsByNotificationAndSubscriberId('bar', 's1');
+
+            expect(JSON.stringify(pFoo)).to.equals('[{"id":"sub_s1_to_p_salt_0","subscriber_id":"s1","publisher_id":"p"}]');
+            expect(JSON.stringify(pBar)).to.equals('[]');
+
+            const p2Foo = p2.findSubscriptionsByNotificationAndSubscriberId('foo', 's2');
+            const p2BarS1 = p2.findSubscriptionsByNotificationAndSubscriberId('bar', 's1');
+            const p2BarS2 = p2.findSubscriptionsByNotificationAndSubscriberId('bar', 's2');
+
+            expect(JSON.stringify(p2Foo)).to.equals('[{"id":"sub_s2_to_p2_salt_0","subscriber_id":"s2","publisher_id":"p2"}]');
+            expect(JSON.stringify(p2BarS1)).to.equals('[]');
+            expect(JSON.stringify(p2BarS2)).to.equals('[{"id":"sub_s2_to_p2_salt_1","subscriber_id":"s2","publisher_id":"p2"}]');
+        });
+        it('find subscription by subscriber_id', () => {
+            const p1 = new Publisher('p1');
+            const p2 = new Publisher('p2');
+
+            const subscriber = new Subscriber('subscriber');
+
+            const pubsub = new PublisherSubscriber('pubsub')
+
+            subscriber.subscribe(p1, 'foo', () => {
+            });
+            subscriber.subscribe(p1, 'bar', () => {
+            });
+            subscriber.subscribe(p2, 'foo', () => {
+            });
+            subscriber.subscribe(p2, 'bar', () => {
+            });
+
+            expect(JSON.stringify(p1.findSubscriptionBySubscriberId('nope'))).to.equals('[]');
+
+            expect(JSON.stringify(p1.findSubscriptionBySubscriberId('subscriber'))).to.equals('[{"id":"sub_subscriber_to_p1_salt_0","subscriber_id":"subscriber","publisher_id":"p1"},{"id":"sub_subscriber_to_p1_salt_1","subscriber_id":"subscriber","publisher_id":"p1"}]');
+            expect(JSON.stringify(p2.findSubscriptionBySubscriberId('subscriber'))).to.equals('[{"id":"sub_subscriber_to_p2_salt_2","subscriber_id":"subscriber","publisher_id":"p2"},{"id":"sub_subscriber_to_p2_salt_3","subscriber_id":"subscriber","publisher_id":"p2"}]');
+
+            subscriber.subscribe(pubsub, 'foo', () => {
+            });
+            expect(JSON.stringify(pubsub.findSubscriptionBySubscriberId('subscriber'))).to.equals('[{"id":"sub_subscriber_to_pubsub_salt_4","subscriber_id":"subscriber","publisher_id":"pubsub"}]');
+
+            pubsub.subscribe(p2, 'foo', () => {
+            });
+            expect(JSON.stringify(p2.findSubscriptionBySubscriberId('pubsub'))).to.equals('[{"id":"sub_pubsub_to_p2_salt_0","subscriber_id":"pubsub","publisher_id":"p2"}]');
+
+            pubsub.subscribe(pubsub, 'loop', () => {
+            });
+            expect(JSON.stringify(pubsub.findSubscriptionBySubscriberId('pubsub'))).to.equals('[{"id":"sub_pubsub_to_pubsub_salt_1","subscriber_id":"pubsub","publisher_id":"pubsub"},{"id":"sub_pubsub_to_p2_salt_0","subscriber_id":"pubsub","publisher_id":"p2"}]');
+        });
+        it('return empty array if unknown subscriber_id is used with findSubscriptionBySubscriberId', () => {
+            const publisher = new Publisher('publisher');
+            const pubsub = new PublisherSubscriber('pubsub');
+
+            expect(JSON.stringify(pubsub.findSubscriptionBySubscriberId('nope'))).to.equals('[]');
+            expect(JSON.stringify(pubsub.findSubscriptionBySubscriberId('nope'))).to.equals('[]');
+        });
+        it('find subscription by subscription_id', () => {
+            const subscriber = new Subscriber('subscriber');
+            const publisher = new Publisher('publisher')
+
+            subscriber.subscribe(publisher, 'foo', () => {
+            });
+            const subscription = subscriber.getSubscriptions()[0];
+
+            expect(subscriber.findSubscriptionById(subscription.id)).to.equals(subscription);
+            expect(publisher.findSubscriptionById(subscription.id)).to.equals(subscription);
+        });
+        it('returns null when we an unknown subscription is required by subscription_id', () => {
+            const subscriber = new Subscriber('subscriber');
+            const publisher = new Publisher('publisher')
+            const pubsub = new PublisherSubscriber('publisher')
+
+            expect(subscriber.findSubscriptionById('missing')).to.equals(null);
+            expect(publisher.findSubscriptionById('missing')).to.equals(null);
+            expect(pubsub.findSubscriptionById('missing')).to.equals(null);
+        });
     });
 
     describe('unsubscription behavior', () => {
@@ -233,7 +401,8 @@ describe('PubSub test suite', () => {
             );
 
             const publisher = new Publisher('bar');
-            subscriber.subscribe(publisher, 'foo', () => {});
+            subscriber.subscribe(publisher, 'foo', () => {
+            });
 
             expect(subscriber.unsubscribeFromSubscriptionId.bind(subscriber, 'foo')).to.throw(
                 SubscriptionNotFoundException,

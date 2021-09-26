@@ -4,6 +4,7 @@ import PublisherInterface from "../interfaces/publisher.interface";
 import NotificationRecord from "../interfaces/notification-record.interface";
 import SubscriptionManager from "./subscription-manager.model";
 import SubscriptionNotFoundException from "../exception/subscription-not-found.exception";
+import {findSubscriptionByRoleAndComponentId, ROLE} from "../helper/subscription-manager.helper";
 
 class Subscriber extends SubscriptionManager implements SubscriberInterface {
     unsubscribeFromSubscriptionId(subscriptionId: string) {
@@ -16,10 +17,17 @@ class Subscriber extends SubscriptionManager implements SubscriberInterface {
         subscription.unsubscribe();
     }
 
+
+    findSubscriptionByPublisherId(publisherId: string): SubscriptionInterface[] {
+        return findSubscriptionByRoleAndComponentId(
+            this,
+            ROLE.PUBLISHER_ID,
+            publisherId
+        );
+    }
+
     unsubscribeFromPublisherId(publisherId: string) {
-        const subscriptions = this.getSubscriptions().filter(subscription => {
-            return subscription.publisher_id === publisherId;
-        });
+        const subscriptions = this.findSubscriptionByPublisherId(publisherId);
 
         const unsubscribesCallback = subscriptions.map(subscription => subscription.unsubscribe);
         unsubscribesCallback.forEach(callback => {
@@ -108,8 +116,9 @@ class Subscriber extends SubscriptionManager implements SubscriberInterface {
 
     findSubscriptionsByNotificationAndPublisherId(notification: string, publisherId: string): SubscriptionInterface[] {
         const subscriptions = this.findSubscriptionsByNotification(notification);
+
         return subscriptions.filter(subscription => {
-            subscription.publisher_id === publisherId
+            return subscription.publisher_id === publisherId
         });
     }
 }

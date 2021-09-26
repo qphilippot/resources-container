@@ -62,7 +62,6 @@ export default class SubscriptionManager implements SubscriptionManagerInterface
         else {
             return this.notificationsCollection[subscriptionIndex.notification][subscriptionIndex.index];
         }
-
     }
 
     findSubscriptionsByNotification(notification: string): Array<SubscriptionInterface> {
@@ -103,7 +102,6 @@ export default class SubscriptionManager implements SubscriptionManagerInterface
         if (Array.isArray(this.notificationsCollection[notification]) !== true) {
             this.notificationsCollection[notification] = [];
         }
-
 
         if (!this.hasSubscription(subscription.id)) {
             this.notificationsCollection[notification].push(subscription);

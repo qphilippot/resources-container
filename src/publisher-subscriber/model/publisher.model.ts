@@ -1,11 +1,22 @@
 import SubscriptionInterface from "../interfaces/subscription.interface";
 import PublisherInterface from "../interfaces/publisher.interface";
 import SubscriptionManager from "./subscription-manager.model";
+import {findSubscriptionByRoleAndComponentId, ROLE} from "../helper/subscription-manager.helper";
 
 class Publisher extends SubscriptionManager implements PublisherInterface {
+    private shouldIStopPublicationOnException: boolean = false;
 
     addSubscriber(notification: string, subscription: SubscriptionInterface) {
         return this.bindSubscriptionToNotification(notification, subscription);
+    }
+
+    stopPublicationOnException() {
+        this.shouldIStopPublicationOnException = true;
+    }
+
+
+    continuePublicationOnException() {
+        this.shouldIStopPublicationOnException = false;
     }
 
     getNbSubscribers(): number {
@@ -13,7 +24,7 @@ class Publisher extends SubscriptionManager implements PublisherInterface {
     }
 
     removeSubscriber(subscription_id: string) {
-      this.clearSubscription(subscription_id);
+        this.clearSubscription(subscription_id);
     }
 
     publish(notification: string, data?: any) {
@@ -23,10 +34,31 @@ class Publisher extends SubscriptionManager implements PublisherInterface {
             // shallow copy in order to avoid iteration on modifiable collection
             subscriptions.slice(0).forEach(
                 (subscription: SubscriptionInterface) => {
-                    subscription.handler(data);
+                    try {
+                        subscription.handler(data);
+                    }
+                    catch (error) {
+                        if (this.shouldIStopPublicationOnException) {
+                            throw error;
+                        }
+                    }
                 }
             );
         }
+    }
+
+    findSubscriptionBySubscriberId(subscriberId: string): SubscriptionInterface[] {
+        return findSubscriptionByRoleAndComponentId(
+            this,
+            ROLE.SUBSCRIBER_ID,
+            subscriberId
+        );
+    }
+
+    findSubscriptionsByNotificationAndSubscriberId(notification: string, subscriberId: string): SubscriptionInterface[] {
+        return this.findSubscriptionsByNotification(notification).filter(subscription => {
+            return subscription.subscriber_id === subscriberId;
+        })
     }
 }
 
