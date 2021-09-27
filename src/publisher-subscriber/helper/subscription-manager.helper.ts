@@ -7,7 +7,7 @@ export function findSubscriptionByRoleAndComponentId(
 ) {
     if (role !== ROLE.PUBLISHER_ID && role !== ROLE.SUBSCRIBER_ID) {
         throw new InvalidArgumentException(
-            `Invalid argument given for "role" in "findSubscriptionByRoleAndComponentId". Values expected are "publisher_id" or "subscriber_id" but "${role} was given".`
+            `Invalid argument given for "role" in "findSubscriptionByRoleAndComponentId". Values expected are "publisher_id" or "subscriber_id" but "${role}" was given.`
         );
     }
 

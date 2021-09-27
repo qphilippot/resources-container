@@ -6,6 +6,8 @@ import Subscriber from "../model/subscriber.model";
 import SubscriptionAlreadyExistsException from "../exception/subscription-already-exists.exception";
 import SubscriptionInterface from "../interfaces/subscription.interface";
 import SubscriptionNotFoundException from "../exception/subscription-not-found.exception";
+import {findSubscriptionByRoleAndComponentId} from "../helper/subscription-manager.helper";
+import InvalidArgumentException from "../../core/exception/invalid-argument.exception";
 
 const Message = {
     INVALID_SUBSCRIBER_NUMBER: 'invalid number of subscribers',
@@ -131,7 +133,6 @@ describe('PubSub test suite', () => {
             expect(barCounter).to.equals(1);
         });
     });
-
 
     describe('retrieve subscription behavior', () => {
         it('find subscription by notification', () => {
@@ -429,8 +430,6 @@ describe('PubSub test suite', () => {
 
             const subscriptionInterfaces = subscriber.findSubscriptionsByNotification('foo');
 
-            console.log("==>", subscriptionInterfaces);
-
             expect(publisher.addSubscriber.bind(publisher, 'foo', subscriptionInterfaces[0])).to.throw(
                 SubscriptionAlreadyExistsException,
                 'Unable to add subscription "sub_subscriber_to_publisher_salt_0" to component "publisher" because it already manage a subscription with same id.'
@@ -463,6 +462,22 @@ describe('PubSub test suite', () => {
             expect(publisher.getNbSubscriptions()).to.equals(0, Message.INVALID_SUBSCRIPTION_NUMBER);
             expect(publisher.getNbSubscribers()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
         })
+    });
+
+    describe('Additionnal tests on subscription-manager.helper', () => {
+        it('findSubscriptionByRoleAndComponentId throws an exception with invalid role', () => {
+            const pubsub = new PublisherSubscriber('foo');
+
+            expect(findSubscriptionByRoleAndComponentId.bind(
+                this,
+                pubsub,
+                'invalid_role',
+                'nevermind'
+            )).to.throw(
+                InvalidArgumentException,
+                'Invalid argument given for "role" in "findSubscriptionByRoleAndComponentId". Values expected are "publisher_id" or "subscriber_id" but "invalid_role" was given.'
+            );
+        });
     });
 
 });
