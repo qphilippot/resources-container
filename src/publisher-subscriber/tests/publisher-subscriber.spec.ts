@@ -15,7 +15,6 @@ const Message = {
 };
 
 describe('PubSub test suite', () => {
-
     describe('Subscription behavior', () => {
         it('increase subscription counter when adding new subscription', () => {
             let publisher = new Publisher('publisher');
@@ -133,7 +132,6 @@ describe('PubSub test suite', () => {
             expect(barCounter).to.equals(1);
         });
     });
-
     describe('retrieve subscription behavior', () => {
         it('find subscription by notification', () => {
             const s1 = new Subscriber('s1');
@@ -328,7 +326,6 @@ describe('PubSub test suite', () => {
             expect(pubsub.findSubscriptionById('missing')).to.equals(null);
         });
     });
-
     describe('unsubscription behavior', () => {
         it('can unsubscribe by subscription id', () => {
             let publisher = new Publisher('publisher');
@@ -415,11 +412,87 @@ describe('PubSub test suite', () => {
 
         });
     });
-
     describe('Publishing workflow', () => {
+        it('handle subscription list as a fifo as default', () => {
+            const publisher = new Publisher('publisher');
+            const subscribar = new Subscriber('subscribar');
+            const subscriboo = new Subscriber('subscriboo');
 
+            let trace = '';
+
+            subscribar.subscribe(publisher, 'foo', () => {
+                trace += 'a';
+            });
+
+            subscriboo.subscribe(publisher, 'foo', () => {
+                trace += 'b';
+            });
+
+            publisher.publish('foo');
+
+            expect(trace).to.equals('ab');
+        });
+        it('publication continues if one subscriber handler throw an error by default', () => {
+            const publisher = new Publisher('publisher');
+            const subscribar = new Subscriber('subscribar');
+            const subscriboo = new Subscriber('subscriboo');
+
+            let triggered = false;
+
+            subscribar.subscribe(publisher, 'foo', () => {
+                throw new Error();
+            });
+
+            subscriboo.subscribe(publisher, 'foo', () => {
+                triggered = true;
+            });
+
+            publisher.publish('foo');
+
+            expect(triggered).to.be.true;
+        });
+        it('stop or remain publication workflow using stopPublicationOnException and continuePublicationOnException', () => {
+            const publisher = new Publisher('publisher');
+            const subscribar = new Subscriber('subscribar');
+            const subscriboo = new Subscriber('subscriboo');
+            const subscribaba = new Subscriber('subscribaba');
+
+            let first = false;
+            let third = false;
+
+            publisher.stopPublicationOnException();
+
+            subscribar.subscribe(publisher, 'foo', () => {
+                first = true;
+            });
+
+            subscriboo.subscribe(publisher, 'foo', () => {
+                throw new Error('expected error');
+            });
+
+            subscribaba.subscribe(publisher, 'foo', () => {
+                third = true;
+            });
+
+
+            expect(publisher.publish.bind(publisher, 'foo')).to.throw(
+                Error,
+                'expected error'
+            );
+
+            expect(first).to.be.true;
+            expect(third).to.be.false;
+
+            first = false;
+
+            publisher.continuePublicationOnException();
+
+            publisher.publish('foo');
+
+            expect(first).to.be.true;
+            expect(third).to.be.true;
+        });
     });
-
     describe('Publisher-Subscriber detect exception and correctly trigger them', () => {
         it('dedupe subscription  by id', () => {
             const publisher = new Publisher('publisher');
@@ -441,7 +514,6 @@ describe('PubSub test suite', () => {
             );
         });
     });
-
     describe('Pubsub can subscribe to another pubsub', () => {
         let publisher = new PublisherSubscriber('publisher');
         let subscriber = new PublisherSubscriber('subscriber');
@@ -463,7 +535,6 @@ describe('PubSub test suite', () => {
             expect(publisher.getNbSubscribers()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
         })
     });
-
     describe('Additionnal tests on subscription-manager.helper', () => {
         it('findSubscriptionByRoleAndComponentId throws an exception with invalid role', () => {
             const pubsub = new PublisherSubscriber('foo');
@@ -478,6 +549,40 @@ describe('PubSub test suite', () => {
                 'Invalid argument given for "role" in "findSubscriptionByRoleAndComponentId". Values expected are "publisher_id" or "subscriber_id" but "invalid_role" was given.'
             );
         });
+        it('clear all subscriptions property using destroy', () => {
+            const pub = new Publisher('pub');
+            const sub = new Subscriber('sub');
+
+            sub.subscribe(pub, 'foo', () => {});
+            sub.subscribe(pub, 'bar', () => {});
+
+            expect(sub.getNbSubscriptions()).to.equals(2);
+            expect(pub.getSubscriptions().length).to.equals(2);
+
+            sub.destroy();
+
+            expect(sub.getNbSubscriptions()).to.equals(0);
+            expect(pub.getSubscriptions().length).to.equals(0);
+        });
+        it('implements identifiable correctly', () => {
+            const pub = new Publisher('pub');
+            const sub = new Subscriber('sub');
+            const pubsub = new PublisherSubscriber('pubsub');
+
+            expect(pub.getId()).to.equals('pub');
+            expect(sub.getId()).to.equals('sub');
+            expect(pubsub.getId()).to.equals('pubsub');
+
+            expect(pub.is(sub.getId())).to.be.false;
+            expect(pub.is(pubsub.getId())).to.be.false;
+            expect(pub.is(pub.getId())).to.be.true;
+            expect(sub.is(pub.getId())).to.be.false;
+            expect(sub.is(pubsub.getId())).to.be.false;
+            expect(sub.is(sub.getId())).to.be.true;
+            expect(pubsub.is(pub.getId())).to.be.false;
+            expect(pubsub.is(sub.getId())).to.be.false;
+            expect(pubsub.is(pubsub.getId())).to.be.true;
+        })
     });
 
 });
