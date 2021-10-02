@@ -1,7 +1,7 @@
 export default class SubscriptionNotFoundException extends Error {
     constructor(subscriptionId: string, componentId: string) {
         super(
-            `Unable to find subscription "${subscriptionId}" in component "${componentId}".`
+            `Unable to find subscription with id "${subscriptionId}" in component "${componentId}".`
         );
 
         // Ensure the name of this error is the same as the class name

@@ -8,6 +8,7 @@ import SubscriptionInterface from "../interfaces/subscription.interface";
 import SubscriptionNotFoundException from "../exception/subscription-not-found.exception";
 import {findSubscriptionByRoleAndComponentId} from "../helper/subscription-manager.helper";
 import InvalidArgumentException from "../../core/exception/invalid-argument.exception";
+import SubscriptionManager from "../model/subscription-manager.model";
 
 const Message = {
     INVALID_SUBSCRIBER_NUMBER: 'invalid number of subscribers',
@@ -21,13 +22,13 @@ describe('PubSub test suite', () => {
             let subscriber = new Subscriber('subscriber');
 
             expect(subscriber.getNbSubscriptions()).to.equals(0, Message.INVALID_SUBSCRIPTION_NUMBER);
-            expect(publisher.getNbSubscribers()).to.equals(0, Message.INVALID_SUBSCRIBER_NUMBER);
+            expect(publisher.getNbSubscriptions()).to.equals(0, Message.INVALID_SUBSCRIBER_NUMBER);
 
             subscriber.subscribe(publisher, 'foo', () => {
             });
 
             expect(subscriber.getNbSubscriptions()).to.equals(1, Message.INVALID_SUBSCRIPTION_NUMBER);
-            expect(publisher.getNbSubscribers()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
+            expect(publisher.getNbSubscriptions()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
         });
         it('trigger subscriber handler each time that publisher publish a subscribed notification', () => {
             let publisher = new Publisher('publisher');
@@ -84,8 +85,8 @@ describe('PubSub test suite', () => {
 
 
             expect(subscriber.getNbSubscriptions()).to.equals(2, Message.INVALID_SUBSCRIPTION_NUMBER);
-            expect(aPublisher.getNbSubscribers()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
-            expect(bPublisher.getNbSubscribers()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
+            expect(aPublisher.getNbSubscriptions()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
+            expect(bPublisher.getNbSubscriptions()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
 
             for (let i = 0; i < 20; ++i) {
                 expect(aCounter).to.equals(i);
@@ -121,7 +122,7 @@ describe('PubSub test suite', () => {
             });
 
             expect(subscriber.getNbSubscriptions()).to.equals(2, Message.INVALID_SUBSCRIPTION_NUMBER);
-            expect(publisher.getNbSubscribers()).to.equals(2, Message.INVALID_SUBSCRIBER_NUMBER);
+            expect(publisher.getNbSubscriptions()).to.equals(2, Message.INVALID_SUBSCRIBER_NUMBER);
 
             publisher.publish('foo');
             expect(fooCounter).to.equals(1);
@@ -130,6 +131,107 @@ describe('PubSub test suite', () => {
             publisher.publish('bar');
             expect(fooCounter).to.equals(1);
             expect(barCounter).to.equals(1);
+        });
+        describe('can wait until one notification before run a callback', () => {
+            let publisher = new Publisher('publisher');
+            let subscriber = new Subscriber('subscriber');
+
+            let trigger = false;
+
+            it('does not add new subscriptions to subscriber using waitUntil', () => {
+                subscriber.waitUntil([
+                    {
+                        from: publisher,
+                        name: 'foo'
+                    }
+                ]).then(() => {
+                    trigger = true;
+                });
+
+                expect(subscriber.getNbSubscriptions()).to.equals(0);
+            });
+
+            it('add a new subscriptions to publisher', () => {
+                expect(publisher.getNbSubscriptions()).to.equals(1);
+            });
+
+            it('does not run handler method on declaration', () => {
+                expect(trigger).to.be.false;
+            });
+
+            it('properly trigger handler and clear additionnals subscriptions', (done) => {
+                publisher.publish('foo');
+
+                setTimeout(() => {
+                    expect(trigger).to.equals(true);
+                    expect(subscriber.getNbSubscriptions()).to.equals(0);
+                    expect(publisher.getNbSubscriptions()).to.equals(0);
+                    done();
+                }, 20);
+
+                // set a short delay, waitUntil might not be so long
+            });
+
+            it('works with async/await', async () => {
+                // if waitUntil is never resolved, mocha timeout will be triggered and test will fails
+                setTimeout(() => {
+                    publisher.publish('bar');
+                }, 200);
+                await subscriber.waitUntil([{
+                    from: publisher,
+                    name: 'bar'
+                }]);
+            });
+        });
+        it('can wait until several notifications from several publisher', (done) => {
+            let publisher = new Publisher('publisher');
+            let pubsub = new PublisherSubscriber('pubsub');
+            let subscriber = new PublisherSubscriber('subscriber');
+
+            let trigger = false;
+
+            subscriber.waitUntil([
+                {
+                    from: pubsub,
+                    name: 'foo'
+                },
+                {
+                    from: pubsub,
+                    name: 'bar'
+                },
+                {
+                    from: publisher,
+                    name: 'foo'
+                }
+            ]).then(() => {
+                trigger = true;
+            });
+
+            publisher.publish('foo');
+            pubsub.publish('foo');
+
+            setTimeout(() => {
+                expect(trigger).to.be.false;
+                pubsub.publish('bar');
+                setTimeout(() => {
+                    expect(trigger).to.be.true;
+                    done();
+                }, 20);
+            }, 100);
+        })
+        it('retrieves subscriptions with pubsub', () => {
+           const publisher = new Publisher('pub');
+           const subscriber = new Subscriber('sub');
+           const pubsub = new PublisherSubscriber('pubsub');
+
+           pubsub.subscribe(publisher, 'foo', () => {});
+           subscriber.subscribe(pubsub, 'bar', () => {});
+
+           const fooSub = publisher.getSubscriptions()[0];
+           const barSub = subscriber.getSubscriptions()[0];
+
+           expect(pubsub.hasSubscription(fooSub.id)).to.be.true;
+           expect(pubsub.hasSubscription(barSub.id)).to.be.true;
         });
     });
     describe('retrieve subscription behavior', () => {
@@ -216,14 +318,18 @@ describe('PubSub test suite', () => {
         });
         it('find subscriptions by notification and publisher_id', () => {
             const s1 = new Subscriber('s1');
-            const s2 = new Subscriber('s2');
+            const s2 = new PublisherSubscriber('s2');
             const p = new Publisher('p');
-            const p2 = new Publisher('p2');
+            const p2 = new PublisherSubscriber('p2');
 
-            s1.subscribe(p, 'foo', () => {});
-            s2.subscribe(p, 'foo', () => {});
-            s2.subscribe(p, 'bar', () => {});
-            s2.subscribe(p2, 'toto', () => {});
+            s1.subscribe(p, 'foo', () => {
+            });
+            s2.subscribe(p, 'foo', () => {
+            });
+            s2.subscribe(p, 'bar', () => {
+            });
+            s2.subscribe(p2, 'toto', () => {
+            });
 
             const s1Foo = s1.findSubscriptionsByNotificationAndPublisherId('foo', 'p');
             const s1Bar = s1.findSubscriptionsByNotificationAndPublisherId('bar', 'p');
@@ -242,13 +348,16 @@ describe('PubSub test suite', () => {
         });
         it('find subscriptions by notification and subscriber_id', () => {
             const s1 = new Subscriber('s1');
-            const s2 = new Subscriber('s2');
+            const s2 = new PublisherSubscriber('s2');
             const p = new Publisher('p');
-            const p2 = new Publisher('p2');
+            const p2 = new PublisherSubscriber('p2');
 
-            s1.subscribe(p, 'foo', () => {});
-            s2.subscribe(p2, 'foo', () => {});
-            s2.subscribe(p2, 'bar', () => {});
+            s1.subscribe(p, 'foo', () => {
+            });
+            s2.subscribe(p2, 'foo', () => {
+            });
+            s2.subscribe(p2, 'bar', () => {
+            });
 
             const pFoo = p.findSubscriptionsByNotificationAndSubscriberId('foo', 's1');
             const pBar = p.findSubscriptionsByNotificationAndSubscriberId('bar', 's1');
@@ -326,8 +435,8 @@ describe('PubSub test suite', () => {
             expect(pubsub.findSubscriptionById('missing')).to.equals(null);
         });
     });
-    describe('unsubscription behavior', () => {
-        it('can unsubscribe by subscription id', () => {
+    describe('Unsubscription behavior', () => {
+        it('clears one subscription by id', () => {
             let publisher = new Publisher('publisher');
             let subscriber = new Subscriber('subscriber');
 
@@ -336,17 +445,38 @@ describe('PubSub test suite', () => {
             });
 
             expect(subscriber.getNbSubscriptions()).to.equals(1, Message.INVALID_SUBSCRIPTION_NUMBER);
-            expect(publisher.getNbSubscribers()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
+            expect(publisher.getNbSubscriptions()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
 
 
             const fooSubscription: SubscriptionInterface = subscriber.findSubscriptionsByNotification('foo')[0];
             subscriber.unsubscribeFromSubscriptionId(fooSubscription.id);
 
 
-            expect(publisher.getNbSubscribers()).to.equals(0, Message.INVALID_SUBSCRIBER_NUMBER);
+            expect(publisher.getNbSubscriptions()).to.equals(0, Message.INVALID_SUBSCRIBER_NUMBER);
             expect(subscriber.getNbSubscriptions()).to.equals(0, Message.INVALID_SUBSCRIPTION_NUMBER);
         });
-        it('remove only one subscription unsubscribing by valid subscription', () => {
+        it('throws an exception on unsubscribe with unknown subscription id', () => {
+            const subscriber = new Subscriber('subscriber');
+
+            expect(subscriber.unsubscribeFromSubscriptionId.bind(subscriber, 'invalidSubscriptId')).to.throw(
+                SubscriptionNotFoundException,
+                'Unable to find subscription with id "invalidSubscriptId" in component "subscriber".'
+            );
+
+            const publisher = new Publisher('bar');
+            subscriber.subscribe(publisher, 'foo', () => {
+            });
+
+            expect(subscriber.unsubscribeFromSubscriptionId.bind(subscriber, 'bad-id')).to.throw(
+                SubscriptionNotFoundException,
+                'Unable to find subscription with id "bad-id" in component "subscriber".'
+            );
+
+            expect(subscriber.getNbSubscriptions()).to.equals(1, Message.INVALID_SUBSCRIPTION_NUMBER);
+            expect(publisher.getNbSubscriptions()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
+
+        });
+        it('removes only one subscription to unsubsribe by subscription id', () => {
             let publisher = new Publisher('publisher');
             let subscriber = new Subscriber('subscriber');
 
@@ -361,7 +491,7 @@ describe('PubSub test suite', () => {
             });
 
             expect(subscriber.getNbSubscriptions()).to.equals(2, Message.INVALID_SUBSCRIPTION_NUMBER);
-            expect(publisher.getNbSubscribers()).to.equals(2, Message.INVALID_SUBSCRIBER_NUMBER);
+            expect(publisher.getNbSubscriptions()).to.equals(2, Message.INVALID_SUBSCRIBER_NUMBER);
 
             publisher.publish('foo');
             publisher.publish('bar');
@@ -372,7 +502,7 @@ describe('PubSub test suite', () => {
             subscriber.unsubscribeFromSubscriptionId(fooSubscription.id);
 
             expect(subscriber.getNbSubscriptions()).to.equals(1, Message.INVALID_SUBSCRIPTION_NUMBER);
-            expect(publisher.getNbSubscribers()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
+            expect(publisher.getNbSubscriptions()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
 
             publisher.publish('foo');
             publisher.publish('bar');
@@ -383,33 +513,111 @@ describe('PubSub test suite', () => {
             subscriber.unsubscribeFromSubscriptionId(barSubscription.id);
 
             expect(subscriber.getNbSubscriptions()).to.equals(0, Message.INVALID_SUBSCRIPTION_NUMBER);
-            expect(publisher.getNbSubscribers()).to.equals(0, Message.INVALID_SUBSCRIBER_NUMBER);
+            expect(publisher.getNbSubscriptions()).to.equals(0, Message.INVALID_SUBSCRIBER_NUMBER);
 
             publisher.publish('foo');
             publisher.publish('bar');
             expect(fooCounter).to.equals(1);
             expect(barCounter).to.equals(2);
         });
-        it('throws an error when unknown subscriptionId is provided to unsubscribe', () => {
-            const subscriber = new Subscriber('subscriber');
+        it('clears all subscriptions related to a publisher to unsubscribe by publisher id', () => {
+            const pubone = new Publisher('pubone');
+            const pubtwo = new Publisher('pubtwo');
+            const sub = new Subscriber('sub');
+            const pubsub = new PublisherSubscriber('pubsub');
 
-            expect(subscriber.unsubscribeFromSubscriptionId.bind(subscriber, 'invalidSubscriptId')).to.throw(
-                SubscriptionNotFoundException,
-                'Unable to find subscription "invalidSubscriptId" in component "subscriber".'
-            );
-
-            const publisher = new Publisher('bar');
-            subscriber.subscribe(publisher, 'foo', () => {
+            sub.subscribe(pubone, 'saperlipopette', () => {
             });
 
-            expect(subscriber.unsubscribeFromSubscriptionId.bind(subscriber, 'foo')).to.throw(
-                SubscriptionNotFoundException,
-                'Unable to find subscription "foo" in component "subscriber".'
-            );
+            pubsub.subscribe(pubone, 'saperlipopette', () => {
+            });
 
-            expect(subscriber.getNbSubscriptions()).to.equals(1, Message.INVALID_SUBSCRIPTION_NUMBER);
-            expect(publisher.getNbSubscribers()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
+            expect(sub.getNbSubscriptions()).to.equals(1);
+            expect(pubone.getNbSubscriptions()).to.equals(2);
+            expect(pubtwo.getNbSubscriptions()).to.equals(0);
+            expect(pubsub.getNbSubscriptions()).to.equals(1);
 
+            // should does nothing
+            sub.unsubscribeFromPublisherId(pubtwo.getId());
+
+            expect(sub.getNbSubscriptions()).to.equals(1);
+            expect(pubone.getNbSubscriptions()).to.equals(2);
+            expect(pubtwo.getNbSubscriptions()).to.equals(0);
+            expect(pubsub.getNbSubscriptions()).to.equals(1);
+
+            sub.subscribe(pubone, 'sacrebleu', () => {
+            });
+            sub.subscribe(pubtwo, 'fichtre', () => {
+            });
+
+            expect(sub.getNbSubscriptions()).to.equals(3);
+            expect(pubone.getNbSubscriptions()).to.equals(3);
+            expect(pubtwo.getNbSubscriptions()).to.equals(1);
+            expect(pubsub.getNbSubscriptions()).to.equals(1);
+
+            sub.unsubscribeFromPublisherId(pubone.getId());
+
+            expect(sub.getNbSubscriptions()).to.equals(1);
+            expect(pubone.getNbSubscriptions()).to.equals(1);
+            expect(pubtwo.getNbSubscriptions()).to.equals(1);
+            expect(pubsub.getNbSubscriptions()).to.equals(1);
+
+            sub.unsubscribeFromPublisherId(pubtwo.getId());
+
+            expect(sub.getNbSubscriptions()).to.equals(0);
+            expect(pubone.getNbSubscriptions()).to.equals(1);
+            expect(pubtwo.getNbSubscriptions()).to.equals(0);
+            expect(pubsub.getNbSubscriptions()).to.equals(1);
+
+            pubsub.unsubscribeFromPublisherId(pubone.getId());
+
+            expect(sub.getNbSubscriptions()).to.equals(0);
+            expect(pubone.getNbSubscriptions()).to.equals(0);
+            expect(pubtwo.getNbSubscriptions()).to.equals(0);
+            expect(pubsub.getNbSubscriptions()).to.equals(0);
+        });
+        it('clears all subscriptions relative to a notification', () => {
+            const pubone = new Publisher('pubone');
+            const pubtwo = new Publisher('pubtwo');
+            const sub = new Subscriber('sub');
+            const pubsub = new PublisherSubscriber('pubsub');
+
+            sub.subscribe(pubone, 'saperlipopette', () => {
+            });
+
+            sub.subscribe(pubtwo, 'saperlipopette', () => {
+            });
+
+            pubsub.subscribe(pubone, 'saperlipopette', () => {
+            });
+
+            expect(sub.getNbSubscriptions()).to.equals(2);
+            expect(pubone.getNbSubscriptions()).to.equals(2);
+            expect(pubtwo.getNbSubscriptions()).to.equals(1);
+            expect(pubsub.getNbSubscriptions()).to.equals(1);
+
+            // should does nothing
+            sub.unsubscribeFromNotification('foo');
+
+            expect(sub.getNbSubscriptions()).to.equals(2);
+            expect(pubone.getNbSubscriptions()).to.equals(2);
+            expect(pubtwo.getNbSubscriptions()).to.equals(1);
+            expect(pubsub.getNbSubscriptions()).to.equals(1);
+
+
+            sub.unsubscribeFromNotification('saperlipopette');
+
+            expect(sub.getNbSubscriptions()).to.equals(0);
+            expect(pubone.getNbSubscriptions()).to.equals(1);
+            expect(pubtwo.getNbSubscriptions()).to.equals(0);
+            expect(pubsub.getNbSubscriptions()).to.equals(1);
+
+            pubsub.unsubscribeFromNotification('saperlipopette');
+
+            expect(sub.getNbSubscriptions()).to.equals(0);
+            expect(pubone.getNbSubscriptions()).to.equals(0);
+            expect(pubtwo.getNbSubscriptions()).to.equals(0);
+            expect(pubsub.getNbSubscriptions()).to.equals(0);
         });
     });
     describe('Publishing workflow', () => {
@@ -452,7 +660,7 @@ describe('PubSub test suite', () => {
             expect(triggered).to.be.true;
         });
         it('stop or remain publication workflow using stopPublicationOnException and continuePublicationOnException', () => {
-            const publisher = new Publisher('publisher');
+            const publisher = new PublisherSubscriber('publisher');
             const subscribar = new Subscriber('subscribar');
             const subscriboo = new Subscriber('subscriboo');
             const subscribaba = new Subscriber('subscribaba');
@@ -492,6 +700,49 @@ describe('PubSub test suite', () => {
             expect(first).to.be.true;
             expect(third).to.be.true;
         });
+        it('Notification with parameters', () => {
+            const publisher = new Publisher('publisher');
+            const subscriber = new Subscriber('subscriber');
+            let receivedData: any = null;
+            subscriber.subscribe(publisher, 'get-my-param', data => receivedData = data);
+            publisher.publish('get-my-param', 'hello');
+
+            expect(receivedData).to.equals('hello');
+
+            publisher.publish('get-my-param', 1);
+            expect(receivedData).to.equals(1);
+
+            publisher.publish('get-my-param');
+            expect(receivedData).to.be.undefined;
+
+            publisher.publish('get-my-param', null);
+            expect(receivedData).to.be.null;
+
+            publisher.publish('get-my-param', NaN);
+            expect(receivedData).to.be.NaN;
+
+            publisher.publish('get-my-param', {value: 8});
+            expect(receivedData.value).to.equals(8);
+        })
+        it('works with two pubsub', () => {
+            let publisher = new PublisherSubscriber('publisher');
+            let subscriber = new PublisherSubscriber('subscriber');
+            let counter = 0;
+
+
+            subscriber.subscribe(publisher, 'aNotification', () => {
+                counter++
+            });
+
+            expect(subscriber.getNbSubscriptionsAsSubscriber()).to.equals(1, Message.INVALID_SUBSCRIPTION_NUMBER);
+            expect(subscriber.getNbSubscriptionsAsPublisher()).to.equals(0, Message.INVALID_SUBSCRIBER_NUMBER);
+
+            expect(publisher.getNbSubscriptionsAsSubscriber()).to.equals(0, Message.INVALID_SUBSCRIPTION_NUMBER);
+            expect(publisher.getNbSubscriptionsAsPublisher()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
+
+            publisher.publish('aNotification');
+            expect(counter).to.equals(1);
+        });
     });
     describe('Publisher-Subscriber detect exception and correctly trigger them', () => {
         it('dedupe subscription  by id', () => {
@@ -514,27 +765,6 @@ describe('PubSub test suite', () => {
             );
         });
     });
-    describe('Pubsub can subscribe to another pubsub', () => {
-        let publisher = new PublisherSubscriber('publisher');
-        let subscriber = new PublisherSubscriber('subscriber');
-        let counter = 0;
-
-        before(() => {
-            subscriber.subscribe(publisher, 'aNotification', () => {
-                counter++
-            });
-        });
-
-        it('Update correctly subscriber', () => {
-            expect(subscriber.getNbSubscriptions()).to.equals(1, Message.INVALID_SUBSCRIPTION_NUMBER);
-            expect(subscriber.getNbSubscribers()).to.equals(0, Message.INVALID_SUBSCRIBER_NUMBER);
-        })
-
-        it('Update correctly publisher', () => {
-            expect(publisher.getNbSubscriptions()).to.equals(0, Message.INVALID_SUBSCRIPTION_NUMBER);
-            expect(publisher.getNbSubscribers()).to.equals(1, Message.INVALID_SUBSCRIBER_NUMBER);
-        })
-    });
     describe('Additionnal tests on subscription-manager.helper', () => {
         it('findSubscriptionByRoleAndComponentId throws an exception with invalid role', () => {
             const pubsub = new PublisherSubscriber('foo');
@@ -553,8 +783,10 @@ describe('PubSub test suite', () => {
             const pub = new Publisher('pub');
             const sub = new Subscriber('sub');
 
-            sub.subscribe(pub, 'foo', () => {});
-            sub.subscribe(pub, 'bar', () => {});
+            sub.subscribe(pub, 'foo', () => {
+            });
+            sub.subscribe(pub, 'bar', () => {
+            });
 
             expect(sub.getNbSubscriptions()).to.equals(2);
             expect(pub.getSubscriptions().length).to.equals(2);
@@ -582,7 +814,57 @@ describe('PubSub test suite', () => {
             expect(pubsub.is(pub.getId())).to.be.false;
             expect(pubsub.is(sub.getId())).to.be.false;
             expect(pubsub.is(pubsub.getId())).to.be.true;
+        });
+        it('throws an error when we try to clear an unknown subscription', () => {
+            class TestSubscriptionManager extends SubscriptionManager {
+                testClearSubscription(subscriptionId: string) {
+                    this.clearSubscription(subscriptionId);
+                }
+            }
+
+            const tsm = new TestSubscriptionManager('tsm');
+
+            expect(
+                tsm.testClearSubscription.bind(tsm, 'toto')
+            ).to.throws(
+                SubscriptionNotFoundException,
+                'Unable to find subscription with id "toto" in component "tsm".'
+            );
+        });
+    });
+    describe('Additionnal tests for pubusb', () => {
+        it('unsubscribe', () => {
+            const foo = new PublisherSubscriber('foo');
+
+            foo.subscribe(foo, 'zoo', () => {});
+            foo.destroy();
+
+            expect(foo.getSubscriptions().length).to.equals(0);
+
+
+            foo.subscribe(foo, 'zoo', () => {});
+            foo.unsubscribeFromNotification('zoo');
+
+            expect(foo.getSubscriptions().length).to.equals(0);
+
+            foo.subscribe(foo, 'zoo', () => {});
+            foo.unsubscribeFromPublisherId(foo.getId());
+            expect(foo.getSubscriptions().length).to.equals(0);
+
+            foo.subscribe(foo, 'zoo', () => {});
+            foo.unsubscribeFromSubscriptionId(foo.getSubscriptions()[0].id);
+            expect(foo.getSubscriptions().length).to.equals(0);
+
+            const bar = new PublisherSubscriber('bar');
+            foo.subscribe(bar, 'hello', () => {});
+            foo.unsubscribeFromPublisherId('bar');
+
+
+            expect(foo.getSubscriptions().length).to.equals(0);
+            expect(bar.getSubscriptions().length).to.equals(0);
+        });
+        it('works with wait until', () => {
+
         })
     });
-
 });

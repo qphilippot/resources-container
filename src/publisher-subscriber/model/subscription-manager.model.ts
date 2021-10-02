@@ -18,6 +18,10 @@ export default class SubscriptionManager implements SubscriptionManagerInterface
         return [].concat.apply([], Object.values(this.notificationsCollection))
     }
 
+    getNbSubscriptions(): number {
+        return this.nbSubscriptionRecorded;
+    }
+
     hasSubscription(subscriptionId: string): boolean {
         return typeof this.subscriptionsList[subscriptionId] !== 'undefined';
     }
@@ -68,7 +72,7 @@ export default class SubscriptionManager implements SubscriptionManagerInterface
         return this.notificationsCollection[notification] || [];
     }
 
-    clearSubscription(subscriptionId: string) {
+    protected clearSubscription(subscriptionId: string):void {
         const subscriptionIndex = this.findSubscriptionIndexById(subscriptionId);
 
         if (subscriptionIndex.index < 0) {
@@ -98,7 +102,7 @@ export default class SubscriptionManager implements SubscriptionManagerInterface
         }
     }
 
-    bindSubscriptionToNotification(notification: string, subscription: SubscriptionInterface) {
+    addSubscription(notification: string, subscription: SubscriptionInterface) {
         if (Array.isArray(this.notificationsCollection[notification]) !== true) {
             this.notificationsCollection[notification] = [];
         }

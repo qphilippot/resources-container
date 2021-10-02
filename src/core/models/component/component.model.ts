@@ -91,10 +91,6 @@ class Component implements PublisherSubscriberInterface {
         return this.id;
     }
 
-    getNbSubscribers(): number {
-        return this.publisherSubscriber.getNbSubscribers();
-    }
-
     getNbSubscriptions(): number {
         return this.publisherSubscriber.getNbSubscriptions();
     }

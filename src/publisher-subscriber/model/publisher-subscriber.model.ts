@@ -9,8 +9,8 @@ import {findSubscriptionByRoleAndComponentId, ROLE} from "../helper/subscription
 
 class PublisherSubscriber implements PublisherSubscriberInterface {
     private readonly id: string;
-    private publisher: PublisherInterface;
-    private subscriber: SubscriberInterface;
+    private readonly publisher: PublisherInterface;
+    private readonly subscriber: SubscriberInterface;
 
     constructor(id) {
         this.id = id;
@@ -30,16 +30,19 @@ class PublisherSubscriber implements PublisherSubscriberInterface {
         this.publisher.addSubscriber(notification, subscription);
     }
 
-    getNbSubscribers(): number {
-        return this.publisher.getNbSubscribers();
-    }
-
     removeSubscriber(subscription_id: string) {
         this.publisher.removeSubscriber(subscription_id);
     }
 
+    getNbSubscriptionsAsPublisher(): number {
+        return this.publisher.getNbSubscriptions();
+    }
 
-    publish(notification: string, data: any) {
+    getNbSubscriptionsAsSubscriber(): number {
+        return this.subscriber.getNbSubscriptions();
+    }
+
+    publish(notification: string, data?: any) {
         this.publisher.publish(notification, data);
     }
 
@@ -48,18 +51,18 @@ class PublisherSubscriber implements PublisherSubscriberInterface {
     }
 
     subscribe(publisher: PublisherInterface, notification: string, handler: Function) {
-        this.subscriber.subscribe(publisher, notification, handler);
+        this.subscriber.subscribe.apply(this, [ publisher, notification, handler ]);
     }
 
     getNbSubscriptions(): number {
         return this.subscriber.getNbSubscriptions();
     }
 
-    removeSubscription(subscription_id: string) {
+     removeSubscription(subscription_id: string) {
         this.subscriber.removeSubscription(subscription_id);
     }
 
-    addSubscription(notification: string, subscription: SubscriptionInterface) {
+     addSubscription(notification: string, subscription: SubscriptionInterface) {
         this.subscriber.addSubscription(notification, subscription);
     }
 

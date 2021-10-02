@@ -6,6 +6,8 @@ import SubscriptionManager from "./subscription-manager.model";
 import SubscriptionNotFoundException from "../exception/subscription-not-found.exception";
 import {findSubscriptionByRoleAndComponentId, ROLE} from "../helper/subscription-manager.helper";
 
+let salt = 0;
+
 class Subscriber extends SubscriptionManager implements SubscriberInterface {
     unsubscribeFromSubscriptionId(subscriptionId: string) {
         const subscription = this.findSubscriptionById(subscriptionId);
@@ -83,31 +85,25 @@ class Subscriber extends SubscriptionManager implements SubscriberInterface {
         this.clearSubscription(subscription_id);
     }
 
-    addSubscription(notification: string, subscription: SubscriptionInterface) {
-        this.bindSubscriptionToNotification(notification, subscription);
-    }
-
     // todo implement a "unsubscribeById" method
     waitUntil(notifications: Array<NotificationRecord>): Promise<Array<any>> {
-        const dedicatedSubSubscriber = new Subscriber({ id:  `wait-until-${notifications.map(item => item.name).join('-and-')}` });
-        return new Promise(resolve => {
+        const dedicatedSubSubscriber = new Subscriber({ id:  `wait-until-${notifications.map(item => item.name).join('-and-')}-salt_${salt++}` });
+        return new Promise((resolve: Function) => {
             Promise.all(
                 notifications.map(notification  => {
-                    return new Promise(resolve1 => {
+                    return new Promise((resolve1: Function) => {
                         dedicatedSubSubscriber.subscribe(
                             notification.from,
                             notification.name,
-                            resolve1
+                            () => {
+                                resolve1();
+                            }
                         );
                     });
                 })
             ).then((data: Array<any>) => {
-                try {
-                    // destroy to avoid memory leak with unused references to PublisherInterface from `notification.from`
-                    dedicatedSubSubscriber.destroy();
-                } catch (error) {
-                    console.error(error);
-                }
+                // destroy to avoid memory leak with unused references to PublisherInterface from `notification.from`
+                dedicatedSubSubscriber.destroy();
 
                 resolve(data);
             });
