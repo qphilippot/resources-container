@@ -71,4 +71,5 @@ L'idée derrière les deprecated dans le container est de préparer les projets 
 Pour l'instant je n'en voit pas l'intérêt. Je préfère d'abord me concentrer sur le développement d'un conteneur plus simple, mais fonctionnel ET pratique.
 https://symfony.com/doc/current/components/expression_language.html
 
-## Ne pas implémenter de système d'extensions poue l'instant
+## Ne pas implémenter de système d'extensions pour l'instant
+
