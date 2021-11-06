@@ -133,7 +133,7 @@ export default class ResourceDefinition {
     }
 
     setResourceType(type: InstanceType<any>) {
-        this.type = type;
+        this.type = type ?? null;
         return this;
     }
 

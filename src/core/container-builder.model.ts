@@ -3,7 +3,7 @@ import FlexibleService from "../utils/flexible.service";
 import Component from "./models/component/component.model";
 import Mixed from "../utils/mixed.interface";
 import MixedInterface from "../utils/mixed.interface";
-import ReflexionService from "../utils/reflexion.service";
+import ReflexionService from "./reflexion/reflexion.service";
 import ResourceDefinition from "./models/resource-definition.model";
 import ContainerBuilderInterface from "./interfaces/container-builder.interface";
 import CompilerInterface from "./interfaces/compiler.interface";
@@ -21,15 +21,13 @@ import Alias from "./models/alias.model";
  * Container Service have to use definitions concept in order to check if some resources dependancies are availables before instantiate it
  */
 class ContainerBuilder extends Component implements ContainerBuilderInterface {
-
-
     container: Container;
     compiler: Compiler;
     private noCompilationIsNeeded: boolean = false;
     removedIds: Set<string> = new Set<string>();
     flexible: FlexibleService;
     factories: Mixed;
-    reflector: ReflexionService;
+    reflexionService: ReflexionService = new ReflexionService();
     // definitions: Array<MixedInterface> = [];
     definitions: Record<string, ResourceDefinition> = {};
 
@@ -42,7 +40,7 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         this.flexible = new FlexibleService();
         this.factories = {};
 
-        this.reflector = new ReflexionService();
+        this.reflexionService = new ReflexionService();
 
         this.addResource(this, 'service.container');
     }
@@ -58,6 +56,10 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
 
         if (typeof aClass !== undefined) {
             definition.setResourceType(aClass);
+        }
+
+        else{
+            definition.setResourceType(null);
         }
 
         this.addDefinition(definition);
@@ -76,6 +78,10 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         // }
 
         this.flexible.set(id, resource, this.container.resources);
+    }
+
+    getReflexionService(): ReflexionService {
+        return this.reflexionService;
     }
 
     createResource(resource_id: string, resourceType: InstanceType<any>, injection: MixedInterface) {

@@ -1,6 +1,6 @@
 import HandlerInterface from "../interfaces/handler.interface";
 import ManagerInterface from "../interfaces/manager.interface";
-import PublisherSubscriber from "../../publisher-subscriber/model/publisher-subscriber.model";
+import { PublisherSubscriber } from '@qphi/publisher-subscriber';
 import HandlerNotFoundException from "../exception/handler-not-found.exception";
 
 export default class Manager extends PublisherSubscriber implements ManagerInterface

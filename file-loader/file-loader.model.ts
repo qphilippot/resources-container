@@ -1,7 +1,6 @@
 import HandlerInterface from "../src/core/interfaces/handler.interface";
 import { readFileSync } from 'fs';
-import Publisher from "../src/publisher-subscriber/model/publisher.model";
-import PublisherInterface from "../src/publisher-subscriber/interfaces/publisher.interface";
+import { Publisher, PublisherInterface } from "@qphi/publisher-subscriber";
 
 export default abstract class FileLoader extends Publisher implements HandlerInterface, PublisherInterface
 {

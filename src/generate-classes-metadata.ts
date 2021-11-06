@@ -5,7 +5,16 @@ import FunctionDeclarationResolver from "./function-declaration-resolver";
 
 import {writeFile} from 'fs';
 
-import * as babelParser from "@babel/parser";
+import { parse } from "@babel/parser";
+import type {ParseResult} from "@babel/parser";
+import type {
+    File,
+    Program,
+    ClassDeclaration,
+    ExportDefaultDeclaration,
+    TSExpressionWithTypeArguments,
+    ClassMethod
+} from '@babel/types';
 
 interface ClassMetadata {
     name: string,
@@ -62,7 +71,7 @@ export function generateClassesMetadata(
                 .replace(/\\/g, '.');
 
             const content = readFileSync(element.path, 'utf-8');
-            const fileNode = babelParser.parse(content, {
+            const fileNode: ParseResult<File> = parse(content, {
                 sourceType: 'module',
                 plugins: [
                     'typescript'
@@ -70,7 +79,7 @@ export function generateClassesMetadata(
             });
 
 
-            const programNode = fileNode.program;
+            const programNode: Program = fileNode.program;
             if (debug === true) {
                 writeFile(
                     'program.json',
@@ -80,12 +89,12 @@ export function generateClassesMetadata(
                     }
                 );
             }
-            let allClassDeclarationNodes = programNode.body.filter(node => node.type === 'ClassDeclaration');
+            let allClassDeclarationNodes: ClassDeclaration[] = programNode.body.filter(node => node.type === 'ClassDeclaration') as ClassDeclaration[];
 
             if (allClassDeclarationNodes.length === 0) {
-                const exportDefaultDeclaration = programNode.body.find(
+                const exportDefaultDeclaration: ExportDefaultDeclaration = programNode.body.find(
                     node => node.type === 'ExportDefaultDeclaration'
-                );
+                ) as ExportDefaultDeclaration;
 
                 if (exportDefaultDeclaration?.declaration?.type === 'ClassDeclaration') {
                     allClassDeclarationNodes = [exportDefaultDeclaration.declaration];
@@ -100,6 +109,7 @@ export function generateClassesMetadata(
 
             const classMeta: ClassMetadata = {
                 name: classDeclarationNode.id.name,
+                // @ts-ignore
                 superClass: classDeclarationNode.superClass?.name,
                 implements: [],
                 constructor: {},
@@ -109,20 +119,23 @@ export function generateClassesMetadata(
 
             classDeclarationNode?.implements?.forEach(node => {
                 if (node.type === 'TSExpressionWithTypeArguments') {
-                    classMeta.implements.push(node?.expression?.name);
+                    // @ts-ignore
+                    classMeta.implements.push((node as TSExpressionWithTypeArguments).expression?.name);
                 }
             });
 
 
-            classDeclarationNode.body.body.filter(node => node.type === 'ClassMethod').forEach(node => {
+            classDeclarationNode.body.body.filter(node => node.type === 'ClassMethod').forEach(
+                (node: ClassMethod) => {
                 if (node.kind === 'constructor') {
-                    const paramters = parser.retrieveSignature(node).parameters;
-                    classMeta.constructor = paramters;
+                    const parameters = parser.retrieveSignature(node).parameters;
+                    classMeta.constructor = parameters;
                 } else if (node.kind === 'method') {
                     const methodMeta = {
                         static: node.static,
                         computed: node.computed,
                         async: node.async,
+                        // @ts-ignore
                         name: node.key.name,
                         parameters: node.params.map(param => {
                             const data = {
@@ -133,6 +146,7 @@ export function generateClassesMetadata(
 
                             const isAssignmentPattern = param.type === 'AssignmentPattern';
 
+                            // @ts-ignore
                             data.name = isAssignmentPattern ? param.left.name : param.name;
                             data.type = parser.retrieveTypeFromNode(param);
 

@@ -4,13 +4,13 @@ import ContainerBuilderInterface from "../../interfaces/container-builder.interf
 import BadDefinitionValidityException from "../../exception/passes/bad-definition-validity.exception";
 import ResourceDefinition from "../../models/resource-definition.model";
 import {syntheticServiceMustBePublic, tagsAttributesValuesMustBeScalar} from './check-definition-validity.helper';
-import Publisher from "../../../publisher-subscriber/model/publisher.model";
+import { Publisher } from "@qphi/publisher-subscriber";
 /**
  * Processes the ContainerBuilder to validate the Definition.
  */
 export default class CheckDefinitionValidityPass extends Publisher implements CompilerPassInterface {
     constructor() {
-        super({ id: 'check-definition-validity-pass' });
+        super('check-definition-validity-pass' );
     }
 
     public process(containerBuilder: ContainerBuilderInterface) {

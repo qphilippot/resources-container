@@ -1,6 +1,7 @@
 import CompilerInterface from "./compiler.interface";
 import ContainerInterface from "./container.interface";
 import ResourceDefinition from "../models/resource-definition.model";
+import ReflexionService from "../reflexion/reflexion.service";
 
 interface ContainerBuilderInterface extends ContainerInterface {
     compiler: CompilerInterface;
@@ -8,6 +9,8 @@ interface ContainerBuilderInterface extends ContainerInterface {
     getContainer(): ContainerInterface;
 
     getDefinitions(): Array<ResourceDefinition>;
+
+    getReflexionService(): ReflexionService;
 
     /**
      * Gets a resource definition.

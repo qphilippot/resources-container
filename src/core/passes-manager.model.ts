@@ -1,9 +1,8 @@
 import CompilerPassInterface from "./interfaces/compiler-pass.interface";
 import Collection from "./models/collection.model";
 import InvalidArgumentException from "./exception/invalid-argument.exception";
-import Subscriber from "../publisher-subscriber/model/subscriber.model";
+import { Subscriber, PublisherInterface } from '@qphi/publisher-subscriber';
 import ContainerBuilderInterface from "./interfaces/container-builder.interface";
-import PublisherInterface from "../publisher-subscriber/interfaces/publisher.interface";
 
 
 //  $this->beforeOptimizationPasses = [

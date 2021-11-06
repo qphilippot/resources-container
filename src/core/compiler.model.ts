@@ -2,11 +2,11 @@ import CompilerInterface from "./interfaces/compiler.interface";
 import ContainerBuilderInterface from "./interfaces/container-builder.interface";
 import CompilerPassInterface from "./interfaces/compiler-pass.interface";
 import COMPILER_STEP from './compiler-step.enum'
-import Publisher from "../publisher-subscriber/model/publisher.model";
+import { Publisher } from '@qphi/publisher-subscriber';
 import PassesManager from "./passes-manager.model";
 
 class Compiler extends Publisher implements CompilerInterface {
-    private passesManager: PassesManager = new PassesManager({ id: 'passes-manager' });
+    private passesManager: PassesManager = new PassesManager('passes-manager');
     private steps: Array<string> = [];
 
     constructor() {

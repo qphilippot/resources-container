@@ -4,7 +4,7 @@ import ConfigLoaderHandlerInterface from "./config-loader-handler.interface";
 import ContainerBuilderInterface from "../../interfaces/container-builder.interface";
 import InvalidArgumentException from "../../exception/invalid-argument.exception";
 import { dirname } from 'path';
-import Publisher from "../../../publisher-subscriber/model/publisher.model";
+import { Publisher } from '@qphi/publisher-subscriber';
 import CONFIG_LOADER_HANDLER_EVENTS from "./config-loader-handler.event";
 import ManagerInterface from "../../interfaces/manager.interface";
 import Manager from "../manager.model";

@@ -7,8 +7,6 @@ import YamlContainerConfigLoader from "./core/models/config-loader/yaml-containe
 import { generateClassesMetadata } from "./generate-classes-metadata";
 // const loader = new YamlLoader();
 
-import ReflexionService from "./utils/reflexion.service";
-
 const manager = new ConfigLoaderManager('config-loader-manager');
 const loader = new YamlContainerConfigLoader('yaml-config-loader');
 
