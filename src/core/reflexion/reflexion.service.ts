@@ -10,8 +10,9 @@ export default class ReflexionService {
     private data: MixedInterface = {};
     private dictionary: Map<string, Class> = new Map<string, Class>();
 
-    recordClass(className: string, theClass: Class) {
+    recordClass(className: string, theClass: Class): this {
         this.dictionary.set(className, theClass);
+        return this;
     }
 
     loadMeta(meta: MixedInterface): void {

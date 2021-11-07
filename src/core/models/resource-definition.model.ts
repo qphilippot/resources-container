@@ -10,6 +10,7 @@ export default class ResourceDefinition {
     private id: string;
     private type?: InstanceType<any>;
     private _isAbstract: boolean = false;
+    private autowired: boolean = false;
     settings: MixedInterface = {};
     arguments: MixedInterface = [];
     properties: Array<any> = [];
@@ -159,6 +160,17 @@ export default class ResourceDefinition {
     setArguments(args: MixedInterface) {
         this.arguments = args;
         return this;
+    }
+
+    setAutowired(status: boolean): this {
+        this.changes['autowired'] = true;
+        this.autowired = status;
+
+        return this;
+    }
+
+    isAutowired(): boolean {
+        return this.autowired;
     }
 
     setArgument(index: number|string, arg: any) {

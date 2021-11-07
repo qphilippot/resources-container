@@ -14,6 +14,8 @@ import InvalidArgumentException from "./exception/invalid-argument.exception";
 import {isValidResourceId} from "./helpers/resource-definition.helper";
 import ResourceNotFoundException from "./exception/resource-not-found.exception";
 import Alias from "./models/alias.model";
+import {EXCEPTION_ON_INVALID_REFERENCE} from "./container-builder.invalid-behaviors";
+import CircularReferenceException from "./exception/circular-reference.exception";
 
 // todo: return an error instead of null when a component is not found
 
@@ -26,7 +28,7 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
     private noCompilationIsNeeded: boolean = false;
     removedIds: Set<string> = new Set<string>();
     flexible: FlexibleService;
-    factories: Mixed;
+
     reflexionService: ReflexionService = new ReflexionService();
     // definitions: Array<MixedInterface> = [];
     definitions: Record<string, ResourceDefinition> = {};
@@ -38,11 +40,14 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
 
         this.container = settings.container || new Container();
         this.flexible = new FlexibleService();
-        this.factories = {};
 
         this.reflexionService = new ReflexionService();
 
-        this.addResource(this, 'service.container');
+        const serviceContainerDefinition = (new ResourceDefinition(ContainerBuilder))
+            .setSynthetic(true)
+            .setPublic(true);
+
+        this.setDefinition('service.container', serviceContainerDefinition);
     }
 
     getContainer(): Container {
@@ -50,6 +55,11 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
     }
 
 
+    /**
+     * Create a standard definition with definition id and type
+     * @param id
+     * @param aClass
+     */
     register(id: string, aClass: InstanceType<any> | undefined = undefined): ResourceDefinition {
         const definition = new ResourceDefinition();
         definition.setId(id);
@@ -66,18 +76,22 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         return definition;
     }
 
-    addResource(resource, id: string = '') {
-        // let _id: string;
-
-        if (id === '') {
-            id = resource.id;
+    set(id: string, resource: any): void {
+        if (
+            this.isCompiled() &&
+            this.hasDefinition(id) &&
+            !this.getDefinition(id).isSynthetic()
+        ) {
+            throw new BadMethodCallException(
+                `Setting service "${id}" for an unknown or non-synthetic service definition on a compiled container is not allowed.`
+            );
         }
-        //
-        // else {
-        //     _id = id;
-        // }
 
-        this.flexible.set(id, resource, this.container.resources);
+        delete this.definitions[id];
+        delete this.removedIds[id];
+
+        this.removeAlias(id);
+        this.container.set(id, resource);
     }
 
     getReflexionService(): ReflexionService {
@@ -91,9 +105,9 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         });
     }
 
-    recordResource(resource_id: string, type: InstanceType<any>, parameters: any) {
-        this.addResource(new type(parameters), resource_id)
-    }
+    // recordResource(resource_id: string, type: InstanceType<any>, parameters: any) {
+    //     this.addResource(new type(parameters), resource_id)
+    // }
 
     addAlias(alias, id) {
         this.flexible.set(alias, id, this.container.aliases);
@@ -135,20 +149,52 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         return this.container.getParameter(parameterName);
     }
 
-    get(key: string): Component | null {
-        let candidate: Component | null = this.findById(key);
-
-        if (candidate !== null) {
-            return candidate;
+    /**
+     * Get a real resource
+     * @param key
+     * @param invalidBehavior
+     */
+    get(key: string, invalidBehavior: number): any {
+        if (
+            this.isCompiled() &&
+            this.removedIds[key] &&
+            invalidBehavior <= EXCEPTION_ON_INVALID_REFERENCE
+        ) {
+            return this.container.get(key, invalidBehavior);
         }
 
-        candidate = this.findByAlias(key);
-
-        if (candidate !== null) {
-            return candidate;
+        // todo detect service circular reference
+        if (!this.hasDefinition(key) && this.hasAlias(key)) {
+            return this.get(this.getAlias(key).toString(), invalidBehavior);
         }
 
-        return this.getParameter(key);
+        try {
+            const definition = this.getDefinition(key);
+        }
+        catch (err) {
+            if (
+                err instanceof CircularReferenceException &&
+                EXCEPTION_ON_INVALID_REFERENCE < invalidBehavior
+            ) {
+                return null;
+            }
+
+            throw err;
+        }
+
+        // let candidate: Component | null = this.findById(key);
+        //
+        // if (candidate !== null) {
+        //     return candidate;
+        // }
+        //
+        // candidate = this.findByAlias(key);
+        //
+        // if (candidate !== null) {
+        //     return candidate;
+        // }
+        //
+        // return this.getParameter(key);
     }
 
     setAlias(alias: string, id: Alias): ContainerInterface {
@@ -178,7 +224,11 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         return this.noCompilationIsNeeded;
     }
 
-    setDefinition(definitionId: string, definition: ResourceDefinition) {
+    hasDefinition(definitionId: string): boolean {
+        return typeof this.definitions[definitionId] !== 'undefined';
+    }
+
+    setDefinition(definitionId: string, definition: ResourceDefinition): ResourceDefinition {
         if (this.isCompiled()) {
             throw new BadMethodCallException('Adding definition to a compiled container is not allowed.')
         }
@@ -190,6 +240,8 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         delete this.container.aliases[definitionId];
         this.removedIds.delete(definitionId);
         this.definitions[definitionId] = definition;
+
+        return definition;
     }
 
     getDefinition(definitionId: string): ResourceDefinition {
@@ -201,13 +253,46 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         return definition;
     }
 
+    /**
+     * Registers an autowired service definition.
+     *
+     * This method implements a shortcut for using setDefinition() with
+     * an autowired definition.
+     *
+     * @return ResourceDefinition The created definition
+     */
+    autowire(id: string, className: string | undefined = undefined): ResourceDefinition {
+        return this.setDefinition(id, new ResourceDefinition(className).setAutowired(true))
+    }
+
     addDefinition(definition: ResourceDefinition) {
         this.definitions[definition.getId()] = definition;
     }
 
+    /**
+     * Adds the service definitions.
+     *
+     * @param {Record<string, ResourceDefinition>} definitions An array of service definitions
+     */
+    addDefinitions(definitions: Record<string, ResourceDefinition>) {
+        Object.keys(definitions).forEach(id => {
+           this.setDefinition(id, definitions[id]);
+        });
+    }
+
+    /**
+     * Sets the service definitions.
+     *
+     * @param {Record<string, ResourceDefinition>} definitions A set of service definitions
+     */
+    setDefinitions(definitions:  Record<string, ResourceDefinition>) {
+        this.definitions = {};
+        this.addDefinitions(definitions);
+    }
 
 
-    // autowiring first tentative
+
+// autowiring first tentative
     // process() {
     //     this.definitions.forEach(definition => {
     //         const definitionsDependencies = this.reflector.getFunctionArgumentsName(definition.getResourceType().prototype.constructor);
@@ -295,10 +380,15 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
         this.noCompilationIsNeeded = true;
     }
 
-    has(id: string) {
+    /**
+     * Search in definitions, alias, and resources
+     * @param id
+     */
+    has(id: string): boolean {
         return (
-            this.findById(id) ||
-            this.findByAlias(id)
+            this.hasDefinition(id) ||
+            this.hasAlias(id) ||
+            this.container.has(id)
         );
     }
 
@@ -308,6 +398,10 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
 
     setParameter(name: string, value: any): void {
         this.container.setParameter(name, value);
+    }
+
+    removeAlias(alias: string): void {
+        this.container.removeAlias(alias);
     }
 }
 

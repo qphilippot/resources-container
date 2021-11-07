@@ -9,6 +9,7 @@ interface ContainerBuilderInterface extends ContainerInterface {
     getContainer(): ContainerInterface;
 
     getDefinitions(): Array<ResourceDefinition>;
+    hasDefinition(definitionId:string):boolean;
 
     getReflexionService(): ReflexionService;
 
@@ -23,9 +24,6 @@ interface ContainerBuilderInterface extends ContainerInterface {
 
 
     register(id: string, aClass: InstanceType<any> | undefined): ResourceDefinition;
-
-
-    addResource(resource, id: string);
     compile();
     isCompiled(): boolean;
 }

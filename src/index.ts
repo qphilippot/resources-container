@@ -8,14 +8,14 @@ import ResourceDefinition from "./core/models/resource-definition.model";
 const containerService : ContainerBuilder = new ContainerBuilder();
 //
 //
-containerService.addResource(new HelloService(), 'service.hello');
-containerService.addResource(
+containerService.setResource(new HelloService(), 'service.hello');
+containerService.setResource(
     new HelloService({
         id: 'service.hello_2'
     })
 );
 //
-containerService.recordResource('aa.bb.cc', HelloService, { id: 'elephant' });
+// containerService.recordResource('aa.bb.cc', HelloService, { id: 'elephant' });
 containerService.addAlias('hello', 'service.hello');
 
 // const reflector = new ReflexionService();

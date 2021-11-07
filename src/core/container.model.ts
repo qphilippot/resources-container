@@ -4,11 +4,13 @@ import ContainerInterface from "./interfaces/container.interface";
 import ResourceNotFoundException from "./exception/resource-not-found.exception";
 import InvalidArgumentException from "./exception/invalid-argument.exception";
 import Alias from "./models/alias.model";
+import {EXCEPTION_ON_INVALID_REFERENCE} from "./container-builder.invalid-behaviors";
 
 class Container extends Component implements ContainerInterface {
     resources: Mixed;
     aliases: Record<string, Alias>;
     parameters: Mixed;
+    factories: Mixed;
 
     constructor(settings: Mixed = {}) {
         super(settings);
@@ -16,16 +18,38 @@ class Container extends Component implements ContainerInterface {
         this.resources = {};
         this.aliases = {};
         this.parameters = {};
+        this.factories = {};
     }
 
-    get(id: string) {
-        if (this.has(id)) {
+    /**
+     * @inheritDoc
+     */
+    get(id: string, invalidBehavior: number = EXCEPTION_ON_INVALID_REFERENCE): any {
+        if (this.resources[id]) {
             return this.resources[id];
         }
 
-        else {
-            throw new ResourceNotFoundException(`Resource not found: ${id}`);
+        if (this.aliases[id]) {
+            return this.resources[this.aliases[id].toString()];
         }
+
+        if (id === 'service_container') {
+            return this;
+        }
+
+        if (this.factories[id]) {
+            return this.factories[id](id, invalidBehavior);
+        }
+
+        if (invalidBehavior === EXCEPTION_ON_INVALID_REFERENCE) {
+            throw new ResourceNotFoundException(id);
+        }
+        // todo create service as fallback (make in php)
+    }
+
+
+    set(id: string, resource: any): void {
+        this.resources[id] = resource;
     }
 
     has(id: string) {
@@ -70,6 +94,9 @@ class Container extends Component implements ContainerInterface {
         return this;
     }
 
+    removeAlias(alias: string):void {
+        delete this.aliases[alias];
+    }
 
     setAliasFromString(alias: string, id: string): ContainerInterface {
        return this.setAlias(alias, new Alias(id));
