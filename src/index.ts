@@ -1,4 +1,4 @@
-import ContainerBuilder from "./core/container-builder.model";
+import ContainerBuilder from "./core/container/container-builder.model";
 import HelloService from "./services/hello.service";
 import AutowirableContainerService from "./autowirable-container.service";
 import TrevorService from "./services/trevor.service";

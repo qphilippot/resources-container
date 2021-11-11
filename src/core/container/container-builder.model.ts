@@ -1,28 +1,40 @@
 import Container from "./container.model";
-import FlexibleService from "../utils/flexible.service";
-import Component from "./models/component/component.model";
-import Mixed from "../utils/mixed.interface";
-import MixedInterface from "../utils/mixed.interface";
-import ReflexionService from "./reflexion/reflexion.service";
-import ResourceDefinition from "./models/resource-definition.model";
-import ContainerBuilderInterface from "./interfaces/container-builder.interface";
-import CompilerInterface from "./interfaces/compiler.interface";
-import Compiler from "./compiler.model";
-import ContainerInterface from "./interfaces/container.interface";
-import BadMethodCallException from "./exception/bad-method-call.exception";
-import InvalidArgumentException from "./exception/invalid-argument.exception";
-import {isValidResourceId} from "./helpers/resource-definition.helper";
-import ResourceNotFoundException from "./exception/resource-not-found.exception";
-import Alias from "./models/alias.model";
-import {EXCEPTION_ON_INVALID_REFERENCE} from "./container-builder.invalid-behaviors";
-import CircularReferenceException from "./exception/circular-reference.exception";
+import FlexibleService from "../../utils/flexible.service";
+import Component from "../models/component/component.model";
+import Mixed from "../../utils/mixed.interface";
+import MixedInterface from "../../utils/mixed.interface";
+import ReflexionService from "../reflexion/reflexion.service";
+import ResourceDefinition from "../models/resource-definition.model";
+import ContainerBuilderInterface from "../interfaces/container-builder.interface";
+import CompilerInterface from "../interfaces/compiler.interface";
+import Compiler from "../compiler.model";
+import ContainerInterface from "../interfaces/container.interface";
+import BadMethodCallException from "../exception/bad-method-call.exception";
+import InvalidArgumentException from "../exception/invalid-argument.exception";
+import {isValidResourceId} from "../helpers/resource-definition.helper";
+import ResourceNotFoundException from "../exception/resource-not-found.exception";
+import Alias from "../models/alias.model";
+import {
+    EXCEPTION_ON_INVALID_REFERENCE,
+    IGNORE_ON_UNINITIALIZED_REFERENCE,
+    NULL_ON_INVALID_REFERENCE
+} from "./container-builder.invalid-behaviors";
+import CircularReferenceException from "../exception/circular-reference.exception";
+import RuntimeException from "../exception/runtime.exception";
+import {
+    ERROR_ON_GET_DEFINITION_BEFORE_COMPILATION,
+    INVALID_REFERENCE_ON_GET_DEFINITION
+} from "./container-notification";
+import NullOnInvalidReferenceFeature from "./features/null-on-invalid-reference.feature";
+import InlineContextualServices from "./inline-contextual-services";
+import ContainerHookContext from "./container-hook-context";
 
 // todo: return an error instead of null when a component is not found
 
 /**
  * Container Service have to use definitions concept in order to check if some resources dependancies are availables before instantiate it
  */
-class ContainerBuilder extends Component implements ContainerBuilderInterface {
+class ContainerBuilder implements ContainerBuilderInterface {
     container: Container;
     compiler: Compiler;
     private noCompilationIsNeeded: boolean = false;
@@ -34,10 +46,6 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
     definitions: Record<string, ResourceDefinition> = {};
 
     constructor(settings: MixedInterface = {}) {
-        super({
-            name: settings.name || 'container-builder'
-        })
-
         this.container = settings.container || new Container();
         this.flexible = new FlexibleService();
 
@@ -48,6 +56,9 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
             .setPublic(true);
 
         this.setDefinition('service.container', serviceContainerDefinition);
+
+        // add feature
+        new NullOnInvalidReferenceFeature(this.container);
     }
 
     getContainer(): Container {
@@ -66,9 +77,7 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
 
         if (typeof aClass !== undefined) {
             definition.setResourceType(aClass);
-        }
-
-        else{
+        } else {
             definition.setResourceType(null);
         }
 
@@ -136,7 +145,7 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
     }
 
     findByAlias(aliasName: string): Component | null {
-        const alias : Alias | undefined = this.container.aliases[aliasName];
+        const alias: Alias | undefined = this.container.aliases[aliasName];
 
         if (typeof alias === 'undefined') {
             return null;
@@ -154,7 +163,7 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
      * @param key
      * @param invalidBehavior
      */
-    get(key: string, invalidBehavior: number): any {
+    get(key: string, invalidBehavior: number = EXCEPTION_ON_INVALID_REFERENCE): any {
         if (
             this.isCompiled() &&
             this.removedIds[key] &&
@@ -163,38 +172,112 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
             return this.container.get(key, invalidBehavior);
         }
 
-        // todo detect service circular reference
+
+        return this.resolveGetBeforeCompilation(key, invalidBehavior);
+
+        // do get
+    }
+
+    resolveGetBeforeCompilation(
+        key: string,
+        invalidBehavior: number = EXCEPTION_ON_INVALID_REFERENCE,
+        inlineContextualServices: InlineContextualServices|null = null,
+    ) {
+        if (inlineContextualServices === null) {
+            inlineContextualServices = new InlineContextualServices();
+            inlineContextualServices.setFromConstructor();
+        }
+
+        if (inlineContextualServices.has(key)) {
+            return inlineContextualServices.get(key);
+        }
+
+        try {
+            if (invalidBehavior === IGNORE_ON_UNINITIALIZED_REFERENCE) {
+                return this.container.get(key, invalidBehavior);
+            }
+
+            const resource = this.container.get(key, NULL_ON_INVALID_REFERENCE);
+            if (resource) {
+                return resource;
+            }
+        } catch (error) {
+            if (
+                error instanceof CircularReferenceException &&
+                inlineContextualServices.isFromConstructor()
+            ) {
+                throw error;
+            }
+        }
+
+
         if (!this.hasDefinition(key) && this.hasAlias(key)) {
             return this.get(this.getAlias(key).toString(), invalidBehavior);
         }
 
         try {
             const definition = this.getDefinition(key);
-        }
-        catch (err) {
-            if (
-                err instanceof CircularReferenceException &&
-                EXCEPTION_ON_INVALID_REFERENCE < invalidBehavior
-            ) {
-                return null;
+        } catch (err) {
+            /**
+             * @hook ERROR_ON_GET_DEFINITION_BEFORE_COMPILATION
+             */
+            const context = new ContainerHookContext(invalidBehavior);
+            this.container.publish(ERROR_ON_GET_DEFINITION_BEFORE_COMPILATION, context);
+
+            if (context.shouldThrows(err.name)) {
+                throw err;
             }
 
-            throw err;
+            if (context.shouldReturn()) {
+                return context.getReturnValue();
+            }
         }
 
-        // let candidate: Component | null = this.findById(key);
-        //
-        // if (candidate !== null) {
-        //     return candidate;
+        if (inlineContextualServices.isFromConstructor()) {
+            this.container.circularReferenceDetector.record(key);
+        }
+    }
+
+    createService(
+        definition: ResourceDefinition,
+        inlineService: Record<string, any> = {},
+        isConstructorArgument: boolean = false,
+        id: string = '',
+        tryProxy: boolean = true
+    ) {
+        if (id.length === 0 && inlineService[definition.getId()]) {
+            return inlineService[definition.getId()];
+        }
+
+        // if ($definition instanceof ChildDefinition) {
+        //     throw new RuntimeException(sprintf('Constructing service "%s" from a parent definition is not supported at build time.', $id));
         // }
+
+        if (definition.isSynthetic()) {
+            throw new RuntimeException(
+                `You have requested a synthetic service ("${id}"). The DIC does not know how to construct this service.`
+            );
+        }
+
+        //    if ($definition->isDeprecated()) {
+        //             $deprecation = $definition->getDeprecation($id);
+        //             trigger_deprecation($deprecation['package'], $deprecation['version'], $deprecation['message']);
+        //         }
+
+
+        //      if ($tryProxy && $definition->isLazy() && !$tryProxy = !($proxy = $this->proxyInstantiator) || $proxy instanceof RealServiceInstantiator) {
+        //             $proxy = $proxy->instantiateProxy(
+        //                 $this,
+        //                 $definition,
+        //                 $id, function () use ($definition, &$inlineServices, $id) {
+        //                     return $this->createService($definition, $inlineServices, true, $id, false);
+        //                 }
+        //             );
+        //             $this->shareService($definition, $proxy, $id, $inlineServices);
         //
-        // candidate = this.findByAlias(key);
-        //
-        // if (candidate !== null) {
-        //     return candidate;
-        // }
-        //
-        // return this.getParameter(key);
+        //             return $proxy;
+        //         }
+
     }
 
     setAlias(alias: string, id: Alias): ContainerInterface {
@@ -212,6 +295,7 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
     getDefinitions(): Array<ResourceDefinition> {
         return Object.values(this.definitions);
     }
+
     // addDefinition(resource_id, type: InstanceType<any>, settings: MixedInterface = {}) {
     //     this.definitions.push({
     //         resource_id,
@@ -276,7 +360,7 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
      */
     addDefinitions(definitions: Record<string, ResourceDefinition>) {
         Object.keys(definitions).forEach(id => {
-           this.setDefinition(id, definitions[id]);
+            this.setDefinition(id, definitions[id]);
         });
     }
 
@@ -285,11 +369,10 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
      *
      * @param {Record<string, ResourceDefinition>} definitions A set of service definitions
      */
-    setDefinitions(definitions:  Record<string, ResourceDefinition>) {
+    setDefinitions(definitions: Record<string, ResourceDefinition>) {
         this.definitions = {};
         this.addDefinitions(definitions);
     }
-
 
 
 // autowiring first tentative
@@ -372,7 +455,7 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
             this.compiler = new Compiler();
         }
 
-        return  this.compiler;
+        return this.compiler;
     }
 
     compile() {
@@ -402,6 +485,13 @@ class ContainerBuilder extends Component implements ContainerBuilderInterface {
 
     removeAlias(alias: string): void {
         this.container.removeAlias(alias);
+    }
+
+    getDataSlot(name: string): any {
+        return this.container.dataSlot;
+    }
+
+    setDataSlot(name: string, value: any): void {
     }
 }
 

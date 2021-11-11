@@ -1,6 +1,6 @@
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
-import ContainerBuilder from "../../../src/core/container-builder.model";
+import ContainerBuilder from "../../../src/core/container/container-builder.model";
 import CheckDefinitionValidityPass from "../../../src/core/compilation-passes/standard/check-definition-validity.pass";
 import CircularReferenceException from "../../../src/core/exception/circular-reference.exception";
 import BadDefinitionValidityException from "../../../src/core/exception/passes/bad-definition-validity.exception";

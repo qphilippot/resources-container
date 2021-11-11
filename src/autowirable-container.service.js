@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const container_builder_model_1 = require("./core/container-builder.model");
+const container_builder_model_1 = require("./core/container/container-builder.model");
 // todo: return an error instead of null when a component is not found
 class AutowirableContainerService extends container_builder_model_1.default {
     constructor(settings = {}) {

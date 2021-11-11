@@ -6,7 +6,7 @@ import {
     EXCEPTION_ON_INVALID_REFERENCE,
     IGNORE_ON_INVALID_REFERENCE,
     IGNORE_ON_UNINITIALIZED_REFERENCE
-} from "../../../container-builder.invalid-behaviors";
+} from "../../../container/container-builder.invalid-behaviors";
 import Reference from "../../reference.model";
 
 export default class DefaultResolver extends Publisher implements HandlerInterface {

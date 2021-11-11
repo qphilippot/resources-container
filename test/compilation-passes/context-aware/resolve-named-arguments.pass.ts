@@ -1,6 +1,6 @@
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
-import ContainerBuilder from "../../../src/core/container-builder.model";
+import ContainerBuilder from "../../../src/core/container/container-builder.model";
 import NamedArgumentDummy from "../../fixtures/NamedArgumentDummy";
 import Reference from "../../../src/core/models/reference.model";
 import ResolveNamedArgumentsPass from "../../../src/core/compilation-passes/context-aware/resolve-named-arguments.pass";

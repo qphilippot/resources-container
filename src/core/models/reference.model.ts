@@ -1,4 +1,4 @@
-import {EXCEPTION_ON_INVALID_REFERENCE} from "../container-builder.invalid-behaviors";
+import {EXCEPTION_ON_INVALID_REFERENCE} from "../container/container-builder.invalid-behaviors";
 
 export default class Reference {
     private id: string;

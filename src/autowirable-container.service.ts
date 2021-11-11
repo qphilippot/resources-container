@@ -1,5 +1,5 @@
 import MixedInterface from "./utils/mixed.interface";
-import ContainerBuilder from "./core/container-builder.model";
+import ContainerBuilder from "./core/container/container-builder.model";
 
 // todo: return an error instead of null when a component is not found
 

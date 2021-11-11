@@ -1,12 +1,16 @@
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
-import ContainerBuilder from "../../src/core/container-builder.model";
+import ContainerBuilder from "../../src/core/container/container-builder.model";
 import ResourceDefinition from "../../src/core/models/resource-definition.model";
 import FooClass from "./fixtures/FooClass";
 import BarClass from "./fixtures/BarClass";
 import FooBarClass from "./fixtures/FooBarClass";
 import ResourceNotFoundException from "../../src/core/exception/resource-not-found.exception";
 import exp = require("constants");
+import Container from "../../src/core/container/container.model";
+import {NULL_ON_INVALID_REFERENCE} from "../../src/core/container/container-builder.invalid-behaviors";
+import Reference from "../../src/core/models/reference.model";
+import CircularReferenceException from "../../src/core/exception/circular-reference.exception";
 
 describe('container-builder tests', function () {
     it('add default service.container definition', function () {
@@ -97,5 +101,20 @@ describe('container-builder tests', function () {
             ResourceNotFoundException,
             'You have requested a non-existent service "foo".'
         );
-    })
+    });
+
+    it('returns null using get with invalid reference and unknown service', function () {
+        const container = new ContainerBuilder();
+        expect(
+            container.get('unknown_service', NULL_ON_INVALID_REFERENCE)
+        ).to.be.null;
+    });
+
+    it('throws circular reference exception if service has reference to itself using get', function () {
+       const container = new ContainerBuilder();
+       container.register('baz', 'FooClass').setArguments([ new Reference('baz')]);
+       expect(container.get.bind(container, 'baz')).to.throw(
+           CircularReferenceException
+       );
+    });
 });

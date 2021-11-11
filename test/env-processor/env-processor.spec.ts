@@ -1,6 +1,6 @@
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
-import ContainerBuilder from "../../src/core/container-builder.model";
+import ContainerBuilder from "../../src/core/container/container-builder.model";
 import EnvVarProcessorManager from "../../src/core/models/env-var-processor-manager.model";
 import StringEnvProcessor from "../../src/core/models/env-var-processor/string.env-processor";
 import BooleanEnvProcessor from "../../src/core/models/env-var-processor/boolean.env-processor";

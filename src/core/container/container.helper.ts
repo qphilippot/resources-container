@@ -1,5 +1,5 @@
-import ContainerInterface from "./interfaces/container.interface";
-import CircularReferenceException from "./exception/circular-reference.exception";
+import ContainerInterface from "../interfaces/container.interface";
+import CircularReferenceException from "../exception/circular-reference.exception";
 
 export function resolveAlias(id: string, container: ContainerInterface): string {
     const alias = container.getAlias(id);

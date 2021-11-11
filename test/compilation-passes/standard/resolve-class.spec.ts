@@ -1,6 +1,6 @@
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
-import ContainerBuilder from "../../../src/core/container-builder.model";
+import ContainerBuilder from "../../../src/core/container/container-builder.model";
 import CompilerInterface from "../../../src/core/interfaces/compiler.interface";
 import Reference from "../../../src/core/models/reference.model";
 import ResolveClassPass from "../../../src/core/compilation-passes/resolve-class.pass";

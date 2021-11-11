@@ -1,7 +1,7 @@
 import CompilerPassInterface from "../../interfaces/compiler-pass.interface";
 import ContainerBuilderInterface from "../../interfaces/container-builder.interface";
 import AbstractRecursivePassModel from "./abstract-recursive-pass.model";
-import { resolveAlias, checkDeprecation } from "../../container.helper";
+import { resolveAlias, checkDeprecation } from "../../container/container.helper";
 import Reference from "../../models/reference.model";
 import Alias from "../../models/alias.model";
 

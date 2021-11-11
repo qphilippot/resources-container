@@ -6,7 +6,6 @@ import ReflexionService from "../reflexion/reflexion.service";
 interface ContainerBuilderInterface extends ContainerInterface {
     compiler: CompilerInterface;
     getCompiler(): CompilerInterface;
-    getContainer(): ContainerInterface;
 
     getDefinitions(): Array<ResourceDefinition>;
     hasDefinition(definitionId:string):boolean;

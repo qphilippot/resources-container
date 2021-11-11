@@ -41,4 +41,7 @@ interface ContainerInterface extends PSRContainerInterface {
      */
     setAlias(alias: string, id: Alias): ContainerInterface;
     setAliasFromString(alias: string, id: string): ContainerInterface;
+
+    setDataSlot(name: string, value: any): void;
+    getDataSlot(name: string): any;
 };

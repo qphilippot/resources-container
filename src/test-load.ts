@@ -1,7 +1,7 @@
 import YamlLoader from "../file-loader/yaml-loader";
 import YamlConfigLoader from "./core/models/config-loader/yaml-config-loader";
 import { resolve } from 'path';
-import ContainerBuilder from "./core/container-builder.model";
+import ContainerBuilder from "./core/container/container-builder.model";
 import ConfigLoaderManager from "./core/models/config-loader/config-loader.manager";
 import YamlContainerConfigLoader from "./core/models/config-loader/yaml-container-config-loader";
 import { generateClassesMetadata } from "./generate-classes-metadata";
