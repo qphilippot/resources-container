@@ -10,6 +10,10 @@ export default class InlineContextualServices {
         return this.inlineServices[id];
     }
 
+    set(id: string, service: any) {
+        this.inlineServices[id] = service;
+    }
+    
     isFromConstructor(): boolean {
         return this.fromConstructor;
     }

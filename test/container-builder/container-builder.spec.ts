@@ -117,4 +117,14 @@ describe('container-builder tests', function () {
            CircularReferenceException
        );
     });
+
+    // it('get returns same instance when service is shared', function () {
+    //     const container = new ContainerBuilder();
+    //     container.getReflexionService()
+    //         .recordClass('FooClass', FooClass);
+    //
+    //     container.register('bar', 'FooClass');
+    //     //
+    //     expect(container.get('bar')).to.equals(container.get('bar'));
+    // });
 });

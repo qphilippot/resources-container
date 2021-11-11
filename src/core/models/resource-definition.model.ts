@@ -11,11 +11,14 @@ export default class ResourceDefinition {
     private type?: InstanceType<any>;
     private _isAbstract: boolean = false;
     private autowired: boolean = false;
+    private lazy: boolean = false;
     settings: MixedInterface = {};
     arguments: MixedInterface = [];
     properties: Array<any> = [];
     changes: MixedInterface = {};
     calls: Array<any> = [];
+    shared: boolean = true;
+    private filePath: string | null;
     private factory: any;
     private public: boolean = true;
     private tags: MixedInterface = {};
@@ -46,6 +49,9 @@ export default class ResourceDefinition {
         return this;
     }
 
+    getFilePath(): string | null {
+        return this.filePath;
+    }
     /**
      * Sets the visibility of this resource.
      * @returns {ResourceDefinition}
@@ -73,6 +79,10 @@ export default class ResourceDefinition {
         this.settings = settings;
     }
 
+    isLazy(): boolean {
+        return this.lazy;
+    }
+
     hasFactory(): boolean {
         return Object.keys(this.getFactory()).length > 0;
     }
@@ -93,6 +103,17 @@ export default class ResourceDefinition {
 
     getId(): string {
         return this.id;
+    }
+
+
+    setShared(shared:boolean): this {
+        this.changes['shared'] = true;
+        this.shared = shared;
+        return this;
+    }
+
+    isShared(): boolean {
+        return this.shared;
     }
 
     hasTag(tag: string): boolean {
@@ -224,7 +245,7 @@ export default class ResourceDefinition {
     }
 
     getArguments(): MixedInterface {
-        return { ...this.arguments };
+        return this.arguments;
     }
 
     getProperties(): Array<any> {

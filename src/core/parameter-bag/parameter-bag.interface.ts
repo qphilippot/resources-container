@@ -62,7 +62,7 @@ export default interface ParameterBagInterface {
      *
      * @throws ParameterNotFoundException if a placeholder references a parameter that does not exist
      */
-    resolveValue($value: MixedInterface, resolving: MixedInterface);
+    resolveValue($value: MixedInterface, resolving?: MixedInterface);
 
     /**
      * Escape parameter placeholders %.

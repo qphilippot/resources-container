@@ -28,6 +28,7 @@ import {
 import NullOnInvalidReferenceFeature from "./features/null-on-invalid-reference.feature";
 import InlineContextualServices from "./inline-contextual-services";
 import ContainerHookContext from "./container-hook-context";
+import Reference from "../models/reference.model";
 
 // todo: return an error instead of null when a component is not found
 
@@ -137,7 +138,8 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
 
     addParameter(id, value) {
-        this.flexible.set(id, value, this.container.parameters);
+        this.container.setParameter(id, value);
+        // this.flexible.set(id, value, this.container.parameters);
     }
 
     findById(resource_id: string): Component | null {
@@ -178,10 +180,103 @@ class ContainerBuilder implements ContainerBuilderInterface {
         // do get
     }
 
+    /**
+     * Replaces service references by the real service instance and evaluates expressions.
+     *
+     * @return any The same value with all service references replaced by
+     *               the real service instances and all expressions evaluated
+     */
+    resolveServices(
+        value: any,
+        inlineContextualServices: InlineContextualServices = new InlineContextualServices()): any
+    {
+     if (value instanceof ResourceDefinition) {
+        value = this.createServiceFromDefinition(value, inlineContextualServices);
+    }
+
+
+    //   elseif ($value instanceof ServiceClosureArgument) {
+        //             $reference = $value->getValues()[0];
+        //             $value = function () use ($reference) {
+        //                 return $this->resolveServices($reference);
+        //             };
+        //         } elseif ($value instanceof IteratorArgument) {
+        //             $value = new RewindableGenerator(function () use ($value, &$inlineServices) {
+        //                 foreach ($value->getValues() as $k => $v) {
+        //                     foreach (self::getServiceConditionals($v) as $s) {
+        //                         if (!$this->has($s)) {
+        //                             continue 2;
+        //                         }
+        //                     }
+        //                     foreach (self::getInitializedConditionals($v) as $s) {
+        //                         if (!$this->doGet($s, ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE, $inlineServices)) {
+        //                             continue 2;
+        //                         }
+        //                     }
+        //
+        //                     yield $k => $this->doResolveServices($v, $inlineServices);
+        //                 }
+        //             }, function () use ($value): int {
+        //                 $count = 0;
+        //                 foreach ($value->getValues() as $v) {
+        //                     foreach (self::getServiceConditionals($v) as $s) {
+        //                         if (!$this->has($s)) {
+        //                             continue 2;
+        //                         }
+        //                     }
+        //                     foreach (self::getInitializedConditionals($v) as $s) {
+        //                         if (!$this->doGet($s, ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE)) {
+        //                             continue 2;
+        //                         }
+        //                     }
+        //
+        //                     ++$count;
+        //                 }
+        //
+        //                 return $count;
+        //             });
+        //         } elseif ($value instanceof ServiceLocatorArgument) {
+        //             $refs = $types = [];
+        //             foreach ($value->getValues() as $k => $v) {
+        //                 if ($v) {
+        //                     $refs[$k] = [$v];
+        //                     $types[$k] = $v instanceof TypedReference ? $v->getType() : '?';
+        //                 }
+        //             }
+        //             $value = new ServiceLocator(\Closure::fromCallable([$this, 'resolveServices']), $refs, $types);
+        //         }
+
+        else if (value instanceof Reference) {
+            value = this.resolveGetBeforeCompilation(
+                value.toString(),
+                value.getInvalidBehavior(),
+                inlineContextualServices
+            );
+        }
+
+
+
+    //    elseif ($value instanceof Parameter) {
+        //             $value = $this->getParameter((string) $value);
+        //         } elseif ($value instanceof Expression) {
+        //             $value = $this->getExpressionLanguage()->evaluate($value, ['container' => $this]);
+        //         } elseif ($value instanceof AbstractArgument) {
+        //             throw new RuntimeException($value->getTextWithContext());
+        //         }
+
+     else if (typeof value === 'object') {
+         // resolve recursively
+         Object.keys(value).forEach(key => {
+             value[key] = this.resolveServices(value[key], inlineContextualServices);
+         });
+     }
+        return value;
+    }
+
     resolveGetBeforeCompilation(
         key: string,
         invalidBehavior: number = EXCEPTION_ON_INVALID_REFERENCE,
-        inlineContextualServices: InlineContextualServices|null = null,
+        inlineContextualServices: InlineContextualServices | null = null,
     ) {
         if (inlineContextualServices === null) {
             inlineContextualServices = new InlineContextualServices();
@@ -215,38 +310,47 @@ class ContainerBuilder implements ContainerBuilderInterface {
             return this.get(this.getAlias(key).toString(), invalidBehavior);
         }
 
+        let definition: ResourceDefinition | null = null;
         try {
-            const definition = this.getDefinition(key);
+            definition = this.getDefinition(key);
         } catch (err) {
-            /**
-             * @hook ERROR_ON_GET_DEFINITION_BEFORE_COMPILATION
-             */
-            const context = new ContainerHookContext(invalidBehavior);
-            this.container.publish(ERROR_ON_GET_DEFINITION_BEFORE_COMPILATION, context);
-
-            if (context.shouldThrows(err.name)) {
-                throw err;
+            if (
+                err instanceof ResourceNotFoundException &&
+                invalidBehavior > EXCEPTION_ON_INVALID_REFERENCE
+            ) {
+                return null;
             }
 
-            if (context.shouldReturn()) {
-                return context.getReturnValue();
-            }
+            throw err;
         }
 
         if (inlineContextualServices.isFromConstructor()) {
             this.container.circularReferenceDetector.record(key);
         }
+
+        try {
+            this.createServiceFromDefinition(
+                // definition is not null or exception had be throw yet
+                // @ts-ignore
+                definition,
+                inlineContextualServices,
+                key
+            )
+        } finally {
+            if (inlineContextualServices.isFromConstructor()) {
+                this.container.circularReferenceDetector.clear(key);
+            }
+        }
     }
 
-    createService(
+    createServiceFromDefinition(
         definition: ResourceDefinition,
-        inlineService: Record<string, any> = {},
-        isConstructorArgument: boolean = false,
+        inlineContextualServices: InlineContextualServices,
         id: string = '',
         tryProxy: boolean = true
     ) {
-        if (id.length === 0 && inlineService[definition.getId()]) {
-            return inlineService[definition.getId()];
+        if (id.length === 0 && inlineContextualServices.has(definition.getId())) {
+            return inlineContextualServices.get(definition.getId());
         }
 
         // if ($definition instanceof ChildDefinition) {
@@ -278,6 +382,112 @@ class ContainerBuilder implements ContainerBuilderInterface {
         //             return $proxy;
         //         }
 
+        const parameterBag = this.container.getParameterBag();
+        // if (null !== definition.getFilePath()) {
+        //     import(...)
+        // }
+
+        let p = definition.getArguments().map(arg => {
+            if (arg instanceof Reference) {
+                return arg;
+            }
+
+            else {
+                return  parameterBag.unescapeValue(parameterBag.resolveValue(arg));
+            }
+        });
+
+       const args = this.resolveServices(
+            p,
+            inlineContextualServices
+        );
+
+        // if (null !== $factory = $definition->getFactory()) {
+        //     if (\is_array($factory)) {
+        //         $factory = [$this->doResolveServices($parameterBag->resolveValue($factory[0]), $inlineServices, $isConstructorArgument), $factory[1]];
+        //     } elseif (!\is_string($factory)) {
+        //         throw new RuntimeException(sprintf('Cannot create service "%s" because of invalid factory.', $id));
+        //     }
+        // }
+
+        // which use case ??
+        if (
+            id.length > 0 &&
+            definition.isShared() &&
+            this.container.hasResource(id) &&
+            ( tryProxy || !definition.isLazy())
+        ) {
+            return this.container.resources[id];
+        }
+
+        let service = null;
+        if (definition.hasFactory()) {
+            // if (\is_array($factory)) {
+            //     $factory = [$this->doResolveServices($parameterBag->resolveValue($factory[0]), $inlineServices, $isConstructorArgument), $factory[1]];
+            // } elseif (!\is_string($factory)) {
+            //     throw new RuntimeException(sprintf('Cannot create service "%s" because of invalid factory.', $id));
+            // }
+        //       //             $service = $factory(...$arguments);
+            //         //
+            //         //             if (!$definition->isDeprecated() && \is_array($factory) && \is_string($factory[0])) {
+            //         //                 $r = new \ReflectionClass($factory[0]);
+            //         //
+            //         //                 if (0 < strpos($r->getDocComment(), "\n * @deprecated ")) {
+            //         //                     trigger_deprecation('', '', 'The "%s" service relies on the deprecated "%s" factory class. It should either be deprecated or its factory upgraded.', $id, $r->name);
+            //         //                 }
+            //         //             }
+        }
+
+        else {
+            const reflexionClass = this.reflexionService.findClass(definition.getResourceType());
+
+            if (reflexionClass) {
+                // service = new reflexionClass(...Object.values(definition.getArguments()));
+                service = new reflexionClass(arguments);
+
+            //    if (!$definition->isDeprecated() && 0 < strpos($r->getDocComment(), "\n * @deprecated ")) {
+                //                 trigger_deprecation('', '', 'The "%s" service relies on the deprecated "%s" class. It should either be deprecated or its implementation upgraded.', $id, $r->name);
+                //             }
+            }
+        }
+
+        let lastWitherIndex: number|null = null;
+        definition.getMethodCalls().forEach((call, index) => {
+            // todo comprendre la structure du call et remplacer ce if par quelque chose de plus sémantique
+            if (call[2] ?? false) {
+                lastWitherIndex = index;
+            }
+        });
+
+        if (null === lastWitherIndex && (tryProxy || !definition.isLazy())) {
+            this.shareService(definition, service, id, inlineContextualServices)
+        }
+
+        if (definition.getProperties().length > 0) {
+            const properties = this.resolveServices(
+                parameterBag.unescapeValue(
+                    parameterBag.resolveValue(definition.getProperties())
+                ),
+
+                inlineContextualServices
+            );
+        }
+
+    }
+
+
+    shareService(
+        definition: ResourceDefinition,
+        service: any,
+        id: string,
+        inlineContextualServices: InlineContextualServices
+    ) {
+        inlineContextualServices.set(id, service);
+
+        if (id.length > 0 && definition.isShared()) {
+            this.container.resources[id] = service;
+            this.container.circularReferenceDetector.clear(id);
+        }
     }
 
     setAlias(alias: string, id: Alias): ContainerInterface {

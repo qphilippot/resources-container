@@ -8,12 +8,18 @@ import {EXCEPTION_ON_INVALID_REFERENCE} from "./container-builder.invalid-behavi
 import CircularReferencesDetectorService from "../circular-references-detector.service";
 import {PublisherSubscriber} from "@qphi/publisher-subscriber";
 import {INVALID_REFERENCE_ON_GET} from "./container-notification";
+import ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
+import ParameterBag from "../parameter-bag/parameter-bag.model";
 
 class Container extends PublisherSubscriber implements ContainerInterface {
     resources: Mixed;
     aliases: Record<string, Alias>;
-    parameters: Mixed;
     factories: Mixed;
+    /**
+     * Contains parameters, not resources or alias
+     * @private
+     */
+    private parameterBag: ParameterBagInterface;
     public circularReferenceDetector: CircularReferencesDetectorService = new CircularReferencesDetectorService();
 
     getHandlers: Record<string, Function> = {};
@@ -21,13 +27,21 @@ class Container extends PublisherSubscriber implements ContainerInterface {
 
     constructor(settings: Mixed = {}) {
         super(settings.name || 'container');
-
         this.resources = {};
         this.aliases = {};
-        this.parameters = {};
+        // this.parameters = {};
         this.factories = {};
+
+        this.parameterBag = settings.parameterBag ?? new ParameterBag();
     }
 
+    getParameterBag(): ParameterBagInterface {
+        return this.parameterBag;
+    }
+
+    hasResource(resourceId): boolean{
+        return typeof this.resources[resourceId] !== "undefined";
+    }
     setDataSlot(name: string, value: any) {
         this.dataSlot[name] = value;
     }
@@ -47,8 +61,6 @@ class Container extends PublisherSubscriber implements ContainerInterface {
             return this.resources[id];
         }
 
-        this.publish(INVALID_REFERENCE_ON_GET, { invalidBehavior, id });
-
         if (this.aliases[id]) {
             return this.resources[this.aliases[id].toString()];
         }
@@ -65,12 +77,9 @@ class Container extends PublisherSubscriber implements ContainerInterface {
     }
 
     make(serviceId: string, invalidBehavior:number) {
-        this.circularReferenceDetector.record(serviceId);
+        this.circularReferenceDetector.process(serviceId);
 
-        if (invalidBehavior === EXCEPTION_ON_INVALID_REFERENCE) {
-            throw new ResourceNotFoundException(serviceId);
-        }
-
+        this.publish(INVALID_REFERENCE_ON_GET, { invalidBehavior, id: serviceId });
 
         return null;
     }
@@ -87,15 +96,18 @@ class Container extends PublisherSubscriber implements ContainerInterface {
     }
 
     hasParameter(name: string): boolean {
-        return typeof this.parameters[name] !== 'undefined';
+        return this.parameterBag.has(name);
+        // return typeof this.parameters[name] !== 'undefined';
     }
 
     getParameter(name: string): any {
-        return this.parameters[name];
+        return this.parameterBag.get(name);
+        // return this.parameters[name];
     }
 
     setParameter(name: string, value: any): void {
-        this.parameters[name] = value;
+        this.parameterBag.set(name, value);
+        // this.parameters[name] = value;
     }
 
     getAliases(): Record<string, Alias> {
