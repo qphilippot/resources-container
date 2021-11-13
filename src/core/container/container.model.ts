@@ -143,7 +143,7 @@ class Container extends PublisherSubscriber implements ContainerInterface {
      * @param alias
      * @param id
      */
-    setAlias(alias: string, id: Alias): ContainerInterface {
+    setAlias(alias: string, id: Alias): Alias {
         checkValidId(alias);
 
         if (alias === id.toString()) {
@@ -152,14 +152,14 @@ class Container extends PublisherSubscriber implements ContainerInterface {
 
         this.aliases[alias] = id;
 
-        return this;
+        return id;
     }
 
     removeAlias(alias: string): void {
         delete this.aliases[alias];
     }
 
-    setAliasFromString(alias: string, id: string): ContainerInterface {
+    setAliasFromString(alias: string, id: string): Alias {
         return this.setAlias(alias, new Alias(id));
     }
 

@@ -41,13 +41,13 @@ interface ContainerInterface extends PSRContainerInterface {
      * @param {string} alias The alias to create
      * @param {string} id The service to alias
      *
-     * @returns {ContainerInterface} the container interface (for method chaining)
+     * @returns {Alias}
      *
      * @throws {InvalidArgumentException} if the id is not a string or an Alias
      * @throws {InvalidArgumentException} if the alias is for itself
      */
-    setAlias(alias: string, id: Alias): ContainerInterface;
-    setAliasFromString(alias: string, id: string): ContainerInterface;
+    setAlias(alias: string, id: Alias): Alias;
+    setAliasFromString(alias: string, id: string): Alias;
 
     getResourceIds(): string[];
 

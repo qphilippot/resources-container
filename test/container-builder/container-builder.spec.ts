@@ -6,17 +6,19 @@ import FooClass from "./fixtures/FooClass";
 import BarClass from "./fixtures/BarClass";
 import FooBarClass from "./fixtures/FooBarClass";
 import ResourceNotFoundException from "../../src/core/exception/resource-not-found.exception";
-import exp = require("constants");
-import Container from "../../src/core/container/container.model";
-import {NULL_ON_INVALID_REFERENCE} from "../../src/core/container/container-builder.invalid-behaviors";
+import {
+    IGNORE_ON_INVALID_REFERENCE,
+    NULL_ON_INVALID_REFERENCE
+} from "../../src/core/container/container-builder.invalid-behaviors";
 import Reference from "../../src/core/models/reference.model";
 import CircularReferenceException from "../../src/core/exception/circular-reference.exception";
-import InvalidArgumentException from "../../src/core/exception/invalid-argument.exception";
 import InvalidIdException from "../../src/core/exception/invalid-id.exception";
 import RuntimeException from "../../src/core/exception/runtime.exception";
 import Alias from "../../src/core/models/alias.model";
 import SelfAliasingException from "../../src/core/exception/self-aliasing.exception";
 import AliasNotFoundException from "../../src/core/exception/alias-not-found.exception";
+import FooCompilerPass from "./fixtures/foo.compiler-pass";
+import {BEFORE_OPTIMIZATION} from "../../src/core/compiler-step.enum";
 
 describe('container-builder tests', function () {
     describe('basic definition operations', function () {
@@ -268,12 +270,74 @@ describe('container-builder tests', function () {
             );
         })
 
-        it('throws an exception trying to get unkown alias', function () {
+        it('throws an exception trying to get unknown alias', function () {
             const container = new ContainerBuilder();
             expect(container.getAlias.bind(container, 'foo')).to.throws(
                 AliasNotFoundException,
                 'The resource alias "foo" does not exist.'
             );
         })
+
+        it('retrieves alias using getAlias()', function () {
+            const container = new ContainerBuilder();
+            container.setAlias('bar', new Alias('foo')).setPublic(true);
+            container.setAlias('foobar', new Alias('foo'));
+            container.setAlias('moo', new Alias('foo', false));
+
+            const aliases = container.getAliases();
+
+            expect(aliases['bar'].toString()).to.equals('foo');
+            expect(aliases['bar'].isPublic()).to.be.true;
+            expect(aliases['foobar'].toString()).to.equals('foo');
+            expect(aliases['foobar'].isPublic()).to.be.false;
+            expect(aliases['moo'].toString()).to.equals('foo');
+            expect(aliases['moo'].isPublic()).to.be.false;
+        });
+
+        it('clears alias when adding any resource or definition with same id', function () {
+            const container = new ContainerBuilder();
+            container.setAlias('bar', new Alias('foo')).setPublic(true);
+            container.setAlias('foobar', new Alias('foo'));
+            container.setAlias('moo', new Alias('foo', false));
+
+            container.register('bar', 'FooClass');
+            expect(container.hasAlias('bar')).to.be.false;
+
+            container.setResource('foobar', new FooClass());
+            container.setResource('moo', new FooClass());
+
+            expect(Object.keys(container.getAliases()).length).to.equals(0);
+        });
+
+        it('keeps invalid behavior setting', function () {
+            const container = new ContainerBuilder();
+            container.getReflexionService().recordClass('FooClass', FooClass);
+            const definition = new ResourceDefinition('FooClass');
+            definition.addMethodCall(
+                'setBar',
+                [new Reference('bar', IGNORE_ON_INVALID_REFERENCE)]
+            );
+
+            container.setDefinition('aliased', definition);
+            container.setAlias('alias', new Alias('aliased'));
+            expect(container.get('alias')).to.be.instanceof(FooClass);
+        });
+    });
+
+    describe('compiler passes', function () {
+        it('can add compilation pass', function () {
+            const container = new ContainerBuilder();
+            const defaultPass = container.getCompiler().getPasses();
+
+            const pass1 = new FooCompilerPass();
+            const pass2 = new FooCompilerPass();
+            container.addCompilerPass(pass1, BEFORE_OPTIMIZATION, -5);
+            container.addCompilerPass(pass2, BEFORE_OPTIMIZATION, 10);
+
+            const passes = container.getCompiler().getPasses();
+            expect(defaultPass.length + 2).to.equals(passes.length);
+            // higher priority first
+            expect(passes.indexOf(pass1) > passes.indexOf(pass2)).to.be.true;
+        });
     });
 });

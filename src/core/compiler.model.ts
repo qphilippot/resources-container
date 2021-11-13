@@ -1,9 +1,10 @@
 import CompilerInterface from "./interfaces/compiler.interface";
 import ContainerBuilderInterface from "./interfaces/container-builder.interface";
 import CompilerPassInterface from "./interfaces/compiler-pass.interface";
-import COMPILER_STEP from './compiler-step.enum'
+import { DEFAULT_COMPILER_STEP } from './compiler-step.enum'
 import { Publisher } from '@qphi/publisher-subscriber';
 import PassesManager from "./passes-manager.model";
+import {PASS_ADDED, STEP_ADDED} from "./compiler.notification";
 
 class Compiler extends Publisher implements CompilerInterface {
     private passesManager: PassesManager = new PassesManager('passes-manager');
@@ -20,10 +21,11 @@ class Compiler extends Publisher implements CompilerInterface {
     addStep(step: string) {
         this.steps.push(step);
         this.passesManager.recordStep(step, this);
+        this.publish(STEP_ADDED, step);
     }
 
     getInitialsSteps(): Array<string> {
-        return Object.values(COMPILER_STEP);
+        return Object.values(DEFAULT_COMPILER_STEP);
     }
 
     getSteps(): Array<string> {
@@ -36,8 +38,13 @@ class Compiler extends Publisher implements CompilerInterface {
         });
     }
 
+    getPasses(): CompilerPassInterface[] {
+        return this.passesManager.getPasses();
+    }
+
     addPass(pass: CompilerPassInterface, step: string, priority: number = 0) {
         this.passesManager.addPass(pass, step, priority);
+        this.publish(PASS_ADDED, { pass, step, priority });
     }
 }
 

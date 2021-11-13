@@ -21,16 +21,13 @@ import {
 } from "./container-builder.invalid-behaviors";
 import CircularReferenceException from "../exception/circular-reference.exception";
 import RuntimeException from "../exception/runtime.exception";
-import {
-    ERROR_ON_GET_DEFINITION_BEFORE_COMPILATION,
-    INVALID_REFERENCE_ON_GET_DEFINITION
-} from "./container-notification";
 import NullOnInvalidReferenceFeature from "./features/null-on-invalid-reference.feature";
 import InlineContextualServices from "./inline-contextual-services";
-import ContainerHookContext from "./container-hook-context";
 import Reference from "../models/reference.model";
 import {checkValidId} from "./container.helper";
 import AliasNotFoundException from "../exception/alias-not-found.exception";
+import CompilerPassInterface from "../interfaces/compiler-pass.interface";
+import {BEFORE_OPTIMIZATION} from "../compiler-step.enum";
 
 // todo: return an error instead of null when a component is not found
 
@@ -84,7 +81,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
             definition.setResourceType(null);
         }
 
-        this.addDefinition(definition);
+        this.setDefinition(id, definition);
         return definition;
     }
 
@@ -301,7 +298,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
         invalidBehavior: number = EXCEPTION_ON_INVALID_REFERENCE,
         inlineContextualServices: InlineContextualServices | null = null,
     ) {
-        console.log('resolveGetBeforeCompilation');
         if (inlineContextualServices === null) {
             inlineContextualServices = new InlineContextualServices();
             inlineContextualServices.setFromConstructor();
@@ -373,7 +369,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
         id: string = '',
         tryProxy: boolean = true
     ) {
-        console.log('createServiceFromDefinition', definition.getId());
         if (id.length === 0 && inlineContextualServices.has(definition.getId())) {
             return inlineContextualServices.get(definition.getId());
         }
@@ -461,7 +456,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
             //         //             }
         } else {
             const reflexionClass = this.reflexionService.findClass(definition.getResourceType());
-            console.log('dans le else', reflexionClass);
 
             if (reflexionClass) {
                 // service = new reflexionClass(...Object.values(definition.getArguments()));
@@ -471,8 +465,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
                 //                 trigger_deprecation('', '', 'The "%s" service relies on the deprecated "%s" class. It should either be deprecated or its implementation upgraded.', $id, $r->name);
                 //             }
             }
-
-            console.log('service', service);
         }
 
         let lastWitherIndex: number | null = null;
@@ -497,7 +489,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
             );
         }
 
-        console.log('return ', service);
         return service;
 
     }
@@ -509,7 +500,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
         id: string,
         inlineContextualServices: InlineContextualServices
     ) {
-        console.log('share service', service)
         inlineContextualServices.set(id, service);
 
         if (id.length > 0 && definition.isShared()) {
@@ -523,15 +513,15 @@ class ContainerBuilder implements ContainerBuilderInterface {
      * @param alias
      * @param id
      */
-    setAlias(alias: string, id: Alias): ContainerInterface {
+    setAlias(alias: string, id: Alias): Alias {
         this.container.setAlias(alias, id);
         delete this.definitions[alias];
         this.removedIds.delete(alias);
 
-        return this;
+        return id;
     }
 
-    setAliasFromString(alias: string, id: string): ContainerInterface {
+    setAliasFromString(alias: string, id: string): Alias {
         return this.setAlias(alias, new Alias(id));
     }
 
@@ -594,10 +584,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
      */
     autowire(id: string, className: string | undefined = undefined): ResourceDefinition {
         return this.setDefinition(id, new ResourceDefinition(className).setAutowired(true))
-    }
-
-    addDefinition(definition: ResourceDefinition) {
-        this.definitions[definition.getId()] = definition;
     }
 
     /**
@@ -739,6 +725,15 @@ class ContainerBuilder implements ContainerBuilderInterface {
     }
 
     setDataSlot(name: string, value: any): void {
+    }
+
+    addCompilerPass(
+        pass: CompilerPassInterface,
+        step: string = BEFORE_OPTIMIZATION,
+        priority: number = 0
+    ): this {
+        this.getCompiler().addPass(pass, step, priority);
+        return this;
     }
 }
 

@@ -8,15 +8,11 @@ import InvalidArgumentException from "../exception/invalid-argument.exception";
 export default class ResolveClassPass implements CompilerPassInterface
 {
     public process(container: ContainerBuilderInterface) {
-        console.log(container.getDefinitions());
         container.getDefinitions().forEach(definition => {
-
-            console.log('A', definition.isSynthetic(), definition.getResourceType());
             if (definition.isSynthetic() || definition.getResourceType() !== null) {
                 return;
             }
 
-            console.log('B');
             if (
                 false
                 // && todo check childDefinition
@@ -27,8 +23,6 @@ export default class ResolveClassPass implements CompilerPassInterface
                 );
             }
 
-            console.log('AAA');
-
             if (definition.getResourceType() === null) {
                 const _class = container.getReflexionService().find(definition.getId());
 
@@ -38,8 +32,6 @@ export default class ResolveClassPass implements CompilerPassInterface
                         `Cannot find class for "${definition.getId()}" definition.`
                     );
                 }
-
-                console.log('_class', _class);
 
                 definition.setResourceType(_class);
             }

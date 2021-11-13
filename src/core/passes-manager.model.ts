@@ -1,7 +1,7 @@
 import CompilerPassInterface from "./interfaces/compiler-pass.interface";
 import Collection from "./models/collection.model";
 import InvalidArgumentException from "./exception/invalid-argument.exception";
-import { Subscriber, PublisherInterface } from '@qphi/publisher-subscriber';
+import {Subscriber, PublisherInterface} from '@qphi/publisher-subscriber';
 import ContainerBuilderInterface from "./interfaces/container-builder.interface";
 
 
@@ -61,7 +61,7 @@ import ContainerBuilderInterface from "./interfaces/container-builder.interface"
 //         ]];
 
 export default class PassesManager extends Subscriber {
-    passesByStep: Collection = new Collection();
+    passesByStep: Collection<Record<string, CompilerPassInterface[]>> = new Collection();
 
     recordStep(step: string, compiler: PublisherInterface) {
         if (!this.passesByStep.has(step)) {
@@ -71,7 +71,7 @@ export default class PassesManager extends Subscriber {
         this.subscribe(
             compiler,
             step,
-            (containerBuilder: ContainerBuilderInterface)  => {
+            (containerBuilder: ContainerBuilderInterface) => {
                 const passesByPriority = this.passesByStep.get(step);
                 const prioritiesAvailables = Object.keys(passesByPriority);
                 prioritiesAvailables.sort((a, b) => parseInt(a) - parseInt(b));
@@ -94,12 +94,29 @@ export default class PassesManager extends Subscriber {
 
         if (Array.isArray(recordedSteps[priority])) {
             recordedSteps[priority].push(pass);
-        }
-
-        else {
-            recordedSteps[priority] = [ pass ];
+        } else {
+            recordedSteps[priority] = [pass];
         }
 
         this.passesByStep.add(step, recordedSteps);
+    }
+
+    getSteps(): string[] {
+        return this.passesByStep.keys();
+    }
+
+    getPasses(): CompilerPassInterface[] {
+        const passes: CompilerPassInterface[] = [];
+        this.passesByStep.keys().forEach(key => {
+                const step = this.passesByStep.get(key);
+                const priorities = Object.keys(step).sort((a, b) => parseInt(b) - parseInt(a));
+
+                priorities.forEach(priority => {
+                    step[priority].forEach((pass: CompilerPassInterface) => passes.push(pass))
+                });
+            }
+        );
+
+        return passes;
     }
 }

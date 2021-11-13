@@ -12,9 +12,7 @@ export default class NullOnInvalidReferenceFeature extends Subscriber {
         super('null-on-invalid-reference-feature');
 
         this.subscribe(container, ERROR_ON_GET_DEFINITION_BEFORE_COMPILATION, (context: ContainerHookContext) => {
-            console.log("je suis dans le hook");
             if (context.isBehavior(NULL_ON_INVALID_REFERENCE)) {
-                console.log("jbbbb", (new ResourceNotFoundException('')).name);
                 context.muteException((new ResourceNotFoundException('')).name);
                 context.setValueToReturn(null);
             }

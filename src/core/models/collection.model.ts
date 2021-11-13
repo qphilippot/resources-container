@@ -1,18 +1,27 @@
-import MixedInterface from "../../utils/mixed.interface";
+import ItemNotFoundException from "../exception/item-not-found.exception";
 
-class Collection {
-    private data: MixedInterface = {};
+class Collection<T> {
+    private data: Record<string, T> = {};
 
     has(key: string): boolean {
         return typeof this.data[key] !== 'undefined';
     }
 
-    add(key: string, item: any) {
+    add(key: string, item: T) {
         this.data[key] = item;
     }
 
-    get(key: string): any {
+    get(key: string): T {
+        if (!this.has(key)) {
+            throw new ItemNotFoundException(
+                `Cannot find item "${key}" in collection.`
+            );
+        }
         return this.data[key];
+    }
+
+    keys(): string[] {
+        return Object.keys(this.data);
     }
 }
 
