@@ -72,3 +72,11 @@ Pour l'instant je n'en voit pas l'intérêt. Je préfère d'abord me concentrer 
 https://symfony.com/doc/current/components/expression_language.html
 
 ## Ne pas implémenter de système d'extensions poue l'instant
+
+## MISC
+
+### DIC
+* Ne sait pas créer un service synthétique via get (?)
+
+### TS/JS
+* La destructuration (spread operator) implique la perte du type (le prototype n'est pas copié).

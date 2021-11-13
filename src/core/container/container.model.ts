@@ -10,6 +10,8 @@ import {PublisherSubscriber} from "@qphi/publisher-subscriber";
 import {INVALID_REFERENCE_ON_GET} from "./container-notification";
 import ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
 import ParameterBag from "../parameter-bag/parameter-bag.model";
+import {checkValidId} from "./container.helper";
+import SelfAliasingException from "../exception/self-aliasing.exception";
 
 class Container extends PublisherSubscriber implements ContainerInterface {
     resources: Mixed;
@@ -39,9 +41,15 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         return this.parameterBag;
     }
 
-    hasResource(resourceId): boolean{
+
+    setResource(id: string, resource: any) {
+        this.set(id, resource);
+    }
+
+    hasResource(resourceId): boolean {
         return typeof this.resources[resourceId] !== "undefined";
     }
+
     setDataSlot(name: string, value: any) {
         this.dataSlot[name] = value;
     }
@@ -76,13 +84,14 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         return this.make(id, invalidBehavior);
     }
 
-    make(serviceId: string, invalidBehavior:number) {
+    make(serviceId: string, invalidBehavior: number) {
         this.circularReferenceDetector.process(serviceId);
 
-        this.publish(INVALID_REFERENCE_ON_GET, { invalidBehavior, id: serviceId });
+        this.publish(INVALID_REFERENCE_ON_GET, {invalidBehavior, id: serviceId});
 
         return null;
     }
+
     set(id: string, resource: any): void {
         this.resources[id] = resource;
     }
@@ -114,17 +123,31 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         return this.aliases;
     }
 
-    getAlias(alias:string): Alias {
+    getAlias(alias: string): Alias {
         return this.aliases[alias];
     }
 
+
+    getResourceIds(): string[] {
+        return Array.from(
+            new Set([
+                ...Object.keys(this.aliases),
+                ...Object.keys(this.resources),
+            ])
+        )
+    }
+
+    /**
+     * @throws InvalidIdException
+     * @throws InvalidArgumentException
+     * @param alias
+     * @param id
+     */
     setAlias(alias: string, id: Alias): ContainerInterface {
-        if (alias.trim().length === 0) {
-            throw new InvalidArgumentException(`Invalid alias id: "${alias}"`);
-        }
+        checkValidId(alias);
 
         if (alias === id.toString()) {
-            throw new InvalidArgumentException(`An alias can not reference itself, got a circular reference on: "${alias}"`);
+            throw new SelfAliasingException(alias);
         }
 
         this.aliases[alias] = id;
@@ -132,12 +155,12 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         return this;
     }
 
-    removeAlias(alias: string):void {
+    removeAlias(alias: string): void {
         delete this.aliases[alias];
     }
 
     setAliasFromString(alias: string, id: string): ContainerInterface {
-       return this.setAlias(alias, new Alias(id));
+        return this.setAlias(alias, new Alias(id));
     }
 
     hasAlias(alias: string): boolean {

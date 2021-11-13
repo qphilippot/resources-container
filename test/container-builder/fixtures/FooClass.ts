@@ -1,1 +1,3 @@
-export default class FooClass {}
+export default class FooClass {
+    className:string = 'FooClass';
+}

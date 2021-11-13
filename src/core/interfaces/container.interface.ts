@@ -26,7 +26,14 @@ interface ContainerInterface extends PSRContainerInterface {
     getAlias(alias: string): Alias;
     removeAlias(alias: string):void;
 
+    /**
+     * @deprecated
+     * @alias setResource
+     **/
     set(id: string, resource: any): void;
+
+    /** @alias set **/
+    setResource(id: string, resource: any): void;
 
     /**
      * Sets an alias for an existing service.
@@ -41,6 +48,8 @@ interface ContainerInterface extends PSRContainerInterface {
      */
     setAlias(alias: string, id: Alias): ContainerInterface;
     setAliasFromString(alias: string, id: string): ContainerInterface;
+
+    getResourceIds(): string[];
 
     setDataSlot(name: string, value: any): void;
     getDataSlot(name: string): any;
