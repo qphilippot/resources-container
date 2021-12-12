@@ -57,4 +57,4 @@ export default class ResolveReferencesToAliasesPass extends AbstractRecursivePas
             }
         }
     }
-};
+}

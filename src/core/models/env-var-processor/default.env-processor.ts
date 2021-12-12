@@ -14,8 +14,8 @@ export default class DefaultEnvProcessor extends EnvAwareProcessorModel{
             throw new RuntimeException(`Invalid env "default:${name}": a fallback parameter should be provided.`);
         }
 
-        let next = name.substr(i + 1);
-        let _default = name.substr(0, i);
+        const next = name.substr(i + 1);
+        const _default = name.substr(0, i);
 
         const container = manager.getContainer();
         if (_default && container.hasParameter(_default)) {

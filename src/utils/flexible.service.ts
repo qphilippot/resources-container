@@ -1,7 +1,7 @@
 import MixedInterface from "./mixed.interface";
 
 class FlexibleService {
-    set(propertyPath: string, value: any, instance: MixedInterface, separator:string = '.') {
+    public set(propertyPath: string, value: any, instance: MixedInterface, separator:string = '.') {
         const tokens = propertyPath.split(separator);
 
         let node: MixedInterface = instance;
@@ -27,7 +27,7 @@ class FlexibleService {
         return instance;
     }
 
-    get(id: string, instance: object, separator: string = '.') : any | null {
+    public get(id: string, instance: object, separator: string = '.') : any | null {
         const tokens = id.split(separator);
 
         let node = instance;

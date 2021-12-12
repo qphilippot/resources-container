@@ -18,7 +18,7 @@ export default class IntEnvProcessor extends EnvAwareProcessorModel implements E
     }
 
     process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
-        let env = this.retrieveEnv(prefix, name, getEnv, manager);
+        const env = this.retrieveEnv(prefix, name, getEnv, manager);
         // Use parseFloat instead of parseInt cause parseInt does not resolve '1e1' correctly
         const number = Math.trunc(parseFloat(env));
 

@@ -9,7 +9,7 @@ class HelloService extends Component {
         });
     }
 
-    sayHello() {
+    public sayHello() {
         console.log('hello');
     }
 }

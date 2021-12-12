@@ -106,11 +106,18 @@ export function generateClassesMetadata(
             }
 
             const classDeclarationNode = allClassDeclarationNodes[0];
+            let superClassName: string = 'undefined';
+            if (
+                classDeclarationNode.superClass !== null &&
+                typeof classDeclarationNode.superClass !== 'undefined' &&
+                'name' in classDeclarationNode.superClass
+            ) {
+                superClassName = classDeclarationNode.superClass.name;
+            }
 
             const classMeta: ClassMetadata = {
                 name: classDeclarationNode.id.name,
-                // @ts-ignore
-                superClass: classDeclarationNode.superClass?.name,
+                superClass: superClassName,
                 implements: [],
                 constructor: {},
                 methods: {}
@@ -119,8 +126,10 @@ export function generateClassesMetadata(
 
             classDeclarationNode?.implements?.forEach(node => {
                 if (node.type === 'TSExpressionWithTypeArguments') {
-                    // @ts-ignore
-                    classMeta.implements.push((node as TSExpressionWithTypeArguments).expression?.name);
+                    const expression = (node as TSExpressionWithTypeArguments).expression;
+                    if ("name" in expression) {
+                        classMeta.implements.push(expression.name);
+                    }
                 }
             });
 
@@ -131,12 +140,17 @@ export function generateClassesMetadata(
                     const parameters = parser.retrieveSignature(node).parameters;
                     classMeta.constructor = parameters;
                 } else if (node.kind === 'method') {
+                    let nodeName = '';
+
+                    if ("name" in node.key) {
+                        nodeName = node.key.name;
+                    }
+
                     const methodMeta = {
                         static: node.static,
                         computed: node.computed,
                         async: node.async,
-                        // @ts-ignore
-                        name: node.key.name,
+                        name: nodeName,
                         parameters: node.params.map(param => {
                             const data = {
                                 name: '',
@@ -146,8 +160,18 @@ export function generateClassesMetadata(
 
                             const isAssignmentPattern = param.type === 'AssignmentPattern';
 
-                            // @ts-ignore
-                            data.name = isAssignmentPattern ? param.left.name : param.name;
+                            if (isAssignmentPattern && 'left' in param && 'name' in param.left) {
+                                data.name = param.left.name;
+                            }
+                            else {
+                                if ('name' in param) {
+                                    data.name = param.name;
+                                }
+                                else {
+                                    data.name = 'undefined';
+                                }
+                            }
+
                             data.type = parser.retrieveTypeFromNode(param);
 
                             if (isAssignmentPattern) {

@@ -53,4 +53,4 @@ interface ContainerInterface extends PSRContainerInterface {
 
     setDataSlot(name: string, value: any): void;
     getDataSlot(name: string): any;
-};
+}

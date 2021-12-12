@@ -24,4 +24,4 @@ export default class DefaultResolver extends Publisher implements HandlerInterfa
     process(data: any) {
         return data;
     }
-};
+}

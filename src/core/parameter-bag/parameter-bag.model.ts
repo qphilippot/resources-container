@@ -8,6 +8,7 @@ import { checkKey } from "./parameter-bag.helper";
 // todo add setNestedDelimiter and setParameterDelimiter in order to allow customisation like: my.#param# or even my\#param#
 export default class ParameterBag implements ParameterBagInterface {
     protected parameters: MixedInterface = {};
+    protected exclusionRules: ((values: MixedInterface) => boolean)[] = [];
     protected resolved: boolean = false;
 
     constructor(parameters: MixedInterface = {}) {
@@ -22,6 +23,10 @@ export default class ParameterBag implements ParameterBagInterface {
         Object.keys(parameters).forEach(entry => {
             this.set(entry, parameters[entry])
         });
+    }
+
+    public addExclusionRule(rule: ((values: MixedInterface) => boolean)): void {
+        this.exclusionRules.push(rule);
     }
 
     all(): MixedInterface {
@@ -49,7 +54,7 @@ export default class ParameterBag implements ParameterBagInterface {
                 let i = 0, alternativeFound = false;
 
                 while (i < nbTokens && !alternativeFound) {
-                    let key: string = tokens.shift() ?? '';
+                    const key: string = tokens.shift() ?? '';
 
                     if (this.has(key)) {
                         if (typeof this.get(key) !== 'undefined') {
@@ -75,6 +80,10 @@ export default class ParameterBag implements ParameterBagInterface {
 
     remove(name: string) {
         delete this.parameters[name];
+    }
+
+    private isExcluded(value: MixedInterface) {
+        return this.exclusionRules.findIndex(rule => rule(value)) >= 0;
     }
 
     resolve() {
@@ -115,6 +124,10 @@ export default class ParameterBag implements ParameterBagInterface {
      * @throws RuntimeException                    when a given parameter has a type problem
      */
     resolveValue(value: any, resolving: MixedInterface = {}): any {
+        if (this.isExcluded(value)) {
+            return value;
+        }
+
         if (typeof value === 'object' && value !== null) {
             const args = {};
 
@@ -197,7 +210,7 @@ export default class ParameterBag implements ParameterBagInterface {
         }
 
         if (typeof mixed === 'object' && mixed !== null) {
-            let escaped = {};
+            const escaped = {};
             Object.keys(mixed).forEach(property => {
                 escaped[property] = this.escapeValue(mixed[property]);
             });
@@ -209,12 +222,16 @@ export default class ParameterBag implements ParameterBagInterface {
     }
 
     unescapeValue(mixed: any): any {
+        if (this.isExcluded(mixed)) {
+            return mixed;
+        }
+
         if (typeof mixed === 'string') {
             return mixed.replace(/%%/g, '%');
         }
 
         if (typeof mixed === 'object') {
-            let escaped = {};
+            const escaped = {};
             Object.keys(mixed).forEach(property => {
                 escaped[property] = this.unescapeValue(mixed[property]);
             });

@@ -37,4 +37,4 @@ export default class ResolveClassPass implements CompilerPassInterface
             }
         });
     }
-};
+}

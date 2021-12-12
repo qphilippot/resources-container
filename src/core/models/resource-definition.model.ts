@@ -18,12 +18,11 @@ export default class ResourceDefinition {
     changes: MixedInterface = {};
     calls: Array<any> = [];
     shared: boolean = true;
-    private filePath: string | null;
+    private filePath: string | null = null;
     private factory: any;
     private public: boolean = true;
     private tags: MixedInterface = {};
     private synthetic: boolean = false;
-
     /**
      * Whether this definition is synthetic, that is not constructed by the
      * container, but dynamically injected.
@@ -49,8 +48,13 @@ export default class ResourceDefinition {
         return this;
     }
 
-    getFilePath(): string | null {
-        return this.filePath;
+    setFile(filePath: string): void {
+        this.filePath = filePath;
+    }
+
+
+    getFilePath(): string {
+        return this.filePath ?? '';
     }
     /**
      * Sets the visibility of this resource.
@@ -79,6 +83,10 @@ export default class ResourceDefinition {
         this.settings = settings;
     }
 
+    setLazy(value: boolean): void {
+        this.lazy = true;
+    }
+
     isLazy(): boolean {
         return this.lazy;
     }
@@ -93,7 +101,7 @@ export default class ResourceDefinition {
     }
 
     getFactory():any {
-        return this.factory || {};
+        return this.factory || null;
     }
 
     setId(id) {
@@ -221,6 +229,8 @@ export default class ResourceDefinition {
     }
 
     addArgument(arg: any) {
+        // As arguments is a mixed object, we have to deduce it index in order to properly "add" argument
+        // It must not replace any existing arguments
         const index = Object.keys(this.arguments).length;
         this.arguments[index] = arg;
         return this;

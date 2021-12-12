@@ -1,3 +1,4 @@
+/* eslint-disable */
 import ContainerBuilder from "./core/container/container-builder.model";
 import HelloService from "./services/hello.service";
 import AutowirableContainerService from "./autowirable-container.service";

@@ -17,7 +17,7 @@ class TrevorService extends Component {
         this.helloService = helloService;
     }
 
-    sayHello() {
+    public sayHello() {
         console.log('hello');
     }
 }

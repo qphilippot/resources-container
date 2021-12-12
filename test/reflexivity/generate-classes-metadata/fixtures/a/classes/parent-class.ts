@@ -11,4 +11,4 @@ export default class ParentClass {
     disableToto() {
         this.isToto = false;
     }
-};
+}

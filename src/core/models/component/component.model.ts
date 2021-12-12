@@ -13,7 +13,7 @@ export interface NotificationRecord {
     from: PublisherInterface;
     name: string;
     handler?: Function
-};
+}
 let counter = 0;
 const prefix = 'component_';
 

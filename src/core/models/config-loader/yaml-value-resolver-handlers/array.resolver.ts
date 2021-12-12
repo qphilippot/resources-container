@@ -22,4 +22,4 @@ export default class ArrayResolver extends Publisher implements HandlerInterface
 
         return data;
     }
-};
+}

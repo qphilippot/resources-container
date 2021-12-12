@@ -5,7 +5,7 @@ export default class Foo {
         this.param = param;
     }
 
-    getParam():any {
+    public getParam():any {
         return this.param;
     }
 }

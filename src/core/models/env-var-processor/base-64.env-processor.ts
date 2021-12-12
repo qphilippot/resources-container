@@ -2,7 +2,7 @@ import EnvVarProcessorInterface from "../../interfaces/env-var-processor.interfa
 import EnvVarProcessorManagerInterface from "../../interfaces/env-var-processor-manager.interface";
 import EnvAwareProcessorModel from "./env-aware-processor.model";
 
-let base64_decode: Function = (typeof window === 'undefined') ?
+const base64_decode: Function = (typeof window === 'undefined') ?
     str => {
         return Buffer.from(str, 'base64').toString('ascii');
     } : window.atob;

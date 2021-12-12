@@ -8,7 +8,7 @@ export default class FunctionDeclarationResolver {
         this.parser = babelParser;
     }
 
-    generateNode(code: string) {
+    public generateNode(code: string) {
         return this.parser.parseExpression(code, {
             sourceType: 'script',
             plugins: [
@@ -18,11 +18,11 @@ export default class FunctionDeclarationResolver {
     }
 
 
-    filterNodes(ast) {
+    public filterNodes(ast) {
         return ast.program.body.filter(node => node.type === 'FunctionDeclaration');
     }
 
-    retrieveTypeFromNode(givenNode) {
+    public retrieveTypeFromNode(givenNode) {
         let node;
         if (givenNode.typeAnnotation?.typeAnnotation) {
             node = givenNode.typeAnnotation?.typeAnnotation;
@@ -75,11 +75,11 @@ export default class FunctionDeclarationResolver {
         return 'unknown';
     }
 
-    retrieveParameter(parameterNode) {
+    public retrieveParameter(parameterNode) {
 
     }
 
-    retrieveValueFromObjectExpression(objectExpressionNode) {
+    public retrieveValueFromObjectExpression(objectExpressionNode) {
         const value: any = {};
 
         objectExpressionNode.properties.forEach(node => {
@@ -91,7 +91,7 @@ export default class FunctionDeclarationResolver {
         return value;
     }
 
-    retrieveDefaultValueFromNode(assignmentNode) {
+    public retrieveDefaultValueFromNode(assignmentNode) {
         if (assignmentNode.type !== 'AssignmentPattern') {
             throw new InvalidArgumentException(`An AssignmentPattern is expected but "${assignmentNode.type}" is given`);
         }
@@ -106,10 +106,10 @@ export default class FunctionDeclarationResolver {
 
     }
 
-    retrieveSignature(functionNode) {
+    public retrieveSignature(functionNode) {
         const name = functionNode.id?.name;
-        let parameters: Array<any> = [];
-        let returnType = undefined;
+        const parameters: Array<any> = [];
+        const returnType = undefined;
 
         functionNode.params.forEach(parameterNode => {
             let type: string = 'unknown';
@@ -144,7 +144,7 @@ export default class FunctionDeclarationResolver {
         };
     }
 
-    resolveFromString(functionCode: string) {
+    public resolveFromString(functionCode: string) {
         try {
             const functionNode = this.generateNode(functionCode);
             return this.retrieveSignature(functionNode);

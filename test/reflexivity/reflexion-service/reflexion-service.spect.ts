@@ -13,7 +13,9 @@ describe('ReflexionService test', () => {
 
         expect(typeof theClass).to.equals('function');
 
-        // @ts-ignore
+        if (typeof theClass === 'undefined') {
+            return;
+        }
         const instance = new theClass('foo');
 
         expect(instance instanceof Foo).to.be.true;
@@ -32,8 +34,10 @@ describe('ReflexionService test', () => {
         const theClass = reflexionService.findClassByAlias('bar');
 
         expect(typeof theClass).to.equals('function');
+        if (typeof theClass === 'undefined') {
+            return;
+        }
 
-        // @ts-ignore
         const instance = new theClass('foo');
 
         expect(instance instanceof Foo).to.be.true;

@@ -44,7 +44,7 @@ export default class EnvVarProcessorManager implements EnvVarProcessorManagerInt
     }
 
     getEnv(prefix: string, name: string, getEnv: Function) {
-        let processor = this.processors.find(p => p.match(prefix));
+        const processor = this.processors.find(p => p.match(prefix));
         if (typeof processor === 'undefined') {
             throw new EnvProcessorNotFoundException(`Unsupported env var prefix "${prefix}".`);
         } else {

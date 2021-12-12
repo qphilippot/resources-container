@@ -2,6 +2,7 @@ import Component from "../core/models/component/component.model";
 import MixedInterface from "../utils/mixed.interface";
 
 class RexService extends Component {
+    // eslint-disable-next-line
     constructor({ service_hello }: MixedInterface, settings: MixedInterface = {}) {
         super({
             ...settings,
@@ -9,7 +10,7 @@ class RexService extends Component {
         });
     }
 
-    sayHello() {
+    public sayHello() {
         console.log('hello');
     }
 }

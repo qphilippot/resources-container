@@ -1,3 +1,3 @@
-interface MixedInterface extends Record<string, any>{}
+type MixedInterface = Record<string, any>
 
 export default MixedInterface;

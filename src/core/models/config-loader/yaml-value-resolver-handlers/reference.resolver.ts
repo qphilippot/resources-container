@@ -50,4 +50,4 @@ export default class ReferenceResolver extends Publisher implements HandlerInter
 
         return value;
     }
-};
+}

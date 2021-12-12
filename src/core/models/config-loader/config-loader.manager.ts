@@ -29,4 +29,4 @@ export default class ConfigLoaderManager extends Manager {
     protected delegate(handler: HandlerInterface, params) {
         return handler.process(params);
     }
-};
+}

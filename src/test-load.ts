@@ -1,3 +1,4 @@
+/* eslint-disable */
 import YamlLoader from "../file-loader/yaml-loader";
 import YamlConfigLoader from "./core/models/config-loader/yaml-config-loader";
 import { resolve } from 'path';

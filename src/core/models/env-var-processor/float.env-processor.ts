@@ -8,7 +8,7 @@ import RuntimeException from "../../exception/runtime.exception";
 
 export default class FloatEnvProcessor extends EnvAwareProcessorModel implements EnvVarProcessorInterface {
      process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
-        let env = this.retrieveEnv(prefix, name, getEnv, manager);
+        const env = this.retrieveEnv(prefix, name, getEnv, manager);
         const number = parseFloat(env);
 
         if (Number.isNaN(number)) {

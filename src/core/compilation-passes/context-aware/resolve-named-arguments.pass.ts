@@ -24,7 +24,7 @@ export default class ResolveNamedArgumentsPass extends AbstractRecursivePassMode
 
         calls.forEach(call => {
             const [ method, args ] = call;
-            let parameters = null;
+            const parameters = null;
             const resolvedArgs: MixedInterface = {};
 
             Object.keys(args).forEach((keyName: string) => {
@@ -124,4 +124,4 @@ export default class ResolveNamedArgumentsPass extends AbstractRecursivePassMode
 
         return super.processValue(value, isRoot);
     }
-};
+}

@@ -147,7 +147,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
      */
     getAlias(alias: string): Alias {
         const found = this.container.getAlias(alias);
-        if(found) {
+        if (found) {
             return this.container.getAlias(alias);
         }
         throw new AliasNotFoundException(alias);
@@ -186,7 +186,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
      * @param key
      * @param invalidBehavior
      */
-    get(key: string, invalidBehavior: number = EXCEPTION_ON_INVALID_REFERENCE): any {
+    public get(key: string, invalidBehavior: number = EXCEPTION_ON_INVALID_REFERENCE): any {
         if (
             this.isCompiled() &&
             this.removedIds[key] &&
@@ -207,11 +207,18 @@ class ContainerBuilder implements ContainerBuilderInterface {
      * @return any The same value with all service references replaced by
      *               the real service instances and all expressions evaluated
      */
-    resolveServices(
-        value: any,
-        inlineContextualServices: InlineContextualServices = new InlineContextualServices()): any {
-        if (value instanceof ResourceDefinition) {
-            value = this.createServiceFromDefinition(value, inlineContextualServices);
+    // doResolveServices
+    // todo refactor with hook system
+    public resolveServices(
+        values: any,
+        inlineContextualServices: InlineContextualServices = new InlineContextualServices(),
+        isFromConstructor: boolean = false
+    ): any {
+        if (Array.isArray(values)) {
+            const a = values.map(value => this.resolveServices(value, inlineContextualServices, isFromConstructor));
+            return a;
+        } else if (values instanceof ResourceDefinition) {
+            return this.createServiceFromDefinition(values, inlineContextualServices);
         }
 
 
@@ -266,10 +273,10 @@ class ContainerBuilder implements ContainerBuilderInterface {
             //             $value = new ServiceLocator(\Closure::fromCallable([$this, 'resolveServices']), $refs, $types);
         //         }
 
-        else if (value instanceof Reference) {
-            value = this.resolveGetBeforeCompilation(
-                value.toString(),
-                value.getInvalidBehavior(),
+        else if (values instanceof Reference) {
+            return this.resolveGetBeforeCompilation(
+                values.toString(),
+                values.getInvalidBehavior(),
                 inlineContextualServices
             );
         }
@@ -284,13 +291,16 @@ class ContainerBuilder implements ContainerBuilderInterface {
             //             throw new RuntimeException($value->getTextWithContext());
         //         }
 
-        else if (typeof value === 'object') {
+        else if (typeof values === 'object') {
             // resolve recursively
-            Object.keys(value).forEach(key => {
-                value[key] = this.resolveServices(value[key], inlineContextualServices);
+            const keys = Object.keys(values);
+            keys.forEach(key => {
+                values[key] = this.resolveServices(values[key], inlineContextualServices, isFromConstructor);
             });
+
+            return values;
         }
-        return value;
+        return values;
     }
 
     resolveGetBeforeCompilation(
@@ -403,32 +413,61 @@ class ContainerBuilder implements ContainerBuilderInterface {
         //         }
 
         const parameterBag = this.container.getParameterBag();
-        // if (null !== definition.getFilePath()) {
-        //     import(...)
-        // }
 
-        let p = definition.getArguments().map(arg => {
-            if (arg instanceof Reference) {
-                return arg;
-            } else {
-                return parameterBag.unescapeValue(parameterBag.resolveValue(arg));
+        // resolve class using definition.filePath
+        if (definition.getFilePath().length > 0) {
+            const data = require(
+                parameterBag.resolveValue(definition.getFilePath())
+            );
+
+            const type = definition.getResourceType();
+            if (typeof this.reflexionService.findClass(type) === 'undefined') {
+                this.reflexionService.recordClass(type, data.default);
             }
-        });
+        }
 
-        const args = this.resolveServices(
-            p,
-            inlineContextualServices
-        );
+        const definitionArguments =
+            this.resolveServices(
+                parameterBag.unescapeValue(parameterBag.resolveValue(definition.getArguments())),
+                inlineContextualServices
+            );
 
-        // if (null !== $factory = $definition->getFactory()) {
-        //     if (\is_array($factory)) {
-        //         $factory = [$this->doResolveServices($parameterBag->resolveValue($factory[0]), $inlineServices, $isConstructorArgument), $factory[1]];
-        //     } elseif (!\is_string($factory)) {
-        //         throw new RuntimeException(sprintf('Cannot create service "%s" because of invalid factory.', $id));
+
+        //
+        // // console.log('definitionArguments', definitionArguments);
+        // const args = this.resolveServices(
+        //     definitionArguments,
+        //     inlineContextualServices
+        // );
+
+
+        // let p = definition.getArguments().map(arg => {
+        //     if (arg instanceof Reference) {
+        //         return arg;
+        //     } else {
+        //         return parameterBag.unescapeValue(parameterBag.resolveValue(arg));
         //     }
-        // }
+        // });
+        //
+        // const args = this.resolveServices(
+        //     p,
+        //     inlineContextualServices
+        // );
+
+        const definitionFactory = definition.getFactory();
+        // console.log('args', args);
+
+        // A000
+        if (definitionFactory !== null) {
+            //     if (\is_array($factory)) {
+            //         $factory = [$this->resolveDefinitionDependency($parameterBag->resolveValue($factory[0]), $inlineServices, $isConstructorArgument), $factory[1]];
+            //     } elseif (!\is_string($factory)) {
+            //         throw new RuntimeException(sprintf('Cannot create service "%s" because of invalid factory.', $id));
+            //     }
+        }
 
         // which use case ??
+        // A001
         if (
             id.length > 0 &&
             definition.isShared() &&
@@ -439,9 +478,10 @@ class ContainerBuilder implements ContainerBuilderInterface {
         }
 
         let service = null;
-        if (definition.hasFactory()) {
+        // A002
+        if (definitionFactory !== null) {
             // if (\is_array($factory)) {
-            //     $factory = [$this->doResolveServices($parameterBag->resolveValue($factory[0]), $inlineServices, $isConstructorArgument), $factory[1]];
+            //     $factory = [$this->resolveDefinitionDependency($parameterBag->resolveValue($factory[0]), $inlineServices, $isConstructorArgument), $factory[1]];
             // } elseif (!\is_string($factory)) {
             //     throw new RuntimeException(sprintf('Cannot create service "%s" because of invalid factory.', $id));
             // }
@@ -455,11 +495,12 @@ class ContainerBuilder implements ContainerBuilderInterface {
             //         //                 }
             //         //             }
         } else {
-            const reflexionClass = this.reflexionService.findClass(definition.getResourceType());
+            const reflexionClass = this.reflexionService.findClass(
+                parameterBag.resolveValue(definition.getResourceType())
+            );
 
             if (reflexionClass) {
-                // service = new reflexionClass(...Object.values(definition.getArguments()));
-                service = new reflexionClass(arguments);
+                service = new reflexionClass(...Object.values(definitionArguments));
 
                 //    if (!$definition->isDeprecated() && 0 < strpos($r->getDocComment(), "\n * @deprecated ")) {
                 //                 trigger_deprecation('', '', 'The "%s" service relies on the deprecated "%s" class. It should either be deprecated or its implementation upgraded.', $id, $r->name);
@@ -493,6 +534,30 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
     }
 
+
+    // // doResolveServices
+    // // todo refactor with hook system
+    // resolveDefinitionDependency(values: any, inlineServices: any[] = [], isConstructor = false): any {
+    //     console.log("resolveDefinitionDependency", values);
+    //     // resolve values like: ['foo', 'bar', '%hello%' ]
+    //     if (Array.isArray(values)) {
+    //         const a = values.map(value => this.resolveDefinitionDependency(value, inlineServices, isConstructor));
+    //         // console.log('u', a);
+    //         return a;
+    //     } else if (typeof values === 'object') {
+    //         // must be last condition
+    //         // resolve values like: { "a": "someValue", 1: "foo", "$var": "%bar%" }
+    //         const keys = Object.keys(values);
+    //         keys.forEach(key => {
+    //             // resolve value-part like  ["a", "someValue"]
+    //             values[key] = this.resolveDefinitionDependency(values[key], inlineServices, isConstructor)
+    //         });
+    //
+    //         return values;
+    //     } else {
+    //         return values;
+    //     }
+    // }
 
     shareService(
         definition: ResourceDefinition,

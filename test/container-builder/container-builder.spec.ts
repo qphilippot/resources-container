@@ -19,6 +19,7 @@ import SelfAliasingException from "../../src/core/exception/self-aliasing.except
 import AliasNotFoundException from "../../src/core/exception/alias-not-found.exception";
 import FooCompilerPass from "./fixtures/foo.compiler-pass";
 import {BEFORE_OPTIMIZATION} from "../../src/core/compiler-step.enum";
+import {join} from "path";
 
 describe('container-builder tests', function () {
     describe('basic definition operations', function () {
@@ -338,6 +339,73 @@ describe('container-builder tests', function () {
             expect(defaultPass.length + 2).to.equals(passes.length);
             // higher priority first
             expect(passes.indexOf(pass1) > passes.indexOf(pass2)).to.be.true;
+        });
+    });
+
+    describe('create service', function () {
+        it('can create service using file', function () {
+            const builder = new ContainerBuilder();
+
+            builder.register('foo1', 'FooClass').setFile(join(__dirname, 'fixtures/FooClass.ts'));
+            builder.register('foo2', 'FooClass').setFile(join(__dirname, 'fixtures/%file%.ts'));
+            builder.register('foo3', 'FooClass');
+            builder.setParameter('file', 'FooClass');
+
+            expect(builder.get('foo1')).to.be.instanceof(FooClass);
+            expect(builder.get('foo2')).to.be.instanceof(FooClass);
+            expect(builder.get('foo3')).to.be.instanceof(FooClass);
+        });
+
+        it('create proxy with real service instanciator', function () {
+            const builder = new ContainerBuilder();
+            builder.register('foo', 'Bar\FooClass').setFile(
+                join(__dirname, 'fixtures/FooClass.ts')
+            );
+
+            builder.getDefinition('foo').setLazy(true);
+
+            const foo = builder.get('foo');
+
+            // The same proxy is retrieved on multiple subsequent calls
+            expect(foo).to.be.equals(builder.get('foo'));
+            expect(foo === builder.get('foo')).to.be.true;
+        });
+
+        it('replaces parameters in the class provided by the service definition', function () {
+            const builder = new ContainerBuilder();
+            builder.register('foo1', '%class%');
+            builder.setParameter('class', 'FooClass');
+            // emulate reflexivity
+            builder.getReflexionService().recordClass('FooClass', FooClass)
+            expect(builder.get('foo1')).to.be.instanceof(FooClass);
+        });
+
+        it('create services arguments', function () {
+            const builder = new ContainerBuilder();
+            builder.register('bar', 'BarClass');
+            const foo1Definition = builder.register('foo1', 'FooClass');
+            foo1Definition.addArgument({
+                'foo': '%value%',
+                '%value%': 'foo',
+                '2': new Reference('bar'),
+                '3': '%%unescape it%%'
+            });
+
+
+            builder.getReflexionService()
+                .recordClass('BarClass', BarClass)
+                .recordClass('FooClass', FooClass);
+
+            builder.setParameter('value', 'bar');
+            const foo = builder.get('foo1');
+            expect(JSON.stringify(foo.arguments)).to.equals(
+                JSON.stringify({
+                    'foo': 'bar',
+                    'bar': 'foo',
+                    '2': builder.get('bar'),
+                    '3': '%unescape it%'
+                }
+                ))
         });
     });
 });

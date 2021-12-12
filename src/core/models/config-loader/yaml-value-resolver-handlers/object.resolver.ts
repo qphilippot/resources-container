@@ -22,4 +22,4 @@ export default class ObjectResolver extends Publisher implements HandlerInterfac
 
         return data;
     }
-};
+}

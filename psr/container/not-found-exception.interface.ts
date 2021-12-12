@@ -8,6 +8,6 @@ import ContainerExceptionInterface from "./container-exception.interface";
  * No entry was found in the container.
  */
 
-interface NotFoundExceptionInterface extends ContainerExceptionInterface {}
+type NotFoundExceptionInterface = ContainerExceptionInterface
 
 export default NotFoundExceptionInterface;

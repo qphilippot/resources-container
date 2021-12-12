@@ -5,46 +5,47 @@ export default class Sapristi {
     constructor(id) {
     }
 
-    initializeHandler() {
+    public initializeHandler() {
     }
 
-    addHandler(handler: handlerInterface, name: string) {
+    public addHandler(handler: handlerInterface, name: string) {
     }
 
-    removeHandler(name: string) {
+    public removeHandler(name: string) {
     }
 
-    load(path: string, container: ContainerBuilderInterface) {
+    public load(path: string, container: ContainerBuilderInterface) {
     }
 
-    parseResources(parameters, path, container: ContainerBuilderInterface) {
+    public parseResources(parameters, path, container: ContainerBuilderInterface) {
     }
 
     /**
      * @throws InvalidArgumentException
      */
-    parseDefaults(parameters, path: string) {
+    public parseDefaults(parameters, path: string) {
     }
 
-    parseDefinition(id: string, resource: object | string | null, path: string, defaults, shouldReturn = false) {
+    public parseDefinition(id: string, resource: object | string | null, path: string, defaults, shouldReturn = false) {
     }
 
-    resolveInstanceOf(_instanceof, path, container: ContainerBuilderInterface) {
+    public resolveInstanceOf(_instanceof, path, container: ContainerBuilderInterface) {
     }
 
-    parseParameters(parameters, path, container: ContainerBuilderInterface) {
+    public parseParameters(parameters, path, container: ContainerBuilderInterface) {
     }
 
-    resolveValue(value) {
+    public resolveValue(value) {
     }
 
-    parseImport(content, path: string, container: ContainerBuilderInterface) {
+    public parseImport(content, path: string, container: ContainerBuilderInterface) {
     }
 
-    match(key: string): boolean {
+    public match(key: string): boolean {
         return true
     }
 
-    process({path, container}) {
+    public process(): void {
+        // this is intentional
     }
 }

@@ -47,4 +47,4 @@ export class BoundArgument implements ArgumentInterface {
             [this.value, this.identifier, this.used] = values;
         }
     }
-};
+}

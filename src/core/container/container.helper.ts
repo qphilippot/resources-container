@@ -21,7 +21,7 @@ export function resolveAlias(id: string, container: ContainerInterface): string 
     } while (container.hasAlias(currentIdCheck));
 
     return currentIdCheck;
-};
+}
 
 export function checkDeprecation(id: string, container: ContainerInterface) {
     // todo

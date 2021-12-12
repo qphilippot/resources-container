@@ -6,11 +6,11 @@ export default class Tom extends ParentClass {
         super(settings);
     }
 
-    whatIsIt(): string {
+    public whatIsIt(): string {
         return this.carabistouille;
     }
 
-    async doSomethingAsync() {
+    public async doSomethingAsync() {
         // imagine some async stuff
     }
 }
