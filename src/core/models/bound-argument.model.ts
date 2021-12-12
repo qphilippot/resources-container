@@ -27,8 +27,8 @@ export class BoundArgument implements ArgumentInterface {
         this.type = type;
         this.path = path;
     }
-    
-    getValues(): Array<any> {
+
+    public getValues(): Array<any> {
         return [
             this.value,
             this.identifier,
@@ -37,8 +37,8 @@ export class BoundArgument implements ArgumentInterface {
             this.path
         ];
     }
-    
-    setValues(values: Array<any>) {
+
+    public setValues(values: Array<any>) {
         if (5 === values.length) {
             [this.value, this.identifier, this.used, this.type, this.path] = values;
         }

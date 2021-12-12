@@ -8,31 +8,28 @@ export default class ContainerHookContext {
         this.invalidBehavior = invalidBehavior
     }
 
-    isBehavior(behavior: number): boolean {
+    public isBehavior(behavior: number): boolean {
         return this.invalidBehavior === behavior;
     }
 
-    shouldThrows(exceptionName): boolean {
+    public shouldThrows(exceptionName): boolean {
         return !this.mutedExceptions.has(exceptionName);
     }
 
-    muteException(exceptionName): void {
+    public muteException(exceptionName): void {
         this.mutedExceptions.add(exceptionName);
     }
 
-    setValueToReturn(value: any) {
+    public setValueToReturn(value: any) {
         this._shouldReturn = true;
         this.returnValue = value;
     }
 
-    shouldReturn(): boolean {
+    public shouldReturn(): boolean {
         return this._shouldReturn;
     }
 
-    getReturnValue(): any {
+    public getReturnValue(): any {
         return this.returnValue;
     }
-
-
-
 }

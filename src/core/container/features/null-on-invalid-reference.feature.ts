@@ -1,8 +1,5 @@
 import {PublisherInterface, Subscriber} from "@qphi/publisher-subscriber";
-import {
-    ERROR_ON_GET_DEFINITION_BEFORE_COMPILATION,
-    INVALID_REFERENCE_ON_GET_DEFINITION
-} from "../container-notification";
+import {ERROR_ON_GET_DEFINITION_BEFORE_COMPILATION} from "../container-notification";
 import {NULL_ON_INVALID_REFERENCE} from "../container-builder.invalid-behaviors";
 import ContainerHookContext from "../container-hook-context";
 import ResourceNotFoundException from "../../exception/resource-not-found.exception";

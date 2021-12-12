@@ -1,7 +1,4 @@
-import InvalidArgumentException from "./invalid-argument.exception";
-import NotFoundExceptionInterface from "../../../psr/container/not-found-exception.interface";
 import RuntimeException from "./runtime.exception";
-import MixedInterface from "../../utils/mixed.interface";
 
 /**
  *  This exception is thrown when a circular reference in a parameter is detected.
@@ -27,7 +24,7 @@ export default class ParameterCircularReferenceException extends RuntimeExceptio
         Error.captureStackTrace(this, this.constructor);
     }
 
-    getParameters(): string[] {
+    public getParameters(): string[] {
         return this.parameters;
     }
 }

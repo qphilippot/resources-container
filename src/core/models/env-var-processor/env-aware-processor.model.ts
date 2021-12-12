@@ -1,16 +1,18 @@
 import EnvNotFoundException from "../../exception/env-not-found.exception";
 import EnvVarProcessorManagerInterface from "../../interfaces/env-var-processor-manager.interface";
+import EnvVarProcessorInterface from "../../interfaces/env-var-processor.interface";
 
-export default class EnvAwareProcessorModel {
-    getTarget(): string {
-        return 'unknown';
-    }
+export default abstract class EnvAwareProcessorModel implements EnvVarProcessorInterface{
+    public abstract process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface);
+    public abstract getProcessedTypeName();
 
-    match(prefix: string): boolean {
+    public abstract getTarget();
+
+    public match(prefix: string): boolean {
         return prefix === this.getTarget();
     }
 
-    retrieveEnv(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
+    public retrieveEnv(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
         const i = name.indexOf(':');
         let env : any = null;
         if (i >= 0 || prefix !== 'string') {

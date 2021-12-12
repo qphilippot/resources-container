@@ -8,6 +8,8 @@ export default class ParameterNotFoundException extends InvalidArgumentException
     private alternatives: string[];
     private nonNestedAlternative?: string;
 
+    // todo fix
+    /* eslint-disable  @typescript-eslint/no-unused-vars */
     constructor(
         key: string,
         sourceId: string | undefined = undefined,
@@ -34,7 +36,7 @@ export default class ParameterNotFoundException extends InvalidArgumentException
         this.updateRepr();
     }
 
-    updateRepr() {
+    public updateRepr() {
         if (typeof this.sourceId !== 'undefined') {
             this.message = `The service "${this.sourceId}" has a dependency on a non-existent parameter "${this.key}".`;
         } else if (typeof this.sourceKey !== 'undefined') {
@@ -56,24 +58,24 @@ export default class ParameterNotFoundException extends InvalidArgumentException
         }
     }
 
-    getKey() {
+    public getKey() {
         return this.key;
     }
 
-    getSourceId() {
+    public getSourceId() {
         return this.sourceId;
     }
 
-    getSourceKey() {
+    public getSourceKey() {
         return this.sourceKey;
     }
 
-    setSourceId(sourceId: string) {
+    public setSourceId(sourceId: string) {
         this.sourceId = sourceId;
         this.updateRepr();
     }
 
-    setSourceKey(sourceKey: string) {
+    public setSourceKey(sourceKey: string) {
         this.sourceKey = sourceKey;
         this.updateRepr();
     }

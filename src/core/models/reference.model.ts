@@ -1,8 +1,8 @@
 import {EXCEPTION_ON_INVALID_REFERENCE} from "../container/container-builder.invalid-behaviors";
 
 export default class Reference {
-    private id: string;
-    private behaviorOnInvalid: number;
+    private readonly id: string;
+    private readonly behaviorOnInvalid: number;
 
     constructor(id:string, behaviorOnInvalid: number = EXCEPTION_ON_INVALID_REFERENCE) {
         this.id = id;
@@ -17,7 +17,7 @@ export default class Reference {
         return this.behaviorOnInvalid;
     }
 
-    toString(): string {
+    public toString(): string {
         return this.id;
     }
 }

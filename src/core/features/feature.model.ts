@@ -1,26 +1,21 @@
-import Component from "../models/component/component.model";
-
 class Feature {
     protected isFeatureEnabled: boolean = false;
 
-    bind(component: Component, settings: any = {}) {}
 
-    initialize() {}
-
-    enable() {
+    public enable() {
         this.isFeatureEnabled = true;
     }
 
-    isEnabled() : boolean {
+    public isEnabled() : boolean {
         return this.isFeatureEnabled === true;
     }
 
-    disable() {
+    public disable() {
         this.isFeatureEnabled = false;
     }
 
 
-    toggle() {
+    public toggle() {
         if (this.isEnabled()) {
             this.disable();
         }

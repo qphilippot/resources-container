@@ -4,7 +4,6 @@ import ResourceDefinition from "../models/resource-definition.model";
 import ReflexionService from "../reflexion/reflexion.service";
 
 interface ContainerBuilderInterface extends ContainerInterface {
-    compiler: CompilerInterface;
     getCompiler(): CompilerInterface;
 
     getDefinitions(): Array<ResourceDefinition>;

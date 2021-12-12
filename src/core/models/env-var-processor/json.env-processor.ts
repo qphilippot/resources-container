@@ -1,13 +1,11 @@
 import EnvVarProcessorInterface from "../../interfaces/env-var-processor.interface";
-import ContainerInterface from "../../interfaces/container.interface";
 import EnvVarProcessorManagerInterface from "../../interfaces/env-var-processor-manager.interface";
 import EnvAwareProcessorModel from "./env-aware-processor.model";
 import RuntimeException from "../../exception/runtime.exception";
 
 
-
 export default class JsonEnvProcessor extends EnvAwareProcessorModel implements EnvVarProcessorInterface {
-     process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
+     public process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
         const env = this.retrieveEnv(prefix, name, getEnv, manager);
 
         if (typeof env !== 'string' && env !== null) {
@@ -22,11 +20,11 @@ export default class JsonEnvProcessor extends EnvAwareProcessorModel implements 
          }
     }
 
-    getTarget() {
+    public getTarget() {
         return 'json';
     }
 
-    getProcessedTypeName(): string {
+    public getProcessedTypeName(): string {
         return 'object';
     }
 }

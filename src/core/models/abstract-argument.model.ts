@@ -9,19 +9,19 @@ abstract class AbstractArgument {
         this.text = text;
     }
 
-    setContext(context: string): void {
+    public setContext(context: string): void {
         this.context = `${context} is abstract ${this.text.length === 0 ? '' : ':'}`;
     }
 
-    getText(): string {
+    public getText(): string {
         return this.text;
     }
 
-    getTextWithContext(): string {
+    public getTextWithContext(): string {
         return this.context + this.text + '.';
     }
 
-    hasContext(): boolean {
+    public hasContext(): boolean {
         return this.context.length > 0;
     }
 }

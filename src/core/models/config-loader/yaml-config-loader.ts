@@ -1,19 +1,18 @@
-import FileLoader from "../../../../file-loader/file-loader.model";
 import YamlLoader from "../../../../file-loader/yaml-loader";
 import ConfigLoaderHandlerInterface from "./config-loader-handler.interface";
 import ContainerBuilderInterface from "../../interfaces/container-builder.interface";
 import InvalidArgumentException from "../../exception/invalid-argument.exception";
-import { dirname } from 'path';
-import { Publisher } from '@qphi/publisher-subscriber';
+import {dirname} from 'path';
+import {Publisher} from '@qphi/publisher-subscriber';
 import CONFIG_LOADER_HANDLER_EVENTS from "./config-loader-handler.event";
 import ManagerInterface from "../../interfaces/manager.interface";
 import Manager from "../manager.model";
 import handlerInterface from "../../interfaces/handler.interface";
 import DefaultResolver from "./yaml-value-resolver-handlers/default.resolver";
 import {BoundArgument} from "../bound-argument.model";
-import YamlDefinitionParserModel from "./YamlDefinitionParser.model";
 import YamlDefinitionParser from "./YamlDefinitionParser.model";
 
+/* eslint-disable  @typescript-eslint/no-unused-vars */
 const SERVICE_KEYWORDS = {
     'alias' : 'alias',
     'parent' : 'parent',
@@ -80,7 +79,7 @@ const DEFAULTS_KEYWORDS = [
     'autoconfigure',
     'bind'
 ];
-
+/* eslint-enable  @typescript-eslint/no-unused-vars */
 
 export default class YamlConfigLoader
     extends Publisher
@@ -98,19 +97,19 @@ export default class YamlConfigLoader
         this.initializeHandler();
     }
 
-    initializeHandler() {
+    public initializeHandler() {
         this.addHandler(new DefaultResolver(this.valueResolver, 'default-resolver'), 'default-resolver');
     }
 
-    addHandler(handler: handlerInterface, name: string) {
+    public addHandler(handler: handlerInterface, name: string) {
         this.valueResolver.addHandler(handler, name);
     }
 
-    removeHandler(name: string) {
+    public removeHandler(name: string) {
         this.valueResolver.removeHandler(name);
     }
 
-    load(path: string, container: ContainerBuilderInterface) {
+    public load(path: string, container: ContainerBuilderInterface) {
         const content = this.fileLoader.load(path);
 
         this.definitionParser.setContainer(container);
@@ -125,7 +124,7 @@ export default class YamlConfigLoader
         this.parseResources(content.resources, path, container);
     }
 
-    parseResources(parameters, path, container: ContainerBuilderInterface) {
+    public parseResources(parameters, path, container: ContainerBuilderInterface) {
         if (typeof parameters === 'undefined') {
             return;
         }
@@ -155,7 +154,7 @@ export default class YamlConfigLoader
     /**
      * @throws InvalidArgumentException
      */
-    parseDefaults(parameters, path: string) {
+    public parseDefaults(parameters, path: string) {
         if (typeof parameters['_default'] === 'undefined') {
             return {};
         }
@@ -253,11 +252,11 @@ export default class YamlConfigLoader
      * @param shouldReturn
      * @throws InvalidArgumentException When tags are invalid
      */
-    parseDefinition(id: string, resource: object | string | null, path: string, defaults, shouldReturn = false) {
+    public parseDefinition(id: string, resource: object | string | null, path: string, defaults, shouldReturn = false) {
         this.definitionParser.parse(id, resource, path, shouldReturn);
     }
-
-    resolveInstanceOf(_instanceof, path, container: ContainerBuilderInterface) {
+    /* eslint-disable  @typescript-eslint/no-unused-vars */
+    public resolveInstanceOf(_instanceof, path, container: ContainerBuilderInterface) {
         if (typeof _instanceof !== 'object') {
             throw new InvalidArgumentException(
                 `Service "_instanceof" key must be an array, "${typeof _instanceof}" given in "${path}".`
@@ -282,7 +281,7 @@ export default class YamlConfigLoader
 
     }
 
-    parseParameters(parameters, path, container: ContainerBuilderInterface) {
+    public parseParameters(parameters, path, container: ContainerBuilderInterface) {
         if (typeof parameters === 'undefined') {
             return;
         }
@@ -301,11 +300,11 @@ export default class YamlConfigLoader
 
     }
 
-    resolveValue(value) {
+    public resolveValue(value) {
         return this.valueResolver.process(value);
     }
 
-    parseImport(content, path: string, container: ContainerBuilderInterface) {
+    public parseImport(content, path: string, container: ContainerBuilderInterface) {
         if (typeof content.imports === 'undefined') {
             return;
         }
@@ -344,7 +343,7 @@ export default class YamlConfigLoader
         });
     }
 
-    match(key: string): boolean {
+    public match(key: string): boolean {
         return this.fileLoader.match(key);
     }
 
@@ -353,7 +352,7 @@ export default class YamlConfigLoader
      * @param {string} obj.path
      * @param {ContainerBuilderInterface} obj.container
      */
-    process({ path, container }) {
+    public process({ path, container }) {
         return this.load(path, container);
     }
 

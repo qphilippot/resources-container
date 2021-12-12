@@ -1,13 +1,12 @@
 import EnvVarProcessorInterface from "../../interfaces/env-var-processor.interface";
-import ContainerInterface from "../../interfaces/container.interface";
 import EnvVarProcessorManagerInterface from "../../interfaces/env-var-processor-manager.interface";
 import EnvAwareProcessorModel from "./env-aware-processor.model";
-import RuntimeException from "../../exception/runtime.exception";
-
 
 
 export default class ConstEnvProcessor extends EnvAwareProcessorModel implements EnvVarProcessorInterface {
-    process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
+    /* eslint-disable  @typescript-eslint/no-unused-vars */
+    public override process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
+        /* eslint-enable  @typescript-eslint/no-unused-vars */
         // let env = this.retrieveEnv(prefix, name, getEnv, manager);
         // // Use parseFloat instead of parseInt cause parseInt does not resolve '1e1' correctly
         // const number = Math.trunc(parseFloat(env));
@@ -22,11 +21,11 @@ export default class ConstEnvProcessor extends EnvAwareProcessorModel implements
         // todo try with namespace
     }
 
-    getTarget(): string {
+    public getTarget(): string {
         return 'const';
     }
 
-    getProcessedTypeName(): string {
+    public getProcessedTypeName(): string {
         return 'any';
     }
 }

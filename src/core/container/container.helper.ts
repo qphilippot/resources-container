@@ -23,9 +23,12 @@ export function resolveAlias(id: string, container: ContainerInterface): string 
     return currentIdCheck;
 }
 
+/* eslint-disable  @typescript-eslint/no-unused-vars */
 export function checkDeprecation(id: string, container: ContainerInterface) {
     // todo
+
 }
+/* eslint-enable  @typescript-eslint/no-unused-vars */
 
 /**
  * @throws InvalidIdException

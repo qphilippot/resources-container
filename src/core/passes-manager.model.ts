@@ -61,9 +61,9 @@ import ContainerBuilderInterface from "./interfaces/container-builder.interface"
 //         ]];
 
 export default class PassesManager extends Subscriber {
-    passesByStep: Collection<Record<string, CompilerPassInterface[]>> = new Collection();
+    private passesByStep: Collection<Record<string, CompilerPassInterface[]>> = new Collection();
 
-    recordStep(step: string, compiler: PublisherInterface) {
+    public recordStep(step: string, compiler: PublisherInterface) {
         if (!this.passesByStep.has(step)) {
             this.passesByStep.add(step, {});
         }
@@ -83,7 +83,7 @@ export default class PassesManager extends Subscriber {
         )
     }
 
-    addPass(pass: CompilerPassInterface, step: string, priority: number = 0) {
+    public addPass(pass: CompilerPassInterface, step: string, priority: number = 0) {
         if (!this.passesByStep.has(step)) {
             throw new InvalidArgumentException(
                 `Unable to add pass. Are you sure that ${step} step is enabled ?`
@@ -101,11 +101,11 @@ export default class PassesManager extends Subscriber {
         this.passesByStep.add(step, recordedSteps);
     }
 
-    getSteps(): string[] {
+    public getSteps(): string[] {
         return this.passesByStep.keys();
     }
 
-    getPasses(): CompilerPassInterface[] {
+    public getPasses(): CompilerPassInterface[] {
         const passes: CompilerPassInterface[] = [];
         this.passesByStep.keys().forEach(key => {
                 const step = this.passesByStep.get(key);

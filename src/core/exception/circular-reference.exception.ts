@@ -1,8 +1,8 @@
 import RuntimeException from "./runtime.exception";
 
 export default class CircularReferenceException extends RuntimeException {
-    private resourceId: string;
-    private path: string[];
+    private readonly resourceId: string;
+    private readonly path: string[];
 
     constructor(resourceId: string, path: string[]) {
         super(`Circular reference detected for resource "${resourceId}", path "${path.join('->')}"`);
@@ -16,11 +16,11 @@ export default class CircularReferenceException extends RuntimeException {
         Error.captureStackTrace(this, this.constructor);
     }
 
-    getResourceId(): string {
+    public getResourceId(): string {
         return this.resourceId;
     }
 
-    getPath(): string[] {
+    public getPath(): string[] {
         return this.path;
     }
 }

@@ -35,15 +35,15 @@ import {BEFORE_OPTIMIZATION} from "../compiler-step.enum";
  * Container Service have to use definitions concept in order to check if some resources dependancies are availables before instantiate it
  */
 class ContainerBuilder implements ContainerBuilderInterface {
-    container: Container;
-    compiler: Compiler;
+    private container: Container;
+    private compiler: Compiler;
     private noCompilationIsNeeded: boolean = false;
-    removedIds: Set<string> = new Set<string>();
-    flexible: FlexibleService;
+    private removedIds: Set<string> = new Set<string>();
+    private flexible: FlexibleService;
 
-    reflexionService: ReflexionService = new ReflexionService();
+    private reflexionService: ReflexionService = new ReflexionService();
     // definitions: Array<MixedInterface> = [];
-    definitions: Record<string, ResourceDefinition> = {};
+    private definitions: Record<string, ResourceDefinition> = {};
 
     constructor(settings: MixedInterface = {}) {
         this.container = settings.container || new Container();
@@ -61,7 +61,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
         new NullOnInvalidReferenceFeature(this.container);
     }
 
-    getContainer(): Container {
+    public getContainer(): Container {
         return this.container;
     }
 
@@ -71,7 +71,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
      * @param id
      * @param aClass
      */
-    register(id: string, aClass: InstanceType<any> | undefined = undefined): ResourceDefinition {
+    public register(id: string, aClass: InstanceType<any> | undefined = undefined): ResourceDefinition {
         const definition = new ResourceDefinition();
         definition.setId(id);
 
@@ -85,7 +85,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
         return definition;
     }
 
-    set(id: string, resource: any): void {
+    public set(id: string, resource: any): void {
         if (
             this.isCompiled() &&
             this.hasDefinition(id) &&
@@ -103,11 +103,11 @@ class ContainerBuilder implements ContainerBuilderInterface {
         this.container.set(id, resource);
     }
 
-    setResource(id: string, resource: any) {
+    public setResource(id: string, resource: any) {
         this.set(id, resource);
     }
 
-    getResourceIds(): string[] {
+    public getResourceIds(): string[] {
         return Array.from(
             new Set([
                 ...this.container.getResourceIds(),
@@ -116,27 +116,27 @@ class ContainerBuilder implements ContainerBuilderInterface {
         )
     }
 
-    getReflexionService(): ReflexionService {
+    public getReflexionService(): ReflexionService {
         return this.reflexionService;
     }
 
-    createResource(resource_id: string, resourceType: InstanceType<any>, injection: MixedInterface) {
-        const resource = new resourceType({
-            ...this.getContainer(),
-            ...injection
-        });
-    }
+    // createResource(resource_id: string, resourceType: InstanceType<any>, injection: MixedInterface) {
+    //     const resource = new resourceType({
+    //         ...this.getContainer(),
+    //         ...injection
+    //     });
+    // }
 
     // recordResource(resource_id: string, type: InstanceType<any>, parameters: any) {
     //     this.addResource(new type(parameters), resource_id)
     // }
 
 
-    addAlias(alias, id) {
-        this.flexible.set(alias, id, this.container.aliases);
+    public addAlias(alias, id) {
+        this.flexible.set(alias, id, this.container.getAliases());
     }
 
-    getAliases(): Record<string, Alias> {
+    public getAliases(): Record<string, Alias> {
         return this.container.getAliases();
     }
 
@@ -145,7 +145,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
      * @throws AliasNotFoundException
      * @param alias
      */
-    getAlias(alias: string): Alias {
+    public getAlias(alias: string): Alias {
         const found = this.container.getAlias(alias);
         if (found) {
             return this.container.getAlias(alias);
@@ -153,22 +153,22 @@ class ContainerBuilder implements ContainerBuilderInterface {
         throw new AliasNotFoundException(alias);
     }
 
-    hasAlias(alias: string): boolean {
+    public hasAlias(alias: string): boolean {
         return this.container.hasAlias(alias);
     }
 
 
-    addParameter(id, value) {
+    public addParameter(id, value) {
         this.container.setParameter(id, value);
         // this.flexible.set(id, value, this.container.parameters);
     }
 
-    findById(resource_id: string): Component | null {
-        return this.flexible.get(resource_id, this.container.resources);
+    public findById(resource_id: string): Component | null {
+        return this.flexible.get(resource_id, this.container.getResources());
     }
 
-    findByAlias(aliasName: string): Component | null {
-        const alias: Alias | undefined = this.container.aliases[aliasName];
+    public findByAlias(aliasName: string): Component | null {
+        const alias: Alias | undefined = this.container.getAlias(aliasName);
 
         if (typeof alias === 'undefined') {
             return null;
@@ -177,7 +177,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
         }
     }
 
-    getParameter(parameterName: string): any {
+    public getParameter(parameterName: string): any {
         return this.container.getParameter(parameterName);
     }
 
@@ -303,7 +303,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
         return values;
     }
 
-    resolveGetBeforeCompilation(
+    private resolveGetBeforeCompilation(
         key: string,
         invalidBehavior: number = EXCEPTION_ON_INVALID_REFERENCE,
         inlineContextualServices: InlineContextualServices | null = null,
@@ -355,7 +355,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
         }
 
         if (inlineContextualServices.isFromConstructor()) {
-            this.container.circularReferenceDetector.record(key);
+            this.container.getCircularReferenceDetector().record(key);
         }
 
         try {
@@ -368,12 +368,12 @@ class ContainerBuilder implements ContainerBuilderInterface {
             )
         } finally {
             if (inlineContextualServices.isFromConstructor()) {
-                this.container.circularReferenceDetector.clear(key);
+                this.container.getCircularReferenceDetector().clear(key);
             }
         }
     }
 
-    createServiceFromDefinition(
+    private createServiceFromDefinition(
         definition: ResourceDefinition,
         inlineContextualServices: InlineContextualServices,
         id: string = '',
@@ -474,7 +474,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
             this.container.hasResource(id) &&
             (tryProxy || !definition.isLazy())
         ) {
-            return this.container.resources[id];
+            return this.container.getResource(id);
         }
 
         let service = null;
@@ -559,7 +559,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
     //     }
     // }
 
-    shareService(
+    private shareService(
         definition: ResourceDefinition,
         service: any,
         id: string,
@@ -568,8 +568,8 @@ class ContainerBuilder implements ContainerBuilderInterface {
         inlineContextualServices.set(id, service);
 
         if (id.length > 0 && definition.isShared()) {
-            this.container.resources[id] = service;
-            this.container.circularReferenceDetector.clear(id);
+            this.container.setResource(id, service);
+            this.container.getCircularReferenceDetector().clear(id);
         }
     }
 
@@ -578,7 +578,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
      * @param alias
      * @param id
      */
-    setAlias(alias: string, id: Alias): Alias {
+    public setAlias(alias: string, id: Alias): Alias {
         this.container.setAlias(alias, id);
         delete this.definitions[alias];
         this.removedIds.delete(alias);
@@ -586,11 +586,11 @@ class ContainerBuilder implements ContainerBuilderInterface {
         return id;
     }
 
-    setAliasFromString(alias: string, id: string): Alias {
+    public setAliasFromString(alias: string, id: string): Alias {
         return this.setAlias(alias, new Alias(id));
     }
 
-    getDefinitions(): Array<ResourceDefinition> {
+    public getDefinitions(): Array<ResourceDefinition> {
         return Object.values(this.definitions);
     }
 
@@ -623,7 +623,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
         checkValidId(definitionId);
 
-        delete this.container.aliases[definitionId];
+        this.container.removeAlias(definitionId);
         this.removedIds.delete(definitionId);
         this.definitions[definitionId] = definition;
 
@@ -784,13 +784,13 @@ class ContainerBuilder implements ContainerBuilderInterface {
     removeAlias(alias: string): void {
         this.container.removeAlias(alias);
     }
+    //
+    // getDataSlot(name: string): any {
+    //     return this.container.dataSlot;
+    // }
 
-    getDataSlot(name: string): any {
-        return this.container.dataSlot;
-    }
-
-    setDataSlot(name: string, value: any): void {
-    }
+    // setDataSlot(name: string, value: any): void {
+    // }
 
     addCompilerPass(
         pass: CompilerPassInterface,
@@ -799,6 +799,10 @@ class ContainerBuilder implements ContainerBuilderInterface {
     ): this {
         this.getCompiler().addPass(pass, step, priority);
         return this;
+    }
+
+    getResources(): MixedInterface {
+        return this.container.getResources();
     }
 }
 

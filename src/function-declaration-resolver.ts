@@ -75,10 +75,6 @@ export default class FunctionDeclarationResolver {
         return 'unknown';
     }
 
-    public retrieveParameter(parameterNode) {
-
-    }
-
     public retrieveValueFromObjectExpression(objectExpressionNode) {
         const value: any = {};
 

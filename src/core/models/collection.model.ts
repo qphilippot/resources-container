@@ -3,15 +3,15 @@ import ItemNotFoundException from "../exception/item-not-found.exception";
 class Collection<T> {
     private data: Record<string, T> = {};
 
-    has(key: string): boolean {
+    public has(key: string): boolean {
         return typeof this.data[key] !== 'undefined';
     }
 
-    add(key: string, item: T) {
+    public add(key: string, item: T): void {
         this.data[key] = item;
     }
 
-    get(key: string): T {
+    public get(key: string): T {
         if (!this.has(key)) {
             throw new ItemNotFoundException(
                 `Cannot find item "${key}" in collection.`
@@ -20,7 +20,7 @@ class Collection<T> {
         return this.data[key];
     }
 
-    keys(): string[] {
+    public keys(): string[] {
         return Object.keys(this.data);
     }
 }

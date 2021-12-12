@@ -8,16 +8,16 @@ const base64_decode: Function = (typeof window === 'undefined') ?
     } : window.atob;
 
 export default class Base64EnvProcessor extends EnvAwareProcessorModel implements EnvVarProcessorInterface {
-    process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
+    public process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
         const env = this.retrieveEnv(prefix, name, getEnv, manager);
         return base64_decode(env.replace('-', '+').replace('_', '/'));
     }
 
-    getTarget(): string {
+    public getTarget(): string {
         return 'base64';
     }
 
-    getProcessedTypeName(): string {
+    public getProcessedTypeName(): string {
         return 'string';
     }
 }

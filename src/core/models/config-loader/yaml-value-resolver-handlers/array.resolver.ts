@@ -1,6 +1,5 @@
 import HandlerInterface from "../../../interfaces/handler.interface";
-import Publisher from "../../../../publisher-subscriber/model/publisher.model";
-import YamlConfigLoader from "../yaml-config-loader";
+import { Publisher } from "@qphi/publisher-subscriber";
 import Manager from "../../manager.model";
 
 export default class ArrayResolver extends Publisher implements HandlerInterface {
@@ -10,12 +9,12 @@ export default class ArrayResolver extends Publisher implements HandlerInterface
         super(id);
         this.manager = manager;
     }
-    
-    match(data: any): boolean {
+
+    public match(data: any): boolean {
         return Array.isArray(data);
     }
 
-    process(data: any) {
+    public process(data: any) {
         Object.keys(data).forEach(property => {
             data[property] = this.manager.process(property);
         });

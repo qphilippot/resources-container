@@ -21,6 +21,14 @@
       }
     ],
     "@typescript-eslint/no-inferrable-types": "off",
+    "@typescript-eslint/ban-types": ["error",
+      {
+        "types": {
+          "Function": false
+        },
+        "extendDefaults": true
+      }
+    ],
     "eol-last": ["warn", "always"]
   },
   "ignorePatterns": [

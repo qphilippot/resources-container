@@ -1,6 +1,5 @@
 import Manager from "../manager.model";
 import ConfigLoaderHandlerInterface from "./config-loader-handler.interface";
-import FileLoaderNotFoundException from "../../exception/file-loader-not-found.exception";
 import CONFIG_LOADER_HANDLER_EVENTS from "./config-loader-handler.event";
 import HandlerInterface from "../../interfaces/handler.interface";
 import {resolve} from 'path';
@@ -22,7 +21,7 @@ export default class ConfigLoaderManager extends Manager {
         )
     }
 
-    retrieveDataForHandlers({ path }) {
+    public retrieveDataForHandlers({ path }) {
         return path;
     }
 

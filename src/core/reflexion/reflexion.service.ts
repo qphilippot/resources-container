@@ -10,20 +10,20 @@ export default class ReflexionService {
     private data: MixedInterface = {};
     private dictionary: Map<string, Class> = new Map<string, Class>();
 
-    recordClass(className: string, theClass: Class): this {
+    public recordClass(className: string, theClass: Class): this {
         this.dictionary.set(className, theClass);
         return this;
     }
 
-    loadMeta(meta: MixedInterface): void {
+    public loadMeta(meta: MixedInterface): void {
         this.data = meta;
     }
 
-    findClassByAlias(alias: string) {
+    public findClassByAlias(alias: string) {
         return this.findClass(this.data[alias]?.name);
     }
 
-    findClass(className: string): Class | undefined {
+    public findClass(className: string): Class | undefined {
         return this.dictionary.get(className);
     }
 
@@ -31,11 +31,11 @@ export default class ReflexionService {
      * Inspired from: https://davidwalsh.name/javascript-arguments
      * @param func
      */
-    getFunctionArgumentsName(func: Function): Array<string> {
+    public getFunctionArgumentsName(func: Function): Array<string> {
         return this.parseFunctionDefinition(func.toString());
     }
 
-    parseFunctionDefinition(functionDefinition: string): Array<string> {
+    public parseFunctionDefinition(functionDefinition: string): Array<string> {
         const tokens = functionDefinition.match(/function\s.*?\(([^)]*)\)/) || [];
 
         if (tokens.length < 1) {
@@ -55,7 +55,7 @@ export default class ReflexionService {
         }));
     }
 
-    find(className: string): Class | undefined {
+    public find(className: string): Class | undefined {
         return this.findClass(className) || this.findClassByAlias(className);
     }
 }

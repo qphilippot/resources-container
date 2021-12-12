@@ -1,6 +1,5 @@
 import HandlerInterface from "../../../interfaces/handler.interface";
 import Publisher from "../../../../publisher-subscriber/model/publisher.model";
-import YamlConfigLoader from "../yaml-config-loader";
 import Manager from "../../manager.model";
 import {
     EXCEPTION_ON_INVALID_REFERENCE,
@@ -17,11 +16,11 @@ export default class ReferenceResolver extends Publisher implements HandlerInter
         this.manager = manager;
     }
 
-    match(data: any): boolean {
+    public match(data: any): boolean {
         return typeof data === 'string' && data.startsWith('@');
     }
 
-    process(str: string) {
+    public process(str: string) {
         let value: string | Reference;
         let invalidBehavior: number | null = null;
 

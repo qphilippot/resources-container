@@ -1,4 +1,3 @@
-import NotFoundExceptionInterface from "../../../psr/container/not-found-exception.interface";
 import HandlerNotFoundException from "./handler-not-found.exception";
 
 export default class FileLoaderNotFoundException extends HandlerNotFoundException {

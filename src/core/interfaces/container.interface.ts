@@ -1,9 +1,7 @@
-import PSRContainerInterface from  '../../../psr/container/container.interface';
-import Alias from "../models/alias.model";
+import type Alias from "../models/alias.model";
+import Mixed from "../../utils/mixed.interface";
 
-// todo remove it !
-export default // @ts-ignore
-interface ContainerInterface extends PSRContainerInterface {
+export default interface ContainerInterface {
     hasParameter(name: string): boolean;
     getParameter(name: string): any;
     setParameter(name: string, value: any): void;
@@ -20,6 +18,8 @@ interface ContainerInterface extends PSRContainerInterface {
      * @see Reference
      */
     get(id: string, invalidBehavior: number): any;
+
+    getResources(): Mixed;
 
     getAliases(): Record<string, Alias>;
     hasAlias(alias: string): boolean;
@@ -51,6 +51,6 @@ interface ContainerInterface extends PSRContainerInterface {
 
     getResourceIds(): string[];
 
-    setDataSlot(name: string, value: any): void;
-    getDataSlot(name: string): any;
+    // setDataSlot(name: string, value: any): void;
+    // getDataSlot(name: string): any;
 }

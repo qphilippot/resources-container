@@ -1,17 +1,17 @@
 import HandlerInterface from "../interfaces/handler.interface";
 import ManagerInterface from "../interfaces/manager.interface";
-import { PublisherSubscriber } from '@qphi/publisher-subscriber';
+import {PublisherSubscriber} from '@qphi/publisher-subscriber';
 import HandlerNotFoundException from "../exception/handler-not-found.exception";
 
 export default class Manager extends PublisherSubscriber implements ManagerInterface
 {
     protected handlers: Record<string, HandlerInterface> = {};
 
-    public addHandler(handler: HandlerInterface, name: string) {
+    public addHandler(handler: HandlerInterface, name: string): void {
         this.handlers[name] = handler;
     }
 
-    removeHandler(name: string) {
+    public removeHandler(name: string): void {
         // todo: auto-unsubscribe to all subscriptions
         delete this.handlers[name];
     }
@@ -21,7 +21,7 @@ export default class Manager extends PublisherSubscriber implements ManagerInter
      * @param {Object} obj
      * @param {string} obj.path
      */
-    process(data) {
+    public process(data: any) {
         const path = data.path;
         const dataForHandlers = this.retrieveDataForHandlers(data);
         const handler = Object.values(this.handlers).find(handler => handler.match(dataForHandlers));
@@ -35,7 +35,7 @@ export default class Manager extends PublisherSubscriber implements ManagerInter
         }
     }
 
-    retrieveDataForHandlers(data) {
+    public retrieveDataForHandlers(data) {
         return data;
     }
 

@@ -15,11 +15,11 @@ export default class ParameterBag implements ParameterBagInterface {
         this.add(parameters);
     }
 
-    clear() {
+    public clear() {
         this.parameters = {};
     }
 
-    add(parameters: MixedInterface) {
+    public add(parameters: MixedInterface) {
         Object.keys(parameters).forEach(entry => {
             this.set(entry, parameters[entry])
         });
@@ -29,11 +29,11 @@ export default class ParameterBag implements ParameterBagInterface {
         this.exclusionRules.push(rule);
     }
 
-    all(): MixedInterface {
+    public all(): MixedInterface {
         return this.parameters;
     }
 
-    get(name: string, separator:string = '.'): any {
+    public get(name: string, separator:string = '.'): any {
         if (typeof this.parameters[name] === 'undefined') {
             if (name.length === 0) {
                 throw new ParameterNotFoundException(name);
@@ -74,11 +74,11 @@ export default class ParameterBag implements ParameterBagInterface {
         return this.parameters[name];
     }
 
-    has(name: string): boolean {
+    public has(name: string): boolean {
         return typeof this.parameters[name] !== 'undefined';
     }
 
-    remove(name: string) {
+    public remove(name: string) {
         delete this.parameters[name];
     }
 
@@ -86,7 +86,7 @@ export default class ParameterBag implements ParameterBagInterface {
         return this.exclusionRules.findIndex(rule => rule(value)) >= 0;
     }
 
-    resolve() {
+    public resolve() {
         if (this.resolved) {
             return;
         }
@@ -123,7 +123,7 @@ export default class ParameterBag implements ParameterBagInterface {
      * @throws ParameterCircularReferenceException if a circular reference if detected
      * @throws RuntimeException                    when a given parameter has a type problem
      */
-    resolveValue(value: any, resolving: MixedInterface = {}): any {
+    public resolveValue(value: any, resolving: MixedInterface = {}): any {
         if (this.isExcluded(value)) {
             return value;
         }
@@ -164,7 +164,7 @@ export default class ParameterBag implements ParameterBagInterface {
      * @throws ParameterCircularReferenceException if a circular reference if detected
      * @throws RuntimeException                    when a given parameter has a type problem
      */
-    resolveString(value: string, resolving: MixedInterface = {}) {
+    public resolveString(value: string, resolving: MixedInterface = {}) {
         const match = value.match(/^%([^%\s]+)%$/);
         if (match !== null) {
             const key = checkKey(match[1], resolving);
@@ -199,12 +199,12 @@ export default class ParameterBag implements ParameterBagInterface {
     }
 
 
-    set(name: string, value: any): ParameterBagInterface {
+    public set(name: string, value: any): ParameterBagInterface {
         this.parameters[name] = value;
         return this;
     }
 
-    escapeValue(mixed: any) {
+    public escapeValue(mixed: any) {
         if (typeof mixed === 'string') {
             return mixed.replace(/%/g, '%%');
         }
@@ -221,7 +221,7 @@ export default class ParameterBag implements ParameterBagInterface {
         return mixed;
     }
 
-    unescapeValue(mixed: any): any {
+    public unescapeValue(mixed: any): any {
         if (this.isExcluded(mixed)) {
             return mixed;
         }

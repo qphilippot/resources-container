@@ -21,11 +21,11 @@ export default class Alias {
      *
      * @return bool
      */
-    isPublic(): boolean {
+    public isPublic(): boolean {
         return this._isPublic;
     }
 
-    setPublic(isPublic: boolean) {
+    public setPublic(isPublic: boolean) {
         this._isPublic = isPublic;
     }
 
@@ -41,7 +41,7 @@ export default class Alias {
      *
      * @throws InvalidArgumentException when the message template is invalid
      */
-    setDeprecated(packageName:string, version: string, message: string) {
+    public setDeprecated(packageName:string, version: string, message: string) {
         if (message.length > 0) {
             if (message.match(/[\r\n]|\*/)) {
                 throw new InvalidArgumentException('Invalid characters found in deprecation template.');
@@ -63,17 +63,17 @@ export default class Alias {
         return this;
     }
 
-    getDeprecations(id: string) {
+    public getDeprecations(id: string) {
         const deprecations = { ...this.deprecation };
         deprecations.message = deprecations.message.replace('/%alias_id%/g', id);
         return deprecations;
     }
 
-    isDeprecated(): boolean {
+    public isDeprecated(): boolean {
         return Object.keys(this.deprecation).length > 0;
     }
 
-    toString(): string {
+    public toString(): string {
         return this.id;
     }
 }

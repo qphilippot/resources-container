@@ -1,8 +1,6 @@
 import Mixed from "../../utils/mixed.interface";
-import Component from "../models/component/component.model";
+import MixedInterface from "../../utils/mixed.interface";
 import ContainerInterface from "../interfaces/container.interface";
-import ResourceNotFoundException from "../exception/resource-not-found.exception";
-import InvalidArgumentException from "../exception/invalid-argument.exception";
 import Alias from "../models/alias.model";
 import {EXCEPTION_ON_INVALID_REFERENCE} from "./container-builder.invalid-behaviors";
 import CircularReferencesDetectorService from "../circular-references-detector.service";
@@ -12,22 +10,21 @@ import ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
 import ParameterBag from "../parameter-bag/parameter-bag.model";
 import {checkValidId} from "./container.helper";
 import SelfAliasingException from "../exception/self-aliasing.exception";
-import MixedInterface from "../../utils/mixed.interface";
 import Reference from "../models/reference.model";
 
 class Container extends PublisherSubscriber implements ContainerInterface {
-    resources: Mixed;
-    aliases: Record<string, Alias>;
-    factories: Mixed;
+    private resources: Mixed;
+    private aliases: Record<string, Alias>;
+    private factories: Mixed;
     /**
      * Contains parameters, not resources or alias
      * @private
      */
     private parameterBag: ParameterBagInterface;
-    public circularReferenceDetector: CircularReferencesDetectorService = new CircularReferencesDetectorService();
+    private circularReferenceDetector: CircularReferencesDetectorService = new CircularReferencesDetectorService();
 
-    getHandlers: Record<string, Function> = {};
-    dataSlot: Record<string, any> = {};
+    private getHandlers: Record<string, Function> = {};
+    private dataSlot: Record<string, any> = {};
 
     constructor(settings: Mixed = {}) {
         super(settings.name || 'container');
@@ -42,31 +39,38 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         )
     }
 
-    getParameterBag(): ParameterBagInterface {
+    public getParameterBag(): ParameterBagInterface {
         return this.parameterBag;
     }
 
+    public getCircularReferenceDetector(): CircularReferencesDetectorService {
+        return this.circularReferenceDetector;
+    }
 
-    setResource(id: string, resource: any) {
+
+    public setResource(id: string, resource: any) {
         this.set(id, resource);
     }
 
-    hasResource(resourceId): boolean {
+    public hasResource(resourceId): boolean {
         return typeof this.resources[resourceId] !== "undefined";
     }
 
-    setDataSlot(name: string, value: any) {
+    public setDataSlot(name: string, value: any) {
         this.dataSlot[name] = value;
     }
 
-    getDataSlot(name: string): any {
+    public getDataSlot(name: string): any {
         return this.dataSlot[name];
     }
 
+    public getResources(): Mixed {
+        return this.resources;
+    }
     /**
      * @inheritDoc
      */
-    get(
+    public get(
         id: string,
         invalidBehavior: number = EXCEPTION_ON_INVALID_REFERENCE
     ): any {
@@ -89,7 +93,7 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         return this.make(id, invalidBehavior);
     }
 
-    make(serviceId: string, invalidBehavior: number) {
+    public make(serviceId: string, invalidBehavior: number) {
         this.circularReferenceDetector.process(serviceId);
 
         this.publish(INVALID_REFERENCE_ON_GET, {invalidBehavior, id: serviceId});
@@ -97,11 +101,11 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         return null;
     }
 
-    set(id: string, resource: any): void {
+    public set(id: string, resource: any): void {
         this.resources[id] = resource;
     }
 
-    has(id: string) {
+    public has(id: string) {
         const resource = this.resources[id];
         return (
             resource !== null &&
@@ -109,31 +113,34 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         );
     }
 
-    hasParameter(name: string): boolean {
+    public hasParameter(name: string): boolean {
         return this.parameterBag.has(name);
         // return typeof this.parameters[name] !== 'undefined';
     }
 
-    getParameter(name: string): any {
+    public getParameter(name: string): any {
         return this.parameterBag.get(name);
         // return this.parameters[name];
     }
 
-    setParameter(name: string, value: any): void {
+    public setParameter(name: string, value: any): void {
         this.parameterBag.set(name, value);
         // this.parameters[name] = value;
     }
 
-    getAliases(): Record<string, Alias> {
+    public getAliases(): Record<string, Alias> {
         return this.aliases;
     }
 
-    getAlias(alias: string): Alias {
+    public getAlias(alias: string): Alias {
         return this.aliases[alias];
     }
 
+    public getResource(resourceId: string): Mixed {
+        return this.resources[resourceId];
+    }
 
-    getResourceIds(): string[] {
+    public getResourceIds(): string[] {
         return Array.from(
             new Set([
                 ...Object.keys(this.aliases),
@@ -148,7 +155,7 @@ class Container extends PublisherSubscriber implements ContainerInterface {
      * @param alias
      * @param id
      */
-    setAlias(alias: string, id: Alias): Alias {
+    public setAlias(alias: string, id: Alias): Alias {
         checkValidId(alias);
 
         if (alias === id.toString()) {
@@ -160,15 +167,15 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         return id;
     }
 
-    removeAlias(alias: string): void {
+    public removeAlias(alias: string): void {
         delete this.aliases[alias];
     }
 
-    setAliasFromString(alias: string, id: string): Alias {
+    public setAliasFromString(alias: string, id: string): Alias {
         return this.setAlias(alias, new Alias(id));
     }
 
-    hasAlias(alias: string): boolean {
+    public hasAlias(alias: string): boolean {
         return typeof this.aliases[alias] !== 'undefined';
     }
 }

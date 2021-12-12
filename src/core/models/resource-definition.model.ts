@@ -1,8 +1,7 @@
-import MixedInterface from "../../utils/mixed.interface";
+import type MixedInterface from "../../utils/mixed.interface";
 import FlexibleService from "../../utils/flexible.service";
 import OutOfBoundsException from "../exception/out-of-bounds.exception";
 import InvalidArgumentException from "../exception/invalid-argument.exception";
-import Reference from "./reference.model";
 
 const flexible = new FlexibleService();
 
@@ -12,12 +11,12 @@ export default class ResourceDefinition {
     private _isAbstract: boolean = false;
     private autowired: boolean = false;
     private lazy: boolean = false;
-    settings: MixedInterface = {};
-    arguments: MixedInterface = [];
-    properties: Array<any> = [];
-    changes: MixedInterface = {};
-    calls: Array<any> = [];
-    shared: boolean = true;
+    private settings: MixedInterface = {};
+    private arguments: MixedInterface = [];
+    private properties: Array<any> = [];
+    private changes: MixedInterface = {};
+    private calls: Array<any> = [];
+    private shared: boolean = true;
     private filePath: string | null = null;
     private factory: any;
     private public: boolean = true;
@@ -29,7 +28,7 @@ export default class ResourceDefinition {
      *
      * @returns {boolean}
      */
-    isSynthetic(): boolean {
+    public isSynthetic(): boolean {
         return this.synthetic;
     }
 
@@ -39,7 +38,7 @@ export default class ResourceDefinition {
      *
      * @returns this
      */
-    setSynthetic(isSynthetic: boolean): ResourceDefinition {
+    public setSynthetic(isSynthetic: boolean): ResourceDefinition {
         this.synthetic = isSynthetic;
 
         if (typeof this.changes['public'] === 'undefined') {
@@ -48,19 +47,19 @@ export default class ResourceDefinition {
         return this;
     }
 
-    setFile(filePath: string): void {
+    public setFile(filePath: string): void {
         this.filePath = filePath;
     }
 
 
-    getFilePath(): string {
+    public getFilePath(): string {
         return this.filePath ?? '';
     }
     /**
      * Sets the visibility of this resource.
      * @returns {ResourceDefinition}
      */
-    setPublic(isPublic: boolean): ResourceDefinition {
+    public setPublic(isPublic: boolean): ResourceDefinition {
         this.changes['public'] = true;
         this.public = isPublic;
         return this;
@@ -71,7 +70,7 @@ export default class ResourceDefinition {
      *
      * @returns {boolean}
      */
-    isPublic(): boolean {
+    public isPublic(): boolean {
         return this.public;
     }
 
@@ -83,55 +82,55 @@ export default class ResourceDefinition {
         this.settings = settings;
     }
 
-    setLazy(value: boolean): void {
-        this.lazy = true;
+    public setLazy(isLazy: boolean = true): void {
+        this.lazy = isLazy;
     }
 
-    isLazy(): boolean {
+    public isLazy(): boolean {
         return this.lazy;
     }
 
-    hasFactory(): boolean {
+    public hasFactory(): boolean {
         return Object.keys(this.getFactory()).length > 0;
     }
 
-    setFactory(factory: any) {
+    public setFactory(factory: any) {
         this.factory = factory;
         return this;
     }
 
-    getFactory():any {
+    public getFactory():any {
         return this.factory || null;
     }
 
-    setId(id) {
+    public setId(id) {
         this.id = id;
         return this;
     }
 
-    getId(): string {
+    public getId(): string {
         return this.id;
     }
 
 
-    setShared(shared:boolean): this {
+    public setShared(shared:boolean): this {
         this.changes['shared'] = true;
         this.shared = shared;
         return this;
     }
 
-    isShared(): boolean {
+    public isShared(): boolean {
         return this.shared;
     }
 
-    hasTag(tag: string): boolean {
+    public hasTag(tag: string): boolean {
         return typeof this.tags[tag] !== 'undefined';
     }
 
     /**
      * @return {object} a shallow copy of tags
      */
-    getTags(): object {
+    public getTags(): object {
         return { ...this.tags };
     }
 
@@ -139,7 +138,7 @@ export default class ResourceDefinition {
      * @param {string} name the tag name
      * @return {any}
      */
-    getTag(name: string): any {
+    public getTag(name: string): any {
         return this.tags[name];
     }
 
@@ -148,7 +147,7 @@ export default class ResourceDefinition {
      * Adds a tag for this definition.
      * @return {ResourceDefinition} this
      */
-    addTag(name: string, value: any = {}): ResourceDefinition {
+    public addTag(name: string, value: any = {}): ResourceDefinition {
         this.tags[name] = value;
         return this;
     }
@@ -157,52 +156,52 @@ export default class ResourceDefinition {
      * Sets tags for this definition.
      * @return {ResourceDefinition} this
      */
-    setTags(tags: MixedInterface): ResourceDefinition {
+    public setTags(tags: MixedInterface): ResourceDefinition {
         this.tags = tags;
         return this;
     }
 
-    setResourceType(type: InstanceType<any>) {
+    public setResourceType(type: InstanceType<any>) {
         this.type = type ?? null;
         return this;
     }
 
-    getResourceType(): InstanceType<any> {
+    public getResourceType(): InstanceType<any> {
         return this.type;
     }
 
-    setup(propertyPath: string, value: any) {
+    public setup(propertyPath: string, value: any) {
         flexible.set(propertyPath, value, this.settings);
     }
 
-    getSetting(propertyPath: string): any {
+    public getSetting(propertyPath: string): any {
         return flexible.get(propertyPath, this.settings);
     }
 
     /**
      * @returns {MixedInterface} a shallow copy of settings. To update settings, use `setup`.
      */
-    getSettings(): MixedInterface {
+    public getSettings(): MixedInterface {
         return { ...this.settings };
     }
 
-    setArguments(args: MixedInterface) {
+    public setArguments(args: MixedInterface) {
         this.arguments = args;
         return this;
     }
 
-    setAutowired(status: boolean): this {
+    public setAutowired(status: boolean): this {
         this.changes['autowired'] = true;
         this.autowired = status;
 
         return this;
     }
 
-    isAutowired(): boolean {
+    public isAutowired(): boolean {
         return this.autowired;
     }
 
-    setArgument(index: number|string, arg: any) {
+    public setArgument(index: number|string, arg: any) {
         this.arguments[index] = arg;
         return this;
     }
@@ -213,7 +212,7 @@ export default class ResourceDefinition {
      *
      * @return {ResourceDefinition} this
      */
-    setAbstract(isAbstract: boolean): ResourceDefinition {
+    public setAbstract(isAbstract: boolean): ResourceDefinition {
         this._isAbstract = isAbstract;
         return this;
     }
@@ -228,7 +227,7 @@ export default class ResourceDefinition {
         return this._isAbstract;
     }
 
-    addArgument(arg: any) {
+    public addArgument(arg: any) {
         // As arguments is a mixed object, we have to deduce it index in order to properly "add" argument
         // It must not replace any existing arguments
         const index = Object.keys(this.arguments).length;
@@ -236,7 +235,7 @@ export default class ResourceDefinition {
         return this;
     }
 
-    replaceArgument(index: number, arg: any) {
+    public replaceArgument(index: number, arg: any) {
         const keys = Object.keys(this.arguments);
         const length = keys.length;
         if (length === 0) {
@@ -254,24 +253,24 @@ export default class ResourceDefinition {
         return this;
     }
 
-    getArguments(): MixedInterface {
+    public getArguments(): MixedInterface {
         return this.arguments;
     }
 
-    getProperties(): Array<any> {
+    public getProperties(): Array<any> {
         return this.properties.slice(0);
     }
 
-    setProperties(properties: Array<any>): ResourceDefinition {
+    public setProperties(properties: Array<any>): ResourceDefinition {
         this.properties = properties;
         return this;
     }
 
-    getMethodCalls(): Array<any> {
+    public getMethodCalls(): Array<any> {
         return this.calls.slice(0);
     }
 
-    setMethodCalls(calls: Array<any>): ResourceDefinition {
+    public setMethodCalls(calls: Array<any>): ResourceDefinition {
         this.calls = [];
 
         calls.forEach(call => {
@@ -281,7 +280,7 @@ export default class ResourceDefinition {
         return this;
     }
 
-    addMethodCall(methodName: string, args: MixedInterface, shouldReturnClone: boolean = false) : ResourceDefinition {
+    public addMethodCall(methodName: string, args: MixedInterface, shouldReturnClone: boolean = false) : ResourceDefinition {
         if (methodName.length === 0) {
             throw  new InvalidArgumentException('Method name cannot be empty');
         }

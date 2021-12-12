@@ -13,7 +13,10 @@ export default class KeyEnvProcessor extends EnvAwareProcessorModel {
         this.flexible = new FlexibleService();
     }
 
-    process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
+
+    /* eslint-disable @typescript-eslint/no-unused-vars */
+    public override process(prefix: string, name: string, getEnv: Function, manager: EnvVarProcessorManagerInterface) {
+        /* eslint-enable @typescript-eslint/no-unused-vars */
         const tokens: Array<string> = name.split(':');
 
         if (tokens.length === 1 || tokens[0].length === 0) {
@@ -43,11 +46,11 @@ export default class KeyEnvProcessor extends EnvAwareProcessorModel {
         return value;
     }
 
-    getTarget(): string {
+    public getTarget(): string {
         return 'key';
     }
 
-    getProcessedTypeName(): string {
+    public getProcessedTypeName(): string {
         return 'bool|int|float|string|array|object';
     }
 }
