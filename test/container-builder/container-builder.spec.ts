@@ -1,7 +1,7 @@
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import ContainerBuilder from "../../src/core/container/container-builder.model";
-import ResourceDefinition from "../../src/core/models/resource-definition.model";
+import Definition from "../../src/core/models/definition.model";
 import FooClass from "./fixtures/FooClass";
 import BarClass from "./fixtures/BarClass";
 import FooBarClass from "./fixtures/FooBarClass";
@@ -30,7 +30,7 @@ describe('container-builder tests', function () {
             expect(container.hasDefinition('service.container')).to.be.true;
 
             const definition = container.getDefinition('service.container');
-            expect(definition instanceof ResourceDefinition).to.be.true;
+            expect(definition instanceof Definition).to.be.true;
             expect(definition.isSynthetic()).to.be.true;
             expect(definition.getResourceType()).to.equals(ContainerBuilder);
         });
@@ -38,8 +38,8 @@ describe('container-builder tests', function () {
         it('correctly use definitions', function () {
             const container = new ContainerBuilder();
             const definitions = {
-                foo: new ResourceDefinition('Bar\FooClass'),
-                bar: new ResourceDefinition('BarClass')
+                foo: new Definition('Bar\FooClass'),
+                bar: new Definition('BarClass')
             };
 
             // emulate reflexivity
@@ -55,13 +55,13 @@ describe('container-builder tests', function () {
             expect(container.hasDefinition('foo')).to.be.true;
             expect(container.hasDefinition('foobar')).to.be.false;
 
-            const foobarDefinition = new ResourceDefinition('FooBarClass');
+            const foobarDefinition = new Definition('FooBarClass');
             container.setDefinition('foobar', foobarDefinition);
             expect(foobarDefinition).to.equals(container.getDefinition('foobar'));
             expect(foobarDefinition).to.equals(container.setDefinition('foobar', foobarDefinition));
 
             const duplicatedDefinition = {
-                foobar: new ResourceDefinition('FooBarClass')
+                foobar: new Definition('FooBarClass')
             };
 
             container.addDefinitions(duplicatedDefinition);
@@ -199,7 +199,7 @@ describe('container-builder tests', function () {
             const container = new ContainerBuilder();
             container.register('foo', 'Bar\FooClass');
             expect(container.hasDefinition('foo')).to.be.true;
-            expect(container.getDefinition('foo') instanceof ResourceDefinition).to.be.true;
+            expect(container.getDefinition('foo') instanceof Definition).to.be.true;
         });
 
         it('does not override existing resource', function () {
@@ -239,7 +239,7 @@ describe('container-builder tests', function () {
         invalidIds.forEach(function (id) {
             it(`"${id}" is not a valid definition id`, function () {
                 const container = new ContainerBuilder();
-                expect(container.setDefinition.bind(container, id, new ResourceDefinition('foo'))).to.throw(
+                expect(container.setDefinition.bind(container, id, new Definition('foo'))).to.throw(
                     InvalidIdException,
                     `Invalid alias id: "${id}"`
                 );
@@ -313,7 +313,7 @@ describe('container-builder tests', function () {
         it('keeps invalid behavior setting', function () {
             const container = new ContainerBuilder();
             container.getReflexionService().recordClass('FooClass', FooClass);
-            const definition = new ResourceDefinition('FooClass');
+            const definition = new Definition('FooClass');
             definition.addMethodCall(
                 'setBar',
                 [new Reference('bar', IGNORE_ON_INVALID_REFERENCE)]
@@ -406,6 +406,15 @@ describe('container-builder tests', function () {
                     '3': '%unescape it%'
                 }
                 ))
+        });
+        it('create services using factory', function () {
+           const builder = new ContainerBuilder();
+           builder.register('foo', 'FooClass').setFactory('FooClass::getInstance');
+           builder.register('qux', 'FooClass').setFactory(['FooClass', 'getInstance']);
+           builder.register('bar', 'FooClass').setFactory([new Definition('FooClass'), 'getInstance']);
+           builder.register('baz', 'FooClass').setFactory([new Reference('bar'), 'getInstance']);
+
+           expect(builder.get('foo').called)
         });
     });
 });

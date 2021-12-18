@@ -1,7 +1,7 @@
 import CompilerPassInterface from "../../interfaces/compiler-pass.interface";
 import AbstractRecursivePassModel from "../standard/abstract-recursive-pass.model";
 import AbstractArgument from "../../models/abstract-argument.model";
-import ResourceDefinition from "../../models/resource-definition.model";
+import Definition from "../../models/definition.model";
 import MixedInterface from "../../../utils/mixed.interface";
 
 /**
@@ -14,7 +14,7 @@ export default class ResolveNamedArgumentsPass extends AbstractRecursivePassMode
             value.setContext(`A value found in service "${this.currentId}"`);
         }
 
-        if (!(value instanceof ResourceDefinition)) {
+        if (!(value instanceof Definition)) {
             return super.processValue(value, isRoot);
         }
 

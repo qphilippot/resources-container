@@ -1,17 +1,13 @@
 import Container from "./container.model";
 import FlexibleService from "../../utils/flexible.service";
 import Component from "../models/component/component.model";
-import Mixed from "../../utils/mixed.interface";
 import MixedInterface from "../../utils/mixed.interface";
 import ReflexionService from "../reflexion/reflexion.service";
-import ResourceDefinition from "../models/resource-definition.model";
+import Definition from "../models/definition.model";
 import ContainerBuilderInterface from "../interfaces/container-builder.interface";
 import CompilerInterface from "../interfaces/compiler.interface";
 import Compiler from "../compiler.model";
-import ContainerInterface from "../interfaces/container.interface";
 import BadMethodCallException from "../exception/bad-method-call.exception";
-import InvalidArgumentException from "../exception/invalid-argument.exception";
-import {isValidResourceId} from "../helpers/resource-definition.helper";
 import ResourceNotFoundException from "../exception/resource-not-found.exception";
 import Alias from "../models/alias.model";
 import {
@@ -43,7 +39,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
     private reflexionService: ReflexionService = new ReflexionService();
     // definitions: Array<MixedInterface> = [];
-    private definitions: Record<string, ResourceDefinition> = {};
+    private definitions: Record<string, Definition> = {};
 
     constructor(settings: MixedInterface = {}) {
         this.container = settings.container || new Container();
@@ -51,7 +47,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
         this.reflexionService = new ReflexionService();
 
-        const serviceContainerDefinition = (new ResourceDefinition(ContainerBuilder))
+        const serviceContainerDefinition = (new Definition(ContainerBuilder))
             .setSynthetic(true)
             .setPublic(true);
 
@@ -71,8 +67,8 @@ class ContainerBuilder implements ContainerBuilderInterface {
      * @param id
      * @param aClass
      */
-    public register(id: string, aClass: InstanceType<any> | undefined = undefined): ResourceDefinition {
-        const definition = new ResourceDefinition();
+    public register(id: string, aClass: InstanceType<any> | undefined = undefined): Definition {
+        const definition = new Definition();
         definition.setId(id);
 
         if (typeof aClass !== undefined) {
@@ -211,13 +207,12 @@ class ContainerBuilder implements ContainerBuilderInterface {
     // todo refactor with hook system
     public resolveServices(
         values: any,
-        inlineContextualServices: InlineContextualServices = new InlineContextualServices(),
-        isFromConstructor: boolean = false
+        inlineContextualServices: InlineContextualServices = new InlineContextualServices()
     ): any {
         if (Array.isArray(values)) {
-            const a = values.map(value => this.resolveServices(value, inlineContextualServices, isFromConstructor));
+            const a = values.map(value => this.resolveServices(value, inlineContextualServices));
             return a;
-        } else if (values instanceof ResourceDefinition) {
+        } else if (values instanceof Definition) {
             return this.createServiceFromDefinition(values, inlineContextualServices);
         }
 
@@ -340,7 +335,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
             return this.get(this.getAlias(key).toString(), invalidBehavior);
         }
 
-        let definition: ResourceDefinition | null = null;
+        let definition: Definition | null = null;
         try {
             definition = this.getDefinition(key);
         } catch (err) {
@@ -374,7 +369,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
     }
 
     private createServiceFromDefinition(
-        definition: ResourceDefinition,
+        definition: Definition,
         inlineContextualServices: InlineContextualServices,
         id: string = '',
         tryProxy: boolean = true
@@ -454,16 +449,25 @@ class ContainerBuilder implements ContainerBuilderInterface {
         //     inlineContextualServices
         // );
 
-        const definitionFactory = definition.getFactory();
+        let definitionFactory = definition.getFactory();
         // console.log('args', args);
 
         // A000
+        // todo add a hook ?
         if (definitionFactory !== null) {
-            //     if (\is_array($factory)) {
-            //         $factory = [$this->resolveDefinitionDependency($parameterBag->resolveValue($factory[0]), $inlineServices, $isConstructorArgument), $factory[1]];
-            //     } elseif (!\is_string($factory)) {
-            //         throw new RuntimeException(sprintf('Cannot create service "%s" because of invalid factory.', $id));
-            //     }
+            if (Array.isArray(definitionFactory)) {
+                definitionFactory = [
+                    this.resolveServices(
+                        parameterBag.resolveValue(definitionFactory[0]),
+                        inlineContextualServices
+                    ),
+                    definitionFactory[1]
+                ];
+            } else if (typeof definitionFactory === 'string') {
+                throw new RuntimeException(
+                    `Cannot create service "${id}" because of invalid factory.`
+                );
+            }
         }
 
         // which use case ??
@@ -560,7 +564,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
     // }
 
     private shareService(
-        definition: ResourceDefinition,
+        definition: Definition,
         service: any,
         id: string,
         inlineContextualServices: InlineContextualServices
@@ -590,7 +594,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
         return this.setAlias(alias, new Alias(id));
     }
 
-    public getDefinitions(): Array<ResourceDefinition> {
+    public getDefinitions(): Array<Definition> {
         return Object.values(this.definitions);
     }
 
@@ -616,7 +620,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
      * @param definition
      * @throws InvalidIdException
      */
-    setDefinition(definitionId: string, definition: ResourceDefinition): ResourceDefinition {
+    setDefinition(definitionId: string, definition: Definition): Definition {
         if (this.isCompiled()) {
             throw new BadMethodCallException('Adding definition to a compiled container is not allowed.')
         }
@@ -630,7 +634,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
         return definition;
     }
 
-    getDefinition(definitionId: string): ResourceDefinition {
+    getDefinition(definitionId: string): Definition {
         const definition = this.definitions[definitionId];
         if (typeof definition === 'undefined') {
             throw new ResourceNotFoundException(definitionId);
@@ -645,18 +649,18 @@ class ContainerBuilder implements ContainerBuilderInterface {
      * This method implements a shortcut for using setDefinition() with
      * an autowired definition.
      *
-     * @return ResourceDefinition The created definition
+     * @return Definition The created definition
      */
-    autowire(id: string, className: string | undefined = undefined): ResourceDefinition {
-        return this.setDefinition(id, new ResourceDefinition(className).setAutowired(true))
+    autowire(id: string, className: string | undefined = undefined): Definition {
+        return this.setDefinition(id, new Definition(className).setAutowired(true))
     }
 
     /**
      * Adds the service definitions.
      *
-     * @param {Record<string, ResourceDefinition>} definitions An array of service definitions
+     * @param {Record<string, Definition>} definitions An array of service definitions
      */
-    addDefinitions(definitions: Record<string, ResourceDefinition>) {
+    addDefinitions(definitions: Record<string, Definition>) {
         Object.keys(definitions).forEach(id => {
             this.setDefinition(id, definitions[id]);
         });
@@ -665,9 +669,9 @@ class ContainerBuilder implements ContainerBuilderInterface {
     /**
      * Sets the service definitions.
      *
-     * @param {Record<string, ResourceDefinition>} definitions A set of service definitions
+     * @param {Record<string, Definition>} definitions A set of service definitions
      */
-    setDefinitions(definitions: Record<string, ResourceDefinition>) {
+    setDefinitions(definitions: Record<string, Definition>) {
         this.definitions = {};
         this.addDefinitions(definitions);
     }
@@ -784,6 +788,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
     removeAlias(alias: string): void {
         this.container.removeAlias(alias);
     }
+
     //
     // getDataSlot(name: string): any {
     //     return this.container.dataSlot;

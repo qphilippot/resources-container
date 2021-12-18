@@ -1,7 +1,7 @@
 import BadDefinitionValidityException from "../../exception/passes/bad-definition-validity.exception";
-import ResourceDefinition from "../../models/resource-definition.model";
+import Definition from "../../models/definition.model";
 
-export function syntheticServiceMustBePublic(definition: ResourceDefinition) {
+export function syntheticServiceMustBePublic(definition: Definition) {
     if (definition.isSynthetic() && !definition.isPublic()) {
         throw new BadDefinitionValidityException(
             `A synthetic service ("${definition.getId()}") must be public.`
@@ -9,7 +9,7 @@ export function syntheticServiceMustBePublic(definition: ResourceDefinition) {
     }
 }
 
-export function tagsAttributesValuesMustBeScalar(definition: ResourceDefinition) {
+export function tagsAttributesValuesMustBeScalar(definition: Definition) {
     const tags = definition.getTags();
     Object.values(tags).forEach(tag => {
         const attributesName = Object.keys(tag);

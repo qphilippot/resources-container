@@ -1,6 +1,6 @@
 import CompilerPassInterface from "../../interfaces/compiler-pass.interface";
 import ContainerBuilderInterface from "../../interfaces/container-builder.interface";
-import ResourceDefinition from "../../models/resource-definition.model";
+import Definition from "../../models/definition.model";
 
 export default abstract class AbstractRecursivePassModel implements CompilerPassInterface {
     protected containerBuilder: ContainerBuilderInterface;
@@ -19,7 +19,7 @@ export default abstract class AbstractRecursivePassModel implements CompilerPass
      * @returns {Object} The processed value
      */
     protected processValue(value: any, isRoot: boolean = false): any {
-        if (value instanceof ResourceDefinition) {
+        if (value instanceof Definition) {
             value.setArguments(this.processValue(value.getArguments()));
             value.setMethodCalls(this.processValue(value.getMethodCalls()));
 

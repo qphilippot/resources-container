@@ -4,7 +4,7 @@ import HelloService from "./services/hello.service";
 import AutowirableContainerService from "./autowirable-container.service";
 import TrevorService from "./services/trevor.service";
 import Component from "./core/models/component/component.model";
-import ResourceDefinition from "./core/models/resource-definition.model";
+import Definition from "./core/models/definition.model";
 //
 const containerService : ContainerBuilder = new ContainerBuilder();
 //
@@ -29,7 +29,7 @@ containerService.addAlias('hello', 'service.hello');
 // new TrevorService(...[undefined, undefined]);
 
 // Maybe create a DefinitionBuilder to create definition or add createDefinition(id, class, settings) to container-builder
-const trevorDefinition = new ResourceDefinition(TrevorService, {
+const trevorDefinition = new Definition(TrevorService, {
     dependencies: {
         'helloService': 'service.hell0'
     }

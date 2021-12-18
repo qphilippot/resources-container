@@ -5,7 +5,7 @@ import ResolveReferencesToAliasesPass from "../../../src/core/compilation-passes
 import CompilerInterface from "../../../src/core/interfaces/compiler.interface";
 import Reference from "../../../src/core/models/reference.model";
 import CircularReferenceException from "../../../src/core/exception/circular-reference.exception";
-import ResourceDefinition from "../../../src/core/models/resource-definition.model";
+import Definition from "../../../src/core/models/definition.model";
 import Alias from "../../../src/core/models/alias.model";
 
 const createTestContainer = () => {
@@ -69,12 +69,12 @@ describe('ResolveReferencesToAliasesPass works as expected', () => {
         container.register('factory', 'Factory');
         container.setAlias('factory_alias', new Alias('factory'));
 
-        const foo = new ResourceDefinition();
+        const foo = new Definition();
         foo.setId('foo'); // for debug
         foo.setFactory([ new Reference('factory_alias'), 'createFoo' ]);
         container.setDefinition('foo', foo);
 
-        const bar = new ResourceDefinition();
+        const bar = new Definition();
         bar.setFactory([ 'Factory', 'createFoo' ]);
         container.setDefinition('bar', bar);
 

@@ -2,10 +2,11 @@ import type MixedInterface from "../../utils/mixed.interface";
 import FlexibleService from "../../utils/flexible.service";
 import OutOfBoundsException from "../exception/out-of-bounds.exception";
 import InvalidArgumentException from "../exception/invalid-argument.exception";
+import Reference from "./reference.model";
 
 const flexible = new FlexibleService();
 
-export default class ResourceDefinition {
+export default class Definition {
     private id: string;
     private type?: InstanceType<any>;
     private _isAbstract: boolean = false;
@@ -18,7 +19,7 @@ export default class ResourceDefinition {
     private calls: Array<any> = [];
     private shared: boolean = true;
     private filePath: string | null = null;
-    private factory: any;
+    private factory: string|Array<any>|null = null;
     private public: boolean = true;
     private tags: MixedInterface = {};
     private synthetic: boolean = false;
@@ -38,7 +39,7 @@ export default class ResourceDefinition {
      *
      * @returns this
      */
-    public setSynthetic(isSynthetic: boolean): ResourceDefinition {
+    public setSynthetic(isSynthetic: boolean): Definition {
         this.synthetic = isSynthetic;
 
         if (typeof this.changes['public'] === 'undefined') {
@@ -57,9 +58,9 @@ export default class ResourceDefinition {
     }
     /**
      * Sets the visibility of this resource.
-     * @returns {ResourceDefinition}
+     * @returns {Definition}
      */
-    public setPublic(isPublic: boolean): ResourceDefinition {
+    public setPublic(isPublic: boolean): Definition {
         this.changes['public'] = true;
         this.public = isPublic;
         return this;
@@ -91,15 +92,24 @@ export default class ResourceDefinition {
     }
 
     public hasFactory(): boolean {
-        return Object.keys(this.getFactory()).length > 0;
+        return this.getFactory() !== null;
     }
 
-    public setFactory(factory: any) {
+    public setFactory(factory: string|Array<any>|Reference|null) {
+        this.changes['factory'] = true;
+
+        if (typeof factory === 'string' && factory.includes('::')) {
+            factory = factory.split('::')[1];
+        } else if (factory instanceof Reference) {
+            // todo voir comment adapter ça en ts ??
+            factory = [factory, '__invoke'];
+        }
+
         this.factory = factory;
         return this;
     }
 
-    public getFactory():any {
+    public getFactory():string|Array<any>|null {
         return this.factory || null;
     }
 
@@ -145,18 +155,18 @@ export default class ResourceDefinition {
 
     /**
      * Adds a tag for this definition.
-     * @return {ResourceDefinition} this
+     * @return {Definition} this
      */
-    public addTag(name: string, value: any = {}): ResourceDefinition {
+    public addTag(name: string, value: any = {}): Definition {
         this.tags[name] = value;
         return this;
     }
 
     /**
      * Sets tags for this definition.
-     * @return {ResourceDefinition} this
+     * @return {Definition} this
      */
-    public setTags(tags: MixedInterface): ResourceDefinition {
+    public setTags(tags: MixedInterface): Definition {
         this.tags = tags;
         return this;
     }
@@ -210,9 +220,9 @@ export default class ResourceDefinition {
      * Whether this definition is abstract, that means it merely serves as a
      * template for other definitions.
      *
-     * @return {ResourceDefinition} this
+     * @return {Definition} this
      */
-    public setAbstract(isAbstract: boolean): ResourceDefinition {
+    public setAbstract(isAbstract: boolean): Definition {
         this._isAbstract = isAbstract;
         return this;
     }
@@ -261,7 +271,7 @@ export default class ResourceDefinition {
         return this.properties.slice(0);
     }
 
-    public setProperties(properties: Array<any>): ResourceDefinition {
+    public setProperties(properties: Array<any>): Definition {
         this.properties = properties;
         return this;
     }
@@ -270,7 +280,7 @@ export default class ResourceDefinition {
         return this.calls.slice(0);
     }
 
-    public setMethodCalls(calls: Array<any>): ResourceDefinition {
+    public setMethodCalls(calls: Array<any>): Definition {
         this.calls = [];
 
         calls.forEach(call => {
@@ -280,7 +290,7 @@ export default class ResourceDefinition {
         return this;
     }
 
-    public addMethodCall(methodName: string, args: MixedInterface, shouldReturnClone: boolean = false) : ResourceDefinition {
+    public addMethodCall(methodName: string, args: MixedInterface, shouldReturnClone: boolean = false) : Definition {
         if (methodName.length === 0) {
             throw  new InvalidArgumentException('Method name cannot be empty');
         }

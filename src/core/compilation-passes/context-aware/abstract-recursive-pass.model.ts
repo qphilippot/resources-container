@@ -1,10 +1,10 @@
 import CompilerPassInterface from "../../interfaces/compiler-pass.interface";
 import ContainerBuilderInterface from "../../interfaces/container-builder.interface";
-import ResourceDefinition from "../../models/resource-definition.model";
+import Definition from "../../models/definition.model";
 import AbstractRecursivePassModel from "../standard/abstract-recursive-pass.model";
 
 export default abstract class ContextAwareAbstractRecursivePassModel extends AbstractRecursivePassModel{
-    protected getConstructor(definition: ResourceDefinition, required: boolean) {
+    protected getConstructor(definition: Definition, required: boolean) {
         if (definition.isSynthetic()) {
             return null;
         }
@@ -18,7 +18,7 @@ export default abstract class ContextAwareAbstractRecursivePassModel extends Abs
         // if ()
     }
 
-    protected getReflectionMethod(definition: ResourceDefinition, method: string) {
+    protected getReflectionMethod(definition: Definition, method: string) {
         if (method === 'constructor') {
             return this.getConstructor(definition, true);
         }

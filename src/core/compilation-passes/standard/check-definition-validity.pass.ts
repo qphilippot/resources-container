@@ -2,7 +2,7 @@ import AbstractRecursivePassModel from "./abstract-recursive-pass.model";
 import CompilerPassInterface from "../../interfaces/compiler-pass.interface";
 import ContainerBuilderInterface from "../../interfaces/container-builder.interface";
 import BadDefinitionValidityException from "../../exception/passes/bad-definition-validity.exception";
-import ResourceDefinition from "../../models/resource-definition.model";
+import Definition from "../../models/definition.model";
 import {syntheticServiceMustBePublic, tagsAttributesValuesMustBeScalar} from './check-definition-validity.helper';
 import { Publisher } from "@qphi/publisher-subscriber";
 /**
