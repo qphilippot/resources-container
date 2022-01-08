@@ -409,12 +409,16 @@ describe('container-builder tests', function () {
         });
         it('create services using factory', function () {
            const builder = new ContainerBuilder();
+           builder.getReflexionService().recordClass('FooClass', FooClass);
            builder.register('foo', 'FooClass').setFactory('FooClass::getInstance');
            builder.register('qux', 'FooClass').setFactory(['FooClass', 'getInstance']);
            builder.register('bar', 'FooClass').setFactory([new Definition('FooClass'), 'getInstance']);
            builder.register('baz', 'FooClass').setFactory([new Reference('bar'), 'getInstance']);
 
            expect(builder.get('foo').called)
+           expect(builder.get('qux').called)
+           expect(builder.get('bar').called)
+           expect(builder.get('baz').called)
         });
     });
 });

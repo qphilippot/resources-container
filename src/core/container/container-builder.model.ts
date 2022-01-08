@@ -290,7 +290,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
             // resolve recursively
             const keys = Object.keys(values);
             keys.forEach(key => {
-                values[key] = this.resolveServices(values[key], inlineContextualServices, isFromConstructor);
+                values[key] = this.resolveServices(values[key], inlineContextualServices);
             });
 
             return values;
@@ -464,6 +464,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
                     definitionFactory[1]
                 ];
             } else if (typeof definitionFactory === 'string') {
+                // todo create dedicated error
                 throw new RuntimeException(
                     `Cannot create service "${id}" because of invalid factory.`
                 );
@@ -484,6 +485,37 @@ class ContainerBuilder implements ContainerBuilderInterface {
         let service = null;
         // A002
         if (definitionFactory !== null) {
+            // strange things happens in PHP here...
+            if (Array.isArray(definitionFactory)) {
+                let factoryClass: any = null;
+
+                switch (typeof definitionFactory[0]) {
+                    case 'string':
+                        factoryClass = this.reflexionService.findClass(definitionFactory[0]);
+                        break;
+                    default:
+                        factoryClass = definitionFactory[0];
+                }
+
+                if (typeof factoryClass === 'undefined' || factoryClass === null) {
+                    // todo implement a test to get this exception
+                    // todo create dedicated error
+                    throw new RuntimeException(
+                        `Cannot found the following factory "${id}". Did you record it correctly ?`
+                    );
+                }
+                // check deprecation
+                if (definitionFactory.length === 2) {
+                    if (typeof factoryClass[definitionFactory[1]] !== 'undefined') {
+                        service = factoryClass[definitionFactory[1]]();
+                    } else {
+                        // try static method
+                        service = factoryClass.constructor[definitionFactory[1]]();
+                    }
+
+                }
+                return service;
+            }
             // if (\is_array($factory)) {
             //     $factory = [$this->resolveDefinitionDependency($parameterBag->resolveValue($factory[0]), $inlineServices, $isConstructorArgument), $factory[1]];
             // } elseif (!\is_string($factory)) {
@@ -524,15 +556,15 @@ class ContainerBuilder implements ContainerBuilderInterface {
             this.shareService(definition, service, id, inlineContextualServices)
         }
 
-        if (definition.getProperties().length > 0) {
-            const properties = this.resolveServices(
-                parameterBag.unescapeValue(
-                    parameterBag.resolveValue(definition.getProperties())
-                ),
-
-                inlineContextualServices
-            );
-        }
+        // if (definition.getProperties().length > 0) {
+        //     const properties = this.resolveServices(
+        //         parameterBag.unescapeValue(
+        //             parameterBag.resolveValue(definition.getProperties())
+        //         ),
+        //
+        //         inlineContextualServices
+        //     );
+        // }
 
         return service;
 

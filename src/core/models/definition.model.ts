@@ -99,7 +99,10 @@ export default class Definition {
         this.changes['factory'] = true;
 
         if (typeof factory === 'string' && factory.includes('::')) {
-            factory = factory.split('::')[1];
+            factory = factory.split('::');
+            if (factory.length > 2) {
+                factory.length = 2;
+            }
         } else if (factory instanceof Reference) {
             // todo voir comment adapter ça en ts ??
             factory = [factory, '__invoke'];

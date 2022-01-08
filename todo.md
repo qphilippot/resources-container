@@ -13,3 +13,6 @@ autoload:
 
 # si le champ autoload n'est pas précisé
 ```
+
+# TODO
+* diviser le `setFactory` pour n'avoir qu'un seul type possible en entrée. Vérifier les cas d'usages et comment est-ce que l'on pourrait modifier la conceptiona actuelle pour couvrir le même périmetre fonctionnel tout en proposant des règles de typage plus strictes.

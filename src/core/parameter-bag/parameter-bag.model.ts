@@ -25,8 +25,9 @@ export default class ParameterBag implements ParameterBagInterface {
         });
     }
 
-    public addExclusionRule(rule: ((values: MixedInterface) => boolean)): void {
+    public addExclusionRule(rule: ((values: MixedInterface) => boolean)): this {
         this.exclusionRules.push(rule);
+        return this;
     }
 
     public all(): MixedInterface {

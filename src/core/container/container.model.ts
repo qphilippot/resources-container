@@ -11,6 +11,7 @@ import ParameterBag from "../parameter-bag/parameter-bag.model";
 import {checkValidId} from "./container.helper";
 import SelfAliasingException from "../exception/self-aliasing.exception";
 import Reference from "../models/reference.model";
+import Definition from "../models/definition.model";
 
 class Container extends PublisherSubscriber implements ContainerInterface {
     private resources: Mixed;
@@ -34,9 +35,13 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         this.factories = {};
 
         this.parameterBag = settings.parameterBag ?? new ParameterBag();
-        this.parameterBag.addExclusionRule(
-            (values: MixedInterface) => values instanceof Reference
-        )
+        this.parameterBag
+            .addExclusionRule(
+                (values: MixedInterface) => values instanceof Reference
+            )
+            .addExclusionRule(
+                (values: MixedInterface) => values instanceof Definition
+            );
     }
 
     public getParameterBag(): ParameterBagInterface {

@@ -75,6 +75,6 @@ export default interface ParameterBagInterface {
      * @return any mixed
      */
     unescapeValue(mixed: any): any;
-    addExclusionRule(rule: (value: MixedInterface) => boolean): void;
+    addExclusionRule(rule: (value: MixedInterface) => boolean): this;
 
 }
