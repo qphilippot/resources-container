@@ -130,20 +130,19 @@ export default class ParameterBag implements ParameterBagInterface {
         }
 
         if (typeof value === 'object' && value !== null) {
-            const args = {};
 
-            if (Array.isArray(value)) {
-                value.forEach((item, index) => {
-                    args[index] = this.resolveValue(item, {...resolving});
-                });
+
+            if (Array.isArray(value) && value.length > 0) {
+                return value.map((item, index) => { return this.resolveValue(item, {...resolving});})
             } else {
+                const args = {};
                 Object.keys(value).forEach(k => {
                     const key = this.resolveValue(k, {...resolving});
                     args[key] = this.resolveValue(value[k], {...resolving});
                 });
-            }
 
-            return args;
+                return args;
+            }
         }
 
         if (typeof value !== 'string' || value.length < 2) {
@@ -232,12 +231,16 @@ export default class ParameterBag implements ParameterBagInterface {
         }
 
         if (typeof mixed === 'object') {
-            const escaped = {};
-            Object.keys(mixed).forEach(property => {
-                escaped[property] = this.unescapeValue(mixed[property]);
-            });
+            if (Array.isArray(mixed) && mixed.length > 0) {
+                return mixed.map(item => { return this.unescapeValue(item) })
+            } else {
+                const escaped = {};
+                Object.keys(mixed).forEach(property => {
+                    escaped[property] = this.unescapeValue(mixed[property]);
+                });
 
-            return escaped;
+                return escaped;
+            }
         }
 
         return mixed;

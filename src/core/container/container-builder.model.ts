@@ -11,7 +11,7 @@ import BadMethodCallException from "../exception/bad-method-call.exception";
 import ResourceNotFoundException from "../exception/resource-not-found.exception";
 import Alias from "../models/alias.model";
 import {
-    EXCEPTION_ON_INVALID_REFERENCE,
+    EXCEPTION_ON_INVALID_REFERENCE, IGNORE_ON_INVALID_REFERENCE,
     IGNORE_ON_UNINITIALIZED_REFERENCE,
     NULL_ON_INVALID_REFERENCE
 } from "./container-builder.invalid-behaviors";
@@ -482,7 +482,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
             return this.container.getResource(id);
         }
 
-        let service = null;
+        let service: any = null;
         // A002
         if (definitionFactory !== null) {
             // strange things happens in PHP here...
@@ -545,8 +545,9 @@ class ContainerBuilder implements ContainerBuilderInterface {
         }
 
         let lastWitherIndex: number | null = null;
-        definition.getMethodCalls().forEach((call, index) => {
-            // todo comprendre la structure du call et remplacer ce if par quelque chose de plus sémantique
+
+        const methodsCall = definition.getMethodCalls();
+        methodsCall.forEach((call, index) => {
             if (call[2] ?? false) {
                 lastWitherIndex = index;
             }
@@ -566,10 +567,80 @@ class ContainerBuilder implements ContainerBuilderInterface {
         //     );
         // }
 
+        definition.getMethodCalls().forEach((call, index) => {
+            // call Method PHP method equivalent
+            this.callInitializerMethod(service, call, inlineContextualServices);
+
+            if (index === lastWitherIndex && (tryProxy || !definition.isLazy())) {
+                this.shareService(definition, service, id, inlineContextualServices)
+            }
+        });
+
         return service;
 
     }
 
+    private callInitializerMethod(
+        service: any,
+        call: Array<any>,
+        inlineContextualServices: InlineContextualServices
+    ): any {
+        let toResolve = this.getElementToResolve(call[1], IGNORE_ON_INVALID_REFERENCE);
+
+        for (const element of toResolve) {
+            if (!this.has(element)) {
+                return service;
+            }
+        }
+        toResolve = this.getElementToResolve(call[1], IGNORE_ON_UNINITIALIZED_REFERENCE);
+        for (const element of toResolve) {
+            if (!this.resolveGetBeforeCompilation(element, IGNORE_ON_UNINITIALIZED_REFERENCE, inlineContextualServices)) {
+                return service;
+            }
+        }
+
+        let result: any = null;
+        if (typeof service[call[0]] === 'function') {
+            const args = this.resolveServices(
+                this.container.getParameterBag().unescapeValue(
+                    this.container.getParameterBag().resolveValue(call[1])
+                ),
+                inlineContextualServices
+            );
+
+            if (Array.isArray(args)) {
+                result = service[call[0]](...args);
+            } else {
+                result = service[call[0]](args)
+            }
+
+        } else {
+            throw `InvalidMethodName ${call[0]}`;
+        }
+
+        return (call[2] === false) ? service : result;
+
+        // }
+        // $result = $service->{$call[0]}(...$this->doResolveServices($this->getParameterBag()->unescapeValue($this->getParameterBag()->resolveValue($call[1])), $inlineServices));
+        //
+        //         return empty($call[2]) ? $service : $result;
+
+    }
+
+    private getElementToResolve(value: any, referenceInvalidBehaviorFallbackPolicy: number): Array<any> {
+        const toResolve: Array<any> = [];
+       if (Array.isArray(value)) {
+            value.forEach(v => {
+                toResolve.push(...this.getElementToResolve(v, referenceInvalidBehaviorFallbackPolicy));
+            });
+        } else {
+            if (value instanceof Reference && value.getInvalidBehavior() === referenceInvalidBehaviorFallbackPolicy) {
+                toResolve.push(value.toString());
+            }
+        }
+
+        return Array.from(new Set<any>(toResolve));
+    }
 
     // // doResolveServices
     // // todo refactor with hook system

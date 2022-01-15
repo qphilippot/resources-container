@@ -400,25 +400,37 @@ describe('container-builder tests', function () {
             const foo = builder.get('foo1');
             expect(JSON.stringify(foo.arguments)).to.equals(
                 JSON.stringify({
-                    'foo': 'bar',
-                    'bar': 'foo',
-                    '2': builder.get('bar'),
-                    '3': '%unescape it%'
-                }
+                        'foo': 'bar',
+                        'bar': 'foo',
+                        '2': builder.get('bar'),
+                        '3': '%unescape it%'
+                    }
                 ))
         });
-        it('create services using factory', function () {
-           const builder = new ContainerBuilder();
-           builder.getReflexionService().recordClass('FooClass', FooClass);
-           builder.register('foo', 'FooClass').setFactory('FooClass::getInstance');
-           builder.register('qux', 'FooClass').setFactory(['FooClass', 'getInstance']);
-           builder.register('bar', 'FooClass').setFactory([new Definition('FooClass'), 'getInstance']);
-           builder.register('baz', 'FooClass').setFactory([new Reference('bar'), 'getInstance']);
 
-           expect(builder.get('foo').called)
-           expect(builder.get('qux').called)
-           expect(builder.get('bar').called)
-           expect(builder.get('baz').called)
+        // factory
+        it('create services using factory', function () {
+            const builder = new ContainerBuilder();
+            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.register('foo', 'FooClass').setFactory('FooClass::getInstance');
+            builder.register('qux', 'FooClass').setFactory(['FooClass', 'getInstance']);
+            builder.register('bar', 'FooClass').setFactory([new Definition('FooClass'), 'getInstance']);
+            builder.register('baz', 'FooClass').setFactory([new Reference('bar'), 'getInstance']);
+
+            expect(builder.get('foo').called)
+            expect(builder.get('qux').called)
+            expect(builder.get('bar').called)
+            expect(builder.get('baz').called)
+        });
+
+        // method call
+        it('replaces the values in the method calls arguments', function () {
+            const builder = new ContainerBuilder();
+            builder.register('bar', 'Object');
+
+            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.register('foo1', 'FooClass').addMethodCall('setBar', [['%%unescape_it%%']]);
+            expect(JSON.stringify(['%unescape_it%'])).to.equals(JSON.stringify(builder.get('foo1').bar));
         });
     });
 });
