@@ -116,7 +116,7 @@ export default class ResolveNamedArgumentsPass extends AbstractRecursivePassMode
             value.setMethodCalls(calls);
         }
 
-        value.getProperties().forEach((property, index) => {
+        value.getInjectionProperties().forEach((property, index) => {
            if (property instanceof AbstractArgument && !property.hasContext()) {
                property.setContext(`Property "${this.currentId}" of service "${this.currentId}"`);
            }

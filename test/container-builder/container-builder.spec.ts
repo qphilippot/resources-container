@@ -432,5 +432,23 @@ describe('container-builder tests', function () {
             builder.register('foo1', 'FooClass').addMethodCall('setBar', [['%%unescape_it%%']]);
             expect(JSON.stringify(['%unescape_it%'])).to.equals(JSON.stringify(builder.get('foo1').bar));
         });
+
+        it ('autowire using definition property', function () {
+            const builder = new ContainerBuilder();
+            builder.register('bar', 'Object');
+
+            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.register('foo1', 'FooClass').setInjectionProperty(
+                'bar',
+                [
+                    '%value%',
+                    new Reference('bar'),
+                    '%%unescape_it%%'
+                ]
+            );
+
+            builder.setParameter('value', 'bar');
+            expect(JSON.stringify(['bar', builder.get('bar'), '%unescape_it%'])).to.equals(JSON.stringify(builder.get('foo1').bar));
+        });
     });
 });

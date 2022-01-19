@@ -17,3 +17,4 @@ autoload:
 # TODO
 * diviser le `setFactory` pour n'avoir qu'un seul type possible en entrée. Vérifier les cas d'usages et comment est-ce que l'on pourrait modifier la conceptiona actuelle pour couvrir le même périmetre fonctionnel tout en proposant des règles de typage plus strictes.
 * créer un type d'enum pour les InvalidBehavior
+* Créer un plugin qui ajoute le fonctionnement "setProperty" pour les définitions at l'auto-wiring

@@ -14,7 +14,8 @@ export default class Definition {
     private lazy: boolean = false;
     private settings: MixedInterface = {};
     private arguments: MixedInterface = [];
-    private properties: Array<any> = [];
+    // https://symfony.com/blog/new-in-symfony-5-1-autowire-public-typed-properties
+    private injectedProperties: Array<any> = [];
     private changes: MixedInterface = {};
     private calls: Array<any> = [];
     private shared: boolean = true;
@@ -270,12 +271,17 @@ export default class Definition {
         return this.arguments;
     }
 
-    public getProperties(): Array<any> {
-        return this.properties.slice(0);
+    public getInjectionProperties(): Record<string, any> {
+        return this.injectedProperties;
     }
 
-    public setProperties(properties: Array<any>): Definition {
-        this.properties = properties;
+    public setInjectionProperties(properties: Array<any>): Definition {
+        this.injectedProperties = properties;
+        return this;
+    }
+
+    public setInjectionProperty(name: string, value: any): this {
+        this.injectedProperties[name] = value;
         return this;
     }
 

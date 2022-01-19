@@ -557,15 +557,24 @@ class ContainerBuilder implements ContainerBuilderInterface {
             this.shareService(definition, service, id, inlineContextualServices)
         }
 
-        // if (definition.getProperties().length > 0) {
-        //     const properties = this.resolveServices(
-        //         parameterBag.unescapeValue(
-        //             parameterBag.resolveValue(definition.getProperties())
-        //         ),
-        //
-        //         inlineContextualServices
-        //     );
-        // }
+
+        const definitionProperties = definition.getInjectionProperties();
+        const definitionPropertiesName = Object.keys(definitionProperties);
+
+        definitionPropertiesName.forEach(propertyName => {
+            const resolvedProperty =  this.resolveServices(
+                parameterBag.unescapeValue(
+                    parameterBag.resolveValue(definitionProperties[propertyName])
+                ),
+
+                inlineContextualServices
+            );
+
+            if (propertyName in service) {
+                service[propertyName] = resolvedProperty;
+            }
+
+        });
 
         definition.getMethodCalls().forEach((call, index) => {
             // call Method PHP method equivalent
