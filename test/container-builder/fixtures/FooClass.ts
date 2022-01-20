@@ -4,6 +4,9 @@ export default class FooClass {
     public bar: any = null;
     public called = false;
 
+    // used by configurator tests
+    public configured = false;
+
     constructor(instanceArguments: any = undefined) {
         this.arguments = instanceArguments;
     }
@@ -18,5 +21,9 @@ export default class FooClass {
         instance.called = true;
 
         return instance;
+    }
+
+    public configure(): void {
+        this.configured = true;
     }
 }

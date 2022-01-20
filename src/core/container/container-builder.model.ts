@@ -24,6 +24,7 @@ import {checkValidId} from "./container.helper";
 import AliasNotFoundException from "../exception/alias-not-found.exception";
 import CompilerPassInterface from "../interfaces/compiler-pass.interface";
 import {BEFORE_OPTIMIZATION} from "../compiler-step.enum";
+import InvalidArgumentException from "../exception/invalid-argument.exception";
 
 // todo: return an error instead of null when a component is not found
 
@@ -584,6 +585,45 @@ class ContainerBuilder implements ContainerBuilderInterface {
                 this.shareService(definition, service, id, inlineContextualServices)
             }
         });
+
+        // todo configurator pass
+        const configuratorSettings = definition.getConfigurator();
+        if (configuratorSettings !== null) {
+            let configurator: ((any)=>void) | InstanceType<any> | null = null;
+            //= configuratorSettings;
+            let entryPoint = null;
+
+            if (Array.isArray(configuratorSettings)) {
+                let callable = parameterBag.resolveValue(configuratorSettings[0]);
+                entryPoint = configuratorSettings[1];
+
+                if (callable instanceof Reference) {
+                    configurator = this.resolveGetBeforeCompilation(
+                        callable.toString(),
+                        callable.getInvalidBehavior(),
+                        inlineContextualServices
+                    );
+                } else {
+                    if (callable instanceof Definition) {
+                        configurator = this.createServiceFromDefinition(definition, inlineContextualServices);
+                    }
+                }
+            } else {
+                if (typeof configuratorSettings === "function") {
+                    configurator = configuratorSettings;
+                }
+            }
+
+            if (typeof configurator === "function") {
+                configurator(service);
+            } else if (typeof entryPoint === 'string' && typeof configurator[entryPoint] === 'function') {
+                configurator[entryPoint](service);
+            } else {
+                throw new InvalidArgumentException(
+                    `The configure callable for class "${service.constructor.name}" is not callable.`
+                );
+            }
+        }
 
         return service;
 

@@ -433,7 +433,7 @@ describe('container-builder tests', function () {
             expect(JSON.stringify(['%unescape_it%'])).to.equals(JSON.stringify(builder.get('foo1').bar));
         });
 
-        it ('autowire using definition property', function () {
+        it('autowire using definition property', function () {
             const builder = new ContainerBuilder();
             builder.register('bar', 'Object');
 
@@ -449,6 +449,13 @@ describe('container-builder tests', function () {
 
             builder.setParameter('value', 'bar');
             expect(JSON.stringify(['bar', builder.get('bar'), '%unescape_it%'])).to.equals(JSON.stringify(builder.get('foo1').bar));
+        });
+
+        it('can configure service using configurator registered into definition', function () {
+            const builder = new ContainerBuilder();
+            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.register('foo1', 'FooClass').setConfigurator((service) => service.configure());
+            expect(builder.get('foo1').configured).to.be.true;
         });
     });
 });

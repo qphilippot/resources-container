@@ -20,10 +20,13 @@ export default class Definition {
     private calls: Array<any> = [];
     private shared: boolean = true;
     private filePath: string | null = null;
-    private factory: string|Array<any>|null = null;
+    private factory: ((any)=>void) | string | Array<any> | null = null;
     private public: boolean = true;
     private tags: MixedInterface = {};
     private synthetic: boolean = false;
+    // @todo better type...
+    private configurator: ((any)=>void) |string | Array<any> | null = null;
+
     /**
      * Whether this definition is synthetic, that is not constructed by the
      * container, but dynamically injected.
@@ -57,6 +60,7 @@ export default class Definition {
     public getFilePath(): string {
         return this.filePath ?? '';
     }
+
     /**
      * Sets the visibility of this resource.
      * @returns {Definition}
@@ -96,7 +100,7 @@ export default class Definition {
         return this.getFactory() !== null;
     }
 
-    public setFactory(factory: string|Array<any>|Reference|null) {
+    public setFactory(factory: string | Array<any> | Reference | null) {
         this.changes['factory'] = true;
 
         if (typeof factory === 'string' && factory.includes('::')) {
@@ -113,7 +117,7 @@ export default class Definition {
         return this;
     }
 
-    public getFactory():string|Array<any>|null {
+    public getFactory(): ((any)=>void) |string | Array<any> | null {
         return this.factory || null;
     }
 
@@ -127,7 +131,7 @@ export default class Definition {
     }
 
 
-    public setShared(shared:boolean): this {
+    public setShared(shared: boolean): this {
         this.changes['shared'] = true;
         this.shared = shared;
         return this;
@@ -145,7 +149,7 @@ export default class Definition {
      * @return {object} a shallow copy of tags
      */
     public getTags(): object {
-        return { ...this.tags };
+        return {...this.tags};
     }
 
     /**
@@ -193,10 +197,41 @@ export default class Definition {
     }
 
     /**
+     * Sets a configurator to call after the service is fully initialized.
+     *
+     * @param {string|Array<any>|Reference|null} configurator A PHP function, reference or an array containing a class/Reference and a method to call
+     *
+     * @return this
+     */
+    public setConfigurator(configurator: ((any)=>void) | string | Array<any> | Reference | null): this {
+        this.changes['configurator'] = true;
+
+        if (typeof configurator === 'string' && configurator.includes('::')) {
+            configurator = configurator.split('::');
+            configurator.length = 2;
+        } else {
+            if (configurator instanceof Reference) {
+                configurator = [configurator, '__invoke'];
+            }
+        }
+
+        this.configurator = configurator;
+
+        return this;
+    }
+
+    /**
+     * Gets the configurator to call after the service is fully initialized.
+     */
+    public getConfigurator(): ((any)=>void) |string | Array<any> | null {
+        return this.configurator;
+    }
+
+    /**
      * @returns {MixedInterface} a shallow copy of settings. To update settings, use `setup`.
      */
     public getSettings(): MixedInterface {
-        return { ...this.settings };
+        return {...this.settings};
     }
 
     public setArguments(args: MixedInterface) {
@@ -215,7 +250,7 @@ export default class Definition {
         return this.autowired;
     }
 
-    public setArgument(index: number|string, arg: any) {
+    public setArgument(index: number | string, arg: any) {
         this.arguments[index] = arg;
         return this;
     }
@@ -237,7 +272,7 @@ export default class Definition {
      *
      * @return bool
      */
-    public isAbstract(): boolean    {
+    public isAbstract(): boolean {
         return this._isAbstract;
     }
 
@@ -299,12 +334,12 @@ export default class Definition {
         return this;
     }
 
-    public addMethodCall(methodName: string, args: MixedInterface, shouldReturnClone: boolean = false) : Definition {
+    public addMethodCall(methodName: string, args: MixedInterface, shouldReturnClone: boolean = false): Definition {
         if (methodName.length === 0) {
             throw  new InvalidArgumentException('Method name cannot be empty');
         }
 
-        this.calls.push([ methodName, args, shouldReturnClone ]);
+        this.calls.push([methodName, args, shouldReturnClone]);
 
         return this;
     }
