@@ -20,6 +20,8 @@ import AliasNotFoundException from "../../src/core/exception/alias-not-found.exc
 import FooCompilerPass from "./fixtures/foo.compiler-pass";
 import {BEFORE_OPTIMIZATION} from "../../src/core/compiler-step.enum";
 import {join} from "path";
+import BazClass from "./fixtures/BazClass";
+import InvalidArgumentException from "../../src/core/exception/invalid-argument.exception";
 
 describe('container-builder tests', function () {
     describe('basic definition operations', function () {
@@ -453,9 +455,52 @@ describe('container-builder tests', function () {
 
         it('can configure service using configurator registered into definition', function () {
             const builder = new ContainerBuilder();
-            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.getReflexionService()
+                .recordClass('FooClass', FooClass)
+                .recordClass('BazClass', BazClass);
+
+            builder.register('baz', 'BazClass');
+
+            // supports raw function as configurator
             builder.register('foo1', 'FooClass').setConfigurator((service) => service.configure());
             expect(builder.get('foo1').configured).to.be.true;
+
+            // support direct method call from any object
+            builder.register('foo2', 'FooClass').setConfigurator(['%class%', 'configureStatic']);
+            builder.setParameter('class', 'BazClass');
+            expect(builder.get('foo2').configured).to.be.true;
+            builder.register('mamamia', 'FooClass').setConfigurator(['%class%', 'not-a-real-method']);
+            expect(builder.get.bind(builder, 'mamamia')).to.throw(
+                InvalidArgumentException,
+                'Cannot configure service using "BazClass.not-a-real-method". No such method found'
+            );
+
+            // support reference
+            builder.register('foo3', 'FooClass').setConfigurator([ new Reference('baz'), 'configure' ]);
+            expect(builder.get('foo3').configured).to.be.true;
+
+            builder.register('mamamia1', 'FooClass').setConfigurator([ new Reference('baz'), 'configure123' ]);
+            expect(builder.get.bind(builder, 'mamamia1')).to.throw(
+                InvalidArgumentException,
+                'Cannot configure service using "baz.configure123". No such method found'
+            );
+
+            // support Definition
+            builder.register('foo4', 'FooClass').setConfigurator([ builder.getDefinition('baz'), 'configure' ]);
+            expect(builder.get('foo4').configured).to.be.true;
+
+            builder.register('mamamia2', 'FooClass').setConfigurator([ builder.getDefinition('baz'), 'configure123' ]);
+            expect(builder.get.bind(builder, 'mamamia2')).to.throw(
+                InvalidArgumentException,
+                'Cannot configure service using "baz.configure123". No such method found'
+            );
+
+            // test non valid callable
+            builder.register('foo5', 'FooClass').setConfigurator('boo');
+            expect(builder.get.bind(builder, 'foo5')).to.throw(
+                InvalidArgumentException,
+                'The configure callable for class "FooClass" is not callable.'
+            );
         });
     });
 });

@@ -563,7 +563,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
         const definitionPropertiesName = Object.keys(definitionProperties);
 
         definitionPropertiesName.forEach(propertyName => {
-            const resolvedProperty =  this.resolveServices(
+            const resolvedProperty = this.resolveServices(
                 parameterBag.unescapeValue(
                     parameterBag.resolveValue(definitionProperties[propertyName])
                 ),
@@ -589,8 +589,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
         // todo configurator pass
         const configuratorSettings = definition.getConfigurator();
         if (configuratorSettings !== null) {
-            let configurator: ((any)=>void) | InstanceType<any> | null = null;
-            //= configuratorSettings;
+            let configurator: ((any) => void) | InstanceType<any> | null = null;
             let entryPoint = null;
 
             if (Array.isArray(configuratorSettings)) {
@@ -603,6 +602,8 @@ class ContainerBuilder implements ContainerBuilderInterface {
                         callable.getInvalidBehavior(),
                         inlineContextualServices
                     );
+                } else if (typeof callable === 'string' && callable.length > 0) {
+                    configurator = this.reflexionService.findClass(callable);
                 } else {
                     if (callable instanceof Definition) {
                         configurator = this.createServiceFromDefinition(definition, inlineContextualServices);
@@ -614,10 +615,25 @@ class ContainerBuilder implements ContainerBuilderInterface {
                 }
             }
 
-            if (typeof configurator === "function") {
-                configurator(service);
-            } else if (typeof entryPoint === 'string' && typeof configurator[entryPoint] === 'function') {
-                configurator[entryPoint](service);
+            if (typeof configurator === "function" || typeof configurator === 'object' && configurator !== null) {
+                if (typeof entryPoint === 'string' && entryPoint !== '__invoke') {
+                    if (typeof configurator[entryPoint] === 'function') {
+                        configurator[entryPoint](service);
+                    } else {
+                        let instanceName = '';
+                        if (configuratorSettings[0] instanceof Definition) {
+                            instanceName = configuratorSettings[0].getId();
+                        } else {
+                            instanceName = parameterBag.resolveValue(configuratorSettings[0]);
+                        }
+
+                        throw new InvalidArgumentException(
+                            `Cannot configure service using "${instanceName}.${entryPoint}". No such method found.`
+                        );
+                    }
+                } else {
+                    configurator(service);
+                }
             } else {
                 throw new InvalidArgumentException(
                     `The configure callable for class "${service.constructor.name}" is not callable.`
