@@ -37,6 +37,8 @@ class ContainerBuilder implements ContainerBuilderInterface {
     private noCompilationIsNeeded: boolean = false;
     private removedIds: Set<string> = new Set<string>();
     private flexible: FlexibleService;
+    private expressionLanguage: ExpressionLanguage;
+    private expressionLanguageProviders: ExpressionFunctionProviderInterface[] = [];
 
     private reflexionService: ReflexionService = new ReflexionService();
     // definitions: Array<MixedInterface> = [];
@@ -281,9 +283,11 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
             //    elseif ($value instanceof Parameter) {
             //             $value = $this->getParameter((string) $value);
-            //         } elseif ($value instanceof Expression) {
-            //             $value = $this->getExpressionLanguage()->evaluate($value, ['container' => $this]);
-            //         } elseif ($value instanceof AbstractArgument) {
+            //         }
+        else if (value instanceof Expression) {
+            value = this.getExpressionLanguage().evaluate(value, {container: this });
+        }
+            //         elseif ($value instanceof AbstractArgument) {
             //             throw new RuntimeException($value->getTextWithContext());
         //         }
 
@@ -297,6 +301,26 @@ class ContainerBuilder implements ContainerBuilderInterface {
             return values;
         }
         return values;
+    }
+
+    private getExpressionLanguage(): ExpressionLanguage {
+        if (this.expressionLanguage !== null) {
+            this.expressionLanguage = new ExpressionLanguage(null, this.expressionLanguageProviders);
+        }
+
+        return this.expressionLanguage;
+    }
+
+    // todo move into dedicated plugin
+    /**
+     * @return ExpressionFunctionProviderInterface[]
+     */
+    public getExpressionLanguageProviders(): ExpressionFunctionProviderInterface[] {
+        return this.expressionLanguageProviders;
+    }
+
+    public addExpressionLanguageProvider(provider: ExpressionFunctionProviderInterface): void{
+        this.expressionLanguageProviders.push(provider);
     }
 
     private resolveGetBeforeCompilation(

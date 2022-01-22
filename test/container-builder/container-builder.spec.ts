@@ -503,4 +503,29 @@ describe('container-builder tests', function () {
             );
         });
     });
+
+    it('throws an exception trying to construct synthetic service', function () {
+        const builder = new ContainerBuilder();
+        builder.getReflexionService().recordClass('FooClass', FooClass)
+        builder.register('foo', 'FooClass').setSynthetic(true);
+        expect(builder.get.bind(builder, 'foo')).to.throw(
+            RuntimeException,
+            'You have requested a synthetic service ("foo"). The DIC does not know how to construct this service.'
+        );
+    });
+
+    it('creates service with expression', function () {
+        const builder = new ContainerBuilder();
+        builder.getReflexionService()
+            .recordClass('FooClass', FooClass)
+            .recordClass('BarClass', BarClass);
+
+        builder.register('bar', 'BarClass');
+        builder.register('foo', 'FooClass').addArgument({
+            'foo': new Expression('service("bar").foo ~ parameter("bar")')
+        });
+
+        expect(builder.get('foo').arguments['foo']).to.equals('foobar');
+
+    });
 });
