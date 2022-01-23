@@ -348,8 +348,8 @@ describe('container-builder tests', function () {
         it('can create service using file', function () {
             const builder = new ContainerBuilder();
 
-            builder.register('foo1', 'FooClass').setFile(join(__dirname, 'fixtures/FooClass.ts'));
-            builder.register('foo2', 'FooClass').setFile(join(__dirname, 'fixtures/%file%.ts'));
+            builder.register('foo1', 'FooClass').setFilePath(join(__dirname, 'fixtures/FooClass.ts'));
+            builder.register('foo2', 'FooClass').setFilePath(join(__dirname, 'fixtures/%file%.ts'));
             builder.register('foo3', 'FooClass');
             builder.setParameter('file', 'FooClass');
 
@@ -360,7 +360,7 @@ describe('container-builder tests', function () {
 
         it('create proxy with real service instanciator', function () {
             const builder = new ContainerBuilder();
-            builder.register('foo', 'Bar\FooClass').setFile(
+            builder.register('foo', 'Bar\FooClass').setFilePath(
                 join(__dirname, 'fixtures/FooClass.ts')
             );
 
@@ -503,4 +503,48 @@ describe('container-builder tests', function () {
             );
         });
     });
+
+    describe('resolve service in depth', function () {
+        it('resolves service from valid reference', function () {
+            const builder = new ContainerBuilder();
+            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.register('foo', 'FooClass');
+
+            expect(builder.get('foo')).to.equals(builder.resolveServices(new Reference('foo')));
+        });
+
+        it('resolves service from nested object', function () {
+            const builder = new ContainerBuilder();
+            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.register('foo', 'FooClass');
+
+            const obj = { foo: ['foo', builder.get('foo')] };
+            const resolvedObj = { foo: [ 'foo', builder.resolveServices(new Reference('foo'))] };
+            expect(JSON.stringify(obj)).to.equals(JSON.stringify(resolvedObj));
+            expect(obj.foo[1]).to.equals(resolvedObj.foo[1]);
+        });
+
+        it('throws exception trying to resolve invalid service reference', function () {
+            const builder = new ContainerBuilder();
+            expect(builder.resolveServices.bind(builder, new Reference('foo'))).to.throw(
+                ResourceNotFoundException,
+                'You have requested a non-existent service "foo".'
+            );
+        });
+
+    });
+
+    // describe('Decorated Definition', function () {
+    //
+    // });
+
+    // @todo support expression
+    // public function testCreateServiceWithExpression()
+    // {
+    //     $builder = new ContainerBuilder();
+    //     $builder->setParameter('bar', 'bar');
+    //     $builder->register('bar', 'BarClass');
+    //     $builder->register('foo', 'Bar\FooClass')->addArgument(['foo' => new Expression('service("bar").foo ~ parameter("bar")')]);
+    //     $this->assertEquals('foobar', $builder->get('foo')->arguments['foo']);
+    // }
 });

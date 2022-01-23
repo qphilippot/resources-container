@@ -3,7 +3,6 @@ import FlexibleService from "../../utils/flexible.service";
 import OutOfBoundsException from "../exception/out-of-bounds.exception";
 import InvalidArgumentException from "../exception/invalid-argument.exception";
 import Reference from "./reference.model";
-
 const flexible = new FlexibleService();
 
 export default class Definition {
@@ -13,7 +12,7 @@ export default class Definition {
     private autowired: boolean = false;
     private lazy: boolean = false;
     private settings: MixedInterface = {};
-    private arguments: MixedInterface = [];
+    protected arguments: MixedInterface = {};
     // https://symfony.com/blog/new-in-symfony-5-1-autowire-public-typed-properties
     private injectedProperties: Array<any> = [];
     private changes: MixedInterface = {};
@@ -21,7 +20,7 @@ export default class Definition {
     private shared: boolean = true;
     private filePath: string | null = null;
     private factory: ((any)=>void) | string | Array<any> | null = null;
-    private public: boolean = true;
+    private public: boolean = false;
     private tags: MixedInterface = {};
     private synthetic: boolean = false;
     // @todo better type...
@@ -52,8 +51,11 @@ export default class Definition {
         return this;
     }
 
-    public setFile(filePath: string): void {
+    public setFilePath(filePath: string): this {
+        this.changes['file'] = true;
         this.filePath = filePath;
+
+        return this;
     }
 
 
@@ -88,8 +90,10 @@ export default class Definition {
         this.settings = settings;
     }
 
-    public setLazy(isLazy: boolean = true): void {
+    public setLazy(isLazy: boolean = true): this {
+        this.changes['lazy'] = true;
         this.lazy = isLazy;
+        return this;
     }
 
     public isLazy(): boolean {
@@ -180,6 +184,7 @@ export default class Definition {
     }
 
     public setResourceType(type: InstanceType<any>) {
+        this.changes['type'] = true;
         this.type = type ?? null;
         return this;
     }
@@ -266,6 +271,10 @@ export default class Definition {
         return this;
     }
 
+    public getChanges(): MixedInterface {
+        return this.changes;
+    }
+
     /**
      * Whether this definition is abstract, that means it merely serves as a
      * template for other definitions.
@@ -284,22 +293,37 @@ export default class Definition {
         return this;
     }
 
-    public replaceArgument(index: number, arg: any) {
+    /**
+     * Replaces a specific argument.
+     *
+     * @return this
+     *
+     * @throws OutOfBoundsException When the replaced argument does not exist
+     */
+    public replaceArgument(key: string, value: any): this {
         const keys = Object.keys(this.arguments);
         const length = keys.length;
         if (length === 0) {
             throw new OutOfBoundsException('Cannot replace arguments if none have been configured yet.');
         }
 
-        if (length <= index) {
+        const keyAsNumber = parseInt(key, 10);
+        if (!isNaN(keyAsNumber) && length <= keyAsNumber) {
             throw new OutOfBoundsException(
-                `The index "${index}" is not in the range [0, ${length - 1}].`
+                `The index "${key}" is not in the range [0, ${length - 1}].`
             );
         }
 
-        const key = keys[index];
-        this.arguments[key] = arg;
+        this.arguments[key] = value;
         return this;
+    }
+
+    public getArgument(key: string): any {
+        if (typeof this.arguments[key] === 'undefined') {
+            throw new OutOfBoundsException(`The argument "${key}" doesn't exists in definition "${this.getId()}".`)
+        }
+
+        return this.arguments[key];
     }
 
     public getArguments(): MixedInterface {
