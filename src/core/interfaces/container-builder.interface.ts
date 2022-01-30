@@ -2,6 +2,7 @@ import CompilerInterface from "./compiler.interface";
 import ContainerInterface from "./container.interface";
 import Definition from "../models/definition.model";
 import ReflexionService from "../reflexion/reflexion.service";
+import ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
 
 interface ContainerBuilderInterface extends ContainerInterface {
     getCompiler(): CompilerInterface;
@@ -19,7 +20,7 @@ interface ContainerBuilderInterface extends ContainerInterface {
      * @throws {ResourceNotFoundException} if the service definition does not exist
      */
     getDefinition(definitionId: string): Definition;
-
+    getParameterBag(): ParameterBagInterface;
 
     register(id: string, aClass: InstanceType<any> | undefined): Definition;
     compile();

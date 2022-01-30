@@ -3,6 +3,7 @@ import FlexibleService from "../../utils/flexible.service";
 import OutOfBoundsException from "../exception/out-of-bounds.exception";
 import InvalidArgumentException from "../exception/invalid-argument.exception";
 import Reference from "./reference.model";
+
 const flexible = new FlexibleService();
 
 export default class Definition {
@@ -10,6 +11,7 @@ export default class Definition {
     private type?: InstanceType<any>;
     private _isAbstract: boolean = false;
     private autowired: boolean = false;
+    private autoconfigured: boolean = false;
     private lazy: boolean = false;
     private settings: MixedInterface = {};
     protected arguments: MixedInterface = {};
@@ -19,12 +21,13 @@ export default class Definition {
     private calls: Array<any> = [];
     private shared: boolean = true;
     private filePath: string | null = null;
-    private factory: ((any)=>void) | string | Array<any> | null = null;
+    private factory: ((any) => void) | string | Array<any> | null = null;
     private public: boolean = false;
     private tags: MixedInterface = {};
     private synthetic: boolean = false;
     // @todo better type...
-    private configurator: ((any)=>void) |string | Array<any> | null = null;
+    private configurator: ((any) => void) | string | Array<any> | null = null;
+    private _instanceof: MixedInterface= {};
 
     /**
      * Whether this definition is synthetic, that is not constructed by the
@@ -121,7 +124,7 @@ export default class Definition {
         return this;
     }
 
-    public getFactory(): ((any)=>void) |string | Array<any> | null {
+    public getFactory(): ((any) => void) | string | Array<any> | null {
         return this.factory || null;
     }
 
@@ -208,7 +211,7 @@ export default class Definition {
      *
      * @return this
      */
-    public setConfigurator(configurator: ((any)=>void) | string | Array<any> | Reference | null): this {
+    public setConfigurator(configurator: ((any) => void) | string | Array<any> | Reference | null): this {
         this.changes['configurator'] = true;
 
         if (typeof configurator === 'string' && configurator.includes('::')) {
@@ -228,7 +231,7 @@ export default class Definition {
     /**
      * Gets the configurator to call after the service is fully initialized.
      */
-    public getConfigurator(): ((any)=>void) |string | Array<any> | null {
+    public getConfigurator(): ((any) => void) | string | Array<any> | null {
         return this.configurator;
     }
 
@@ -240,7 +243,7 @@ export default class Definition {
     }
 
     public setArguments(args: MixedInterface) {
-        this.arguments = args;
+        this.arguments = {...args};
         return this;
     }
 
@@ -253,6 +256,17 @@ export default class Definition {
 
     public isAutowired(): boolean {
         return this.autowired;
+    }
+
+    public setAutoconfigured(status: boolean): this {
+        this.changes['autoconfigured'] = true;
+        this.autoconfigured = status;
+
+        return this;
+    }
+
+    public isAutoconfigured(): boolean {
+        return this.autoconfigured;
     }
 
     public setArgument(index: number | string, arg: any) {
@@ -368,60 +382,26 @@ export default class Definition {
         return this;
     }
 
-//
-//     /**
-//      * Removes a method to call after service initialization.
-//      *
-//      * @returns $this
-//      */
-//     public function removeMethodCall(string $method)
-//     {
-//         foreach ($this->calls as $i => $call) {
-//             if ($call[0] === $method) {
-//                 unset($this->calls[$i]);
-//             }
-//         }
-//
-//         return $this;
-//     }
-//
-//     /**
-//      * Check if the current definition has a given method to call after service initialization.
-//      *
-//      * @returns bool
-//      */
-//     public function hasMethodCall(string $method)
-//     {
-//         foreach ($this->calls as $call) {
-//             if ($call[0] === $method) {
-//                 return true;
-//             }
-//         }
-//
-//         return false;
-//     }
-//
-//     /**
-//      * Gets the methods to call after service initialization.
-//      *
-//      * @returns array An array of method calls
-//      */
-//     public function getMethodCalls()
-//     {
-//         return $this->calls;
-//     }
-//
-//     /**
-//      * Sets the definition templates to conditionally apply on the current definition, keyed by parent interface/class.
-//      *
-//      * @param ChildDefinition[] $instanceof
-//      *
-//      * @returns $this
-//      */
-//     public function setInstanceofConditionals(array $instanceof)
-//     {
-//         $this->instanceof = $instanceof;
-//
-//         return $this;
-//     }
+    /**
+     * Sets the definition templates to conditionally apply on the current definition, keyed by parent interface/class.
+     *
+     * @param ChildDefinition[] instanceof
+     *
+     * @return this
+     */
+    public setInstanceofConditionals(_instanceof: MixedInterface): this {
+        this._instanceof = _instanceof;
+
+        return this;
+    }
+
+    /**
+     * Gets the definition templates to conditionally apply on the current definition, keyed by parent interface/class.
+     *
+     * @return ChildDefinition[]
+     */
+    public getInstanceofConditionals(): MixedInterface {
+        return this._instanceof;
+    }
+
 }

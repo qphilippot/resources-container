@@ -20,3 +20,4 @@ autoload:
 * Créer un plugin qui ajoute le fonctionnement "setProperty" pour les définitions at l'auto-wiring
 * Créer un définition service / manager => s'occupe de mettre à jour les changes
 * Créer un MixedInterface helper
+* Definition autoconfigured as feature

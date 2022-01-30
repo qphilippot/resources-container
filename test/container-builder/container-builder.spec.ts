@@ -22,6 +22,8 @@ import {BEFORE_OPTIMIZATION} from "../../src/core/compiler-step.enum";
 import {join} from "path";
 import BazClass from "./fixtures/BazClass";
 import InvalidArgumentException from "../../src/core/exception/invalid-argument.exception";
+import ChildDefinition from "../../src/core/models/child-definition.model";
+import ParameterBag from "../../src/core/parameter-bag/parameter-bag.model";
 
 describe('container-builder tests', function () {
     describe('basic definition operations', function () {
@@ -476,20 +478,20 @@ describe('container-builder tests', function () {
             );
 
             // support reference
-            builder.register('foo3', 'FooClass').setConfigurator([ new Reference('baz'), 'configure' ]);
+            builder.register('foo3', 'FooClass').setConfigurator([new Reference('baz'), 'configure']);
             expect(builder.get('foo3').configured).to.be.true;
 
-            builder.register('mamamia1', 'FooClass').setConfigurator([ new Reference('baz'), 'configure123' ]);
+            builder.register('mamamia1', 'FooClass').setConfigurator([new Reference('baz'), 'configure123']);
             expect(builder.get.bind(builder, 'mamamia1')).to.throw(
                 InvalidArgumentException,
                 'Cannot configure service using "baz.configure123". No such method found'
             );
 
             // support Definition
-            builder.register('foo4', 'FooClass').setConfigurator([ builder.getDefinition('baz'), 'configure' ]);
+            builder.register('foo4', 'FooClass').setConfigurator([builder.getDefinition('baz'), 'configure']);
             expect(builder.get('foo4').configured).to.be.true;
 
-            builder.register('mamamia2', 'FooClass').setConfigurator([ builder.getDefinition('baz'), 'configure123' ]);
+            builder.register('mamamia2', 'FooClass').setConfigurator([builder.getDefinition('baz'), 'configure123']);
             expect(builder.get.bind(builder, 'mamamia2')).to.throw(
                 InvalidArgumentException,
                 'Cannot configure service using "baz.configure123". No such method found'
@@ -518,8 +520,8 @@ describe('container-builder tests', function () {
             builder.getReflexionService().recordClass('FooClass', FooClass);
             builder.register('foo', 'FooClass');
 
-            const obj = { foo: ['foo', builder.get('foo')] };
-            const resolvedObj = { foo: [ 'foo', builder.resolveServices(new Reference('foo'))] };
+            const obj = {foo: ['foo', builder.get('foo')]};
+            const resolvedObj = {foo: ['foo', builder.resolveServices(new Reference('foo'))]};
             expect(JSON.stringify(obj)).to.equals(JSON.stringify(resolvedObj));
             expect(obj.foo[1]).to.equals(resolvedObj.foo[1]);
         });
@@ -547,4 +549,98 @@ describe('container-builder tests', function () {
     //     $builder->register('foo', 'Bar\FooClass')->addArgument(['foo' => new Expression('service("bar").foo ~ parameter("bar")')]);
     //     $this->assertEquals('foobar', $builder->get('foo')->arguments['foo']);
     // }
+
+    describe('child definition', function () {
+        it('resolves services with child definition', function () {
+            const builder = new ContainerBuilder();
+            builder.setDefinition('grandpa', new Definition('Object'));
+            builder.setDefinition('parent', new ChildDefinition('grandpa'));
+            builder.setDefinition('foo', new ChildDefinition('parent'));
+
+            expect(builder.get.bind(builder, 'foo')).to.throw(
+                RuntimeException,
+                'Constructing service "foo" from a parent definition is not supported at build time.'
+            );
+        });
+
+        it('support custom definition', function () {
+            class CustomDefinition extends Definition {
+            };
+            const builder = new ContainerBuilder();
+            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.setDefinition('foo', new CustomDefinition('FooClass'));
+            expect(builder.get('foo') instanceof FooClass).to.be.true;
+        })
+    });
+
+    describe('merge configuration', function () {
+        it('merges current parameters with the loaded ones', function () {
+            const builder = new ContainerBuilder();
+            builder.setParameter('bar', 'foo');
+
+            const anotherConfig = new ContainerBuilder();
+            anotherConfig.setParameter('foo', 'bar');
+
+            builder.merge(anotherConfig);
+            expect(JSON.stringify(builder.getParameterBag().all())).to.equals('{"bar":"foo","foo":"bar"}');
+        });
+
+        // todo check this test after compilation passes are implemented cause it seems that its a compiliation passe test and not a containerbuilder test...
+        // it('evaluates the values of the parameters towards already defined ones', function () {
+        //     const builder = new ContainerBuilder();
+        //     builder.setParameter('bar','foo');
+        //
+        //     const anotherConfig = new ContainerBuilder();
+        //     anotherConfig.setParameter('foo','%bar%');
+        //
+        //     builder.merge(anotherConfig);
+        //     builder.compile();
+        //     expect(JSON.stringify(builder.getParameterBag().all())).to.equals('{"bar":"foo","foo":"foo"}');
+        // });
+
+        it('merges definitions already defined ones', function () {
+            const builder = new ContainerBuilder();
+            builder.register('foo', 'FooClass');
+            builder.register('bar', 'BarClass');
+
+            const anotherConfig = new ContainerBuilder();
+            anotherConfig.setDefinition('baz', new Definition('BazClass'));
+            anotherConfig.setAlias('alias_for_foo', new Alias('foo'));
+            builder.merge(anotherConfig);
+
+            const allDefinitions = builder.getDefinitions().map(definition => definition.getId());
+
+            expect(JSON.stringify(allDefinitions)).to.equals('["service.container","foo","bar","baz"]');
+
+            const aliases = builder.getAliases();
+            expect(Object.keys(aliases).includes('alias_for_foo'));
+            expect(aliases.alias_for_foo.toString()).to.equals('foo');
+        });
+
+        it('override already defined services', function () {
+            const builder = new ContainerBuilder();
+            builder.register('foo', 'FooClass');
+
+            const anotherConfig = new ContainerBuilder();
+            anotherConfig.setDefinition('foo', new Definition('BazClass'));
+            builder.merge(anotherConfig);
+
+            expect(builder.getDefinition('foo').getResourceType()).to.equals('BazClass');
+        });
+
+        // it('resolve merged env placeholder', function () {
+        //     const builder = new ContainerBuilder();
+        //     const anotherConfig = new ContainerBuilder();
+        //     const bag = new EnvPla
+        //     builder.register('foo', 'FooClass');
+        //     anotherConfig.setDefinition('foo', new Definition('BazClass'));
+        //     builder.merge(anotherConfig);
+        //
+        //     expect(builder.getDefinition('foo').getResourceType()).to.equals('BazClass');
+        // });
+
+
+    });
+
+
 });

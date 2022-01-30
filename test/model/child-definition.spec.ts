@@ -126,4 +126,17 @@ describe('child-definition behavior', function () {
            'The argument "1" doesn\'t exists in definition "foo".'
        );
     });
+
+    it('can be autoconfigured', function () {
+        const definition = new ChildDefinition('foo');
+        definition.setAutoconfigured(true);
+        expect(definition.isAutoconfigured()).to.be.true;
+    });
+
+    it('test instance of conditionals', function () {
+        const definition = new ChildDefinition('foo');
+        const conditionals = { 'Foo': new ChildDefinition('') };
+        definition.setInstanceofConditionals(conditionals);
+        expect(definition.getInstanceofConditionals()).to.equals(conditionals);
+    });
 });

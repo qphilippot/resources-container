@@ -25,6 +25,8 @@ import AliasNotFoundException from "../exception/alias-not-found.exception";
 import CompilerPassInterface from "../interfaces/compiler-pass.interface";
 import {BEFORE_OPTIMIZATION} from "../compiler-step.enum";
 import InvalidArgumentException from "../exception/invalid-argument.exception";
+import ChildDefinition from "../models/child-definition.model";
+import ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
 
 // todo: return an error instead of null when a component is not found
 
@@ -62,6 +64,9 @@ class ContainerBuilder implements ContainerBuilderInterface {
         return this.container;
     }
 
+    public getParameterBag(): ParameterBagInterface {
+        return this.container.getParameterBag();
+    }
 
     /**
      * Create a standard definition with definition id and type
@@ -130,7 +135,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
 
     public addAlias(alias, id) {
-        this.flexible.set(alias, id, this.container.getAliases());
+        this.flexible.set(id, alias, this.container.getAliases());
     }
 
     public getAliases(): Record<string, Alias> {
@@ -379,9 +384,11 @@ class ContainerBuilder implements ContainerBuilderInterface {
             return inlineContextualServices.get(definition.getId());
         }
 
-        // if ($definition instanceof ChildDefinition) {
-        //     throw new RuntimeException(sprintf('Constructing service "%s" from a parent definition is not supported at build time.', $id));
-        // }
+        if (definition instanceof ChildDefinition) {
+            throw new RuntimeException(
+                `Constructing service "${id}" from a parent definition is not supported at build time.`
+            );
+        }
 
         if (definition.isSynthetic()) {
             throw new RuntimeException(
@@ -694,7 +701,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
     private getElementToResolve(value: any, referenceInvalidBehaviorFallbackPolicy: number): Array<any> {
         const toResolve: Array<any> = [];
-       if (Array.isArray(value)) {
+        if (Array.isArray(value)) {
             value.forEach(v => {
                 toResolve.push(...this.getElementToResolve(v, referenceInvalidBehaviorFallbackPolicy));
             });
@@ -794,6 +801,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
         }
 
         checkValidId(definitionId);
+        definition.setId(definitionId);
 
         this.container.removeAlias(definitionId);
         this.removedIds.delete(definitionId);
@@ -976,6 +984,104 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
     getResources(): MixedInterface {
         return this.container.getResources();
+    }
+
+    /**
+     * Merges a ContainerBuilder with the current ContainerBuilder configuration.
+     *
+     * Service definitions overrides the current defined ones.
+     *
+     * But for parameters, they are overridden by the current ones. It allows
+     * the parameters passed to the container constructor to have precedence
+     * over the loaded ones.
+     *
+     *     container = new ContainerBuilder(new ParameterBag({foo: "bar"}));
+     *     loader = new LoaderXXX(container);
+     *     loader.load('resource_name');
+     *     container.register('foo', 'Object');
+     *
+     * In the above example, even if the loaded resource defines a foo
+     * parameter, the value will still be 'bar' as defined in the ContainerBuilder
+     * constructor.
+     *
+     * @throws BadMethodCallException When this ContainerBuilder is compiled
+     */
+    public merge(container: ContainerBuilderInterface): void {
+        if (this.isCompiled()) {
+            throw new BadMethodCallException('Cannot merge on a compiled container.');
+        }
+
+        this.mergeDefinition(container);
+        this.mergeAliases(container);
+        this.getParameterBag().add(container.getParameterBag().all());
+
+    //      if ($this->trackResources) {
+        //             foreach ($container->getResources() as $resource) {
+        //                 $this->addResource($resource);
+        //             }
+        //         }
+
+        // foreach ($this->extensions as $name => $extension) {
+        //     if (!isset($this->extensionConfigs[$name])) {
+        //         $this->extensionConfigs[$name] = [];
+        //     }
+        //
+        //     $this->extensionConfigs[$name] = array_merge($this->extensionConfigs[$name], $container->getExtensionConfig($name));
+        // }
+
+        // let envPlaceholders;
+        // if (
+        //     this.getParameterBag() instanceof EnvPlaceholderParameterBag &&
+        //     container.getParameterBag() instanceof EnvPlaceholderParameterBag
+        // ) {
+        //     envPlaceholders = container.getParameterBag().getEnvPlaceholders();
+        //     this.getParameterBag().mergeEnvPlaceholders(container.getParameterBag());
+        // } else {
+        //     envPlaceholders = [];
+        // }
+        //
+        // foreach ($container->envCounters as $env => $count) {
+        //     if (!$count && !isset($envPlaceholders[$env])) {
+        //         continue;
+        //     }
+        //     if (!isset($this->envCounters[$env])) {
+        //         $this->envCounters[$env] = $count;
+        //     } else {
+        //         $this->envCounters[$env] += $count;
+        //     }
+        // }
+        //
+        // foreach ($container->getAutoconfiguredInstanceof() as $interface => $childDefinition) {
+        //     if (isset($this->autoconfiguredInstanceof[$interface])) {
+        //         throw new InvalidArgumentException(sprintf('"%s" has already been autoconfigured and merge() does not support merging autoconfiguration for the same class/interface.', $interface));
+        //     }
+        //
+        //     $this->autoconfiguredInstanceof[$interface] = $childDefinition;
+        // }
+        //
+        // foreach ($container->getAutoconfiguredAttributes() as $attribute => $configurator) {
+        //     if (isset($this->autoconfiguredAttributes[$attribute])) {
+        //         throw new InvalidArgumentException(sprintf('"%s" has already been autoconfigured and merge() does not support merging autoconfiguration for the same attribute.', $attribute));
+        //     }
+        //
+        //     $this->autoconfiguredAttributes[$attribute] = $configurator;
+        // }
+
+    }
+
+
+    private mergeDefinition(container: ContainerBuilderInterface): void {
+        container.getDefinitions().forEach(definition => {
+            this.setDefinition(definition.getId(), definition);
+        });
+    }
+
+    private mergeAliases(container: ContainerBuilderInterface): void {
+        const aliases = container.getAliases();
+        Object.keys(aliases).forEach(aliasId => {
+            console.log('add alias', aliases[aliasId], aliasId);
+            this.addAlias(aliases[aliasId], aliasId);
+        });
     }
 }
 

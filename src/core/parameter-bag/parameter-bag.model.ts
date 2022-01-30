@@ -102,8 +102,8 @@ export default class ParameterBag implements ParameterBagInterface {
             } catch (error) {
                 if (error instanceof ParameterNotFoundException) {
                     error.setSourceKey(key);
-                    throw error;
                 }
+                throw error;
             }
         });
 
@@ -230,7 +230,7 @@ export default class ParameterBag implements ParameterBagInterface {
             return mixed.replace(/%%/g, '%');
         }
 
-        if (typeof mixed === 'object') {
+        if (typeof mixed === 'object' && mixed !== null) {
             if (Array.isArray(mixed) && mixed.length > 0) {
                 return mixed.map(item => { return this.unescapeValue(item) })
             } else {
