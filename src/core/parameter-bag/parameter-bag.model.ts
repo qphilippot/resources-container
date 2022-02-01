@@ -108,7 +108,7 @@ export default class ParameterBag implements ParameterBagInterface {
         });
 
         this.parameters = parameters;
-        this.resolved = true;
+        this.setAsResolved();
     }
 
 
@@ -249,5 +249,10 @@ export default class ParameterBag implements ParameterBagInterface {
     public isResolved(): boolean {
         return this.resolved;
     }
+
+    public setAsResolved(): void {
+        this.resolved = true;
+    }
+
 
 }

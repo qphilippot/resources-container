@@ -27,6 +27,7 @@ import {BEFORE_OPTIMIZATION} from "../compiler-step.enum";
 import InvalidArgumentException from "../exception/invalid-argument.exception";
 import ChildDefinition from "../models/child-definition.model";
 import ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
+import EnvPlaceholderBag from "../parameter-bag/env-placeholder.bag";
 
 // todo: return an error instead of null when a component is not found
 
@@ -36,7 +37,7 @@ import ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
 class ContainerBuilder implements ContainerBuilderInterface {
     private container: Container;
     private compiler: Compiler;
-    private noCompilationIsNeeded: boolean = false;
+
     private removedIds: Set<string> = new Set<string>();
     private flexible: FlexibleService;
 
@@ -44,8 +45,18 @@ class ContainerBuilder implements ContainerBuilderInterface {
     // definitions: Array<MixedInterface> = [];
     private definitions: Record<string, Definition> = {};
 
+    /**
+     * a map of env var names to their placeholders
+     */
+    private envPlaceholders: Map<string, string[]> = new Map<string, string[]>();
+
+    /**
+     * Map of env vars to their resolution counter
+     */
+    private envCounters = new Map<string, number>();
+
     constructor(settings: MixedInterface = {}) {
-        this.container = settings.container || new Container();
+        this.container = settings.container || new Container(settings);
         this.flexible = new FlexibleService();
 
         this.reflexionService = new ReflexionService();
@@ -58,6 +69,8 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
         // add feature
         new NullOnInvalidReferenceFeature(this.container);
+
+
     }
 
     public getContainer(): Container {
@@ -142,6 +155,93 @@ class ContainerBuilder implements ContainerBuilderInterface {
         return this.container.getAliases();
     }
 
+
+    /**
+     * Resolves env parameter placeholders in a string or an array.
+     *
+     * @param string|true|null $format    A sprintf() format returning the replacement for each env var name or
+     *                                    null to resolve back to the original "%env(VAR)%" format or
+     *                                    true to resolve to the actual values of the referenced env vars
+     * @param array            &$usedEnvs Env vars found while resolving are added to this array
+     *
+     * @return mixed The value with env parameters resolved if a string or an array is passed
+     */
+    public resolveEnvPlaceholders(value: any, format: string | boolean | null = null, usedEnvs: any[] = []): MixedInterface {
+        if (null === format) {
+            format = '%%env(%s)%%';
+        }
+
+        let bag = this.getParameterBag();
+        if (true === format) {
+            value = bag.resolveValue(value);
+        }
+
+        if (value instanceof Definition) {
+            value = [value];
+        }
+
+        if (typeof value === 'object' && value !== null) {
+            let result = Object.keys(value).map(k => {
+                const v = value[k];
+                // const keyAsNumber = parseInt(k, 10);
+                // const resolvedKey = keyAsNumber === NaN ? this.resolveEnvPlaceholders(k, format, usedEnvs) : keyAsNumber;
+                // result[k] = this.resolveEnvPlaceholders(v, format, usedEnvs);
+                return this.resolveEnvPlaceholders(v, format, usedEnvs);
+            });
+
+            return result;
+        }
+
+        if (typeof value !== 'string' || value.length < 38) {
+            return value;
+        }
+        let envPlaceholders = bag instanceof EnvPlaceholderBag ? bag.getEnvPlaceholders() : this.envPlaceholders;
+
+        let completed = false;
+        let resolved: string = '';
+        for (const env of envPlaceholders.keys()) {
+            const placeholders = envPlaceholders.get(env);
+            if (!Array.isArray(placeholders)) {
+                throw new RuntimeException(
+                    `env placeholder should be a string array, "${typeof placeholders}" is given.`
+                );
+            }
+
+            for (let i = 0; i < placeholders.length && completed === false; i++) {
+                const placeholder = placeholders[i];
+                if (placeholder.includes(value)) {
+                    if (format === true) {
+                        resolved = bag.escapeValue(this.getEnv(env));
+                    } else {
+                        if (typeof format === "string") {
+                            resolved = format.replace("%s", env);
+                        }
+                    }
+                    if (placeholder === value) {
+                        value = resolved;
+                        completed = true;
+                    } else {
+                        if (typeof resolved !== 'string' && !(typeof resolved === "number" && Number.isFinite(resolved))) {
+                            throw new RuntimeException(
+                                `A string value must be composed of strings and/or numbers, but found parameter "env(${env})" of type "${resolved.constructor.name}" inside string value "${this.resolveEnvPlaceholders(value)}".`
+                            );
+                        }
+
+                        if (typeof value === 'string') {
+                            value = value.replaceAll(placeholder, resolved);
+                        }
+
+                    }
+                    usedEnvs[env] = env;
+                    let previousCounter = this.envCounters.get(env) ?? 0;
+                    this.envCounters.set(env, previousCounter + 1);
+                }
+            }
+
+        }
+
+        return value;
+    }
 
     /**
      * @throws AliasNotFoundException
@@ -781,9 +881,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
     //     });
     // }
 
-    isCompiled(): boolean {
-        return this.noCompilationIsNeeded;
-    }
 
     hasDefinition(definitionId: string): boolean {
         return typeof this.definitions[definitionId] !== 'undefined';
@@ -938,7 +1035,12 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
     compile() {
         this.getCompiler().compile(this);
-        this.noCompilationIsNeeded = true;
+        // this.noCompilationIsNeeded = true;
+        this.container.compile();
+    }
+
+    isCompiled(): boolean {
+        return this.container.isCompiled();
     }
 
     /**
@@ -1015,7 +1117,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
         this.mergeAliases(container);
         this.getParameterBag().add(container.getParameterBag().all());
 
-    //      if ($this->trackResources) {
+        //      if ($this->trackResources) {
         //             foreach ($container->getResources() as $resource) {
         //                 $this->addResource($resource);
         //             }

@@ -21,3 +21,4 @@ autoload:
 * Créer un définition service / manager => s'occupe de mettre à jour les changes
 * Créer un MixedInterface helper
 * Definition autoconfigured as feature
+* Voir s'il est possible de sortir l'env processor et toute cette logique du container.model et container-builder

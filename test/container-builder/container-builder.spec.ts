@@ -24,6 +24,7 @@ import BazClass from "./fixtures/BazClass";
 import InvalidArgumentException from "../../src/core/exception/invalid-argument.exception";
 import ChildDefinition from "../../src/core/models/child-definition.model";
 import ParameterBag from "../../src/core/parameter-bag/parameter-bag.model";
+import EnvPlaceholderBag from "../../src/core/parameter-bag/env-placeholder.bag";
 
 describe('container-builder tests', function () {
     describe('basic definition operations', function () {
@@ -628,16 +629,18 @@ describe('container-builder tests', function () {
             expect(builder.getDefinition('foo').getResourceType()).to.equals('BazClass');
         });
 
-        // it('resolve merged env placeholder', function () {
-        //     const builder = new ContainerBuilder();
-        //     const anotherConfig = new ContainerBuilder();
-        //     const bag = new EnvPla
-        //     builder.register('foo', 'FooClass');
-        //     anotherConfig.setDefinition('foo', new Definition('BazClass'));
-        //     builder.merge(anotherConfig);
-        //
-        //     expect(builder.getDefinition('foo').getResourceType()).to.equals('BazClass');
-        // });
+        it('resolve merged env placeholder', function () {
+            const builder = new ContainerBuilder();
+
+            const bag = new EnvPlaceholderBag();
+            bag.get('env(Foo)');
+
+            const anotherConfig = new ContainerBuilder({ parameterBag: bag });
+            // anotherConfig
+            builder.merge(anotherConfig);
+
+            expect(builder.getDefinition('foo').getResourceType()).to.equals('BazClass');
+        });
 
 
     });

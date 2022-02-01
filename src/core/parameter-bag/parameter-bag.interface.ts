@@ -43,7 +43,7 @@ export default interface ParameterBagInterface {
      *
      * @throws LogicException if the parameter can not be set
      */
-    set(name: string, valu: any): ParameterBagInterface     ;
+    set(name: string, value: any): ParameterBagInterface;
 
     /**
      * Returns true if a parameter name is defined.
@@ -76,5 +76,7 @@ export default interface ParameterBagInterface {
      */
     unescapeValue(mixed: any): any;
     addExclusionRule(rule: (value: MixedInterface) => boolean): this;
+
+    isResolved(): boolean;
 
 }

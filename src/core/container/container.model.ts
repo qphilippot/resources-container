@@ -13,18 +13,22 @@ import SelfAliasingException from "../exception/self-aliasing.exception";
 import Reference from "../models/reference.model";
 import Definition from "../models/definition.model";
 import EnvPlaceholderBag from "../parameter-bag/env-placeholder.bag";
+import ParameterCircularReferenceException from "../exception/parameter-circular-reference.exception";
+import ReadOnlyParameterBag from "../parameter-bag/read-only.parameter-bag";
 
 class Container extends PublisherSubscriber implements ContainerInterface {
     private resources: Mixed;
     private aliases: Record<string, Alias>;
     private factories: Mixed;
+    private noCompilationIsNeeded: boolean = false;
     /**
      * Contains parameters, not resources or alias
      * @private
      */
     private parameterBag: ParameterBagInterface;
     private circularReferenceDetector: CircularReferencesDetectorService = new CircularReferencesDetectorService();
-
+    protected resolving = {};
+    protected envCache = new Map<string, any>();
     private getHandlers: Record<string, Function> = {};
     private dataSlot: Record<string, any> = {};
 
@@ -58,6 +62,10 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         this.set(id, resource);
     }
 
+    public isCompiled(): boolean {
+        return this.noCompilationIsNeeded;
+    }
+
     public hasResource(resourceId): boolean {
         return typeof this.resources[resourceId] !== "undefined";
     }
@@ -73,6 +81,7 @@ class Container extends PublisherSubscriber implements ContainerInterface {
     public getResources(): Mixed {
         return this.resources;
     }
+
     /**
      * @inheritDoc
      */
@@ -88,7 +97,7 @@ class Container extends PublisherSubscriber implements ContainerInterface {
             return this.resources[this.aliases[id].toString()];
         }
 
-        if (id === 'service_container') {
+        if (id === 'service.container') {
             return this;
         }
 
@@ -183,6 +192,56 @@ class Container extends PublisherSubscriber implements ContainerInterface {
 
     public hasAlias(alias: string): boolean {
         return typeof this.aliases[alias] !== 'undefined';
+    }
+
+    public getEnv(name: string): any {
+        const envName = `env(${name})`
+        if (typeof (this.resolving[envName]) !== 'undefined') {
+            throw new ParameterCircularReferenceException(Object.keys(this.resolving));
+        }
+
+        if (this.envCache.has(name)) {
+            return this.envCache.get(name);
+        }
+
+        // todo resolve from processor
+        // const id = 'container.env_var_processors_locator';
+        // if (!this.has(id)) {
+        //     this.set(id, new ServiceLocator([]));
+        // }
+        // this.getEnv ??= \Closure::fromCallable([this, 'getEnv']);
+        // processors = this.get(id);
+        // const index = name.indexOf(name);
+        // if (index >= 0) {
+        //     prefix = substr(name, 0, index);
+        //     localName = substr(name, 1 + index);
+        // } else {
+        //     prefix = 'string';
+        //     localName = name;
+        // }
+        // processor = processors.has(prefix) ? processors.get(prefix) : new EnvVarProcessor(this);
+
+        // this.resolving[envName] = true;
+        // try {
+        //     return this.envCache[name] = processor.getEnv(prefix, localName, this.getEnv);
+        // } finally {
+        //     unset(this.resolving[envName]);
+        // }
+    }
+
+
+    /**
+     * Compiles the container.
+     *
+     * This method does two things:
+     *
+     *  * Parameter values are resolved;
+     *  * The parameter bag is frozen.
+     */
+    public compile() {
+        this.parameterBag.resolve();
+        this.parameterBag = new ReadOnlyParameterBag(this.parameterBag.all());
+        this.noCompilationIsNeeded = true;
     }
 }
 
