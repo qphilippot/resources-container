@@ -41,7 +41,7 @@ export default class ReadOnlyParameterBag implements ParameterBagInterface {
     }
 
     addExclusionRule(rule: (value: MixedInterface) => boolean): this {
-        throw new LogicException('Impossible to call addExclusionRule() on  a read-only ParameterBag.');
+       return this;
     }
 
     isResolved(): boolean {

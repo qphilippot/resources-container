@@ -160,6 +160,7 @@ class Container extends PublisherSubscriber implements ContainerInterface {
             new Set([
                 ...Object.keys(this.aliases),
                 ...Object.keys(this.resources),
+                'service.container'
             ])
         )
     }
