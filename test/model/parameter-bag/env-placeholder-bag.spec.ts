@@ -1,8 +1,8 @@
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
-import EnvPlaceholderBag from "../../src/core/parameter-bag/env-placeholder.bag";
-import InvalidArgumentException from "../../src/core/exception/invalid-argument.exception";
-import RuntimeException from "../../src/core/exception/runtime.exception";
+import EnvPlaceholderBag from "../../../src/core/parameter-bag/env-placeholder.bag";
+import InvalidArgumentException from "../../../src/core/exception/invalid-argument.exception";
+import RuntimeException from "../../../src/core/exception/runtime.exception";
 
 // todo reuse parameter-bag spec with this class...
 // todo define what is "word" characters in tutorial

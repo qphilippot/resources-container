@@ -75,5 +75,4 @@ export default class ReadOnlyParameterBag implements ParameterBagInterface {
     public remove(name: string) {
         throw new LogicException('Impossible to call remove() on  a read-only ParameterBag.');
     }
-
 }

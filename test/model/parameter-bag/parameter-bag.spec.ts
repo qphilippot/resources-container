@@ -1,9 +1,9 @@
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
-import ParameterBag from "../../src/core/parameter-bag/parameter-bag.model";
-import ParameterNotFoundException from "../../src/core/exception/parameter-not-found.exception";
-import RuntimeException from "../../src/core/exception/runtime.exception";
-import ParameterCircularReferenceException from "../../src/core/exception/parameter-circular-reference.exception";
+import ParameterBag from "../../../src/core/parameter-bag/parameter-bag.model";
+import ParameterNotFoundException from "../../../src/core/exception/parameter-not-found.exception";
+import RuntimeException from "../../../src/core/exception/runtime.exception";
+import ParameterCircularReferenceException from "../../../src/core/exception/parameter-circular-reference.exception";
 
 const someParameters = {
     foo: 'foo',
