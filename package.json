@@ -1,6 +1,6 @@
 {
   "name": "resources-container",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "test": "mocha -r ts-node/register test/*.spec.ts",
     "build": "webpack",
