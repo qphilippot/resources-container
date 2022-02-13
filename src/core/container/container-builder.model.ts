@@ -211,7 +211,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
                 const placeholder = placeholders[i];
                 if (placeholder.includes(value)) {
                     if (format === true) {
-                        resolved = bag.escapeValue(this.getEnv(env));
+                        // resolved = bag.escapeValue(this.getEnv(env));
                     } else {
                         if (typeof format === "string") {
                             resolved = format.replace("%s", env);
@@ -221,11 +221,11 @@ class ContainerBuilder implements ContainerBuilderInterface {
                         value = resolved;
                         completed = true;
                     } else {
-                        if (typeof resolved !== 'string' && !(typeof resolved === "number" && Number.isFinite(resolved))) {
-                            throw new RuntimeException(
-                                `A string value must be composed of strings and/or numbers, but found parameter "env(${env})" of type "${resolved.constructor.name}" inside string value "${this.resolveEnvPlaceholders(value)}".`
-                            );
-                        }
+                        // if (typeof resolved !== 'string' && !(typeof resolved === "number" && Number.isFinite(resolved))) {
+                        //     throw new RuntimeException(
+                        //         `A string value must be composed of strings and/or numbers, but found parameter "env(${env})" of type "${resolved.constructor.name}" inside string value "${this.resolveEnvPlaceholders(value)}".`
+                        //     );
+                        // }
 
                         if (typeof value === 'string') {
                             value = value.replaceAll(placeholder, resolved);

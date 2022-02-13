@@ -1,7 +1,7 @@
 import NotFoundExceptionInterface from "../../../psr/container/not-found-exception.interface";
 
 export default class ResourceNotFoundException extends Error  implements NotFoundExceptionInterface {
-    constructor(id, sourceId = null, previous = null, alternatives = [], msg: string = '') {
+    constructor(id, sourceId = null, previous = null, alternatives:string[] = [], msg: string = '') {
         if (msg !== '') {
             // no-op
         }

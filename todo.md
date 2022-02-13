@@ -22,3 +22,4 @@ autoload:
 * Créer un MixedInterface helper
 * Definition autoconfigured as feature
 * Voir s'il est possible de sortir l'env processor et toute cette logique du container.model et container-builder
+* Permettre au container d'utiliser des methodmap qui permettent d'invoquer une methode en fallback du get si aucun alias / service n'est trouvé. Ce fallback devrait retourner un service. ==> Ne pas supporter en V1 car pas de cas d'usage identifié.

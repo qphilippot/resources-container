@@ -4,6 +4,7 @@ import ParameterNotFoundException from "../exception/parameter-not-found.excepti
 import * as levenshtein from 'fast-levenshtein';
 import RuntimeException from "../exception/runtime.exception";
 import { checkKey } from "./parameter-bag.helper";
+import {searchAlternativesString} from "../helpers/string-alternatives.helper";
 
 // todo add setNestedDelimiter and setParameterDelimiter in order to allow customisation like: my.#param# or even my\#param#
 export default class ParameterBag implements ParameterBagInterface {
@@ -40,13 +41,7 @@ export default class ParameterBag implements ParameterBagInterface {
                 throw new ParameterNotFoundException(name);
             }
 
-            const alternatives: string[] = [];
-            Object.keys(this.parameters).forEach(key => {
-                const distance = levenshtein.get(name, key);
-                if (distance <= name.length / 3 || key.includes(name)) {
-                    alternatives.push(key);
-                }
-            });
+            const alternatives = searchAlternativesString(name, Object.keys(this.parameters));
 
             let nonNestedAlternative: string | undefined;
             if (alternatives.length === 0 && name.includes(separator)) {

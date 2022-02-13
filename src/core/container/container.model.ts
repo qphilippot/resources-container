@@ -15,6 +15,8 @@ import Definition from "../models/definition.model";
 import EnvPlaceholderBag from "../parameter-bag/env-placeholder.bag";
 import ParameterCircularReferenceException from "../exception/parameter-circular-reference.exception";
 import ReadOnlyParameterBag from "../parameter-bag/read-only.parameter-bag";
+import ExceptionOnInvalidReferenceFeature from "./features/exception-on-invalid-reference.feature";
+import IdentifiableInterface from "@qphi/publisher-subscriber/src/interfaces/identifiable.interface";
 
 class Container extends PublisherSubscriber implements ContainerInterface {
     private resources: Mixed;
@@ -31,6 +33,7 @@ class Container extends PublisherSubscriber implements ContainerInterface {
     protected envCache = new Map<string, any>();
     private getHandlers: Record<string, Function> = {};
     private dataSlot: Record<string, any> = {};
+    private features: Record<string, any> = {};
 
     constructor(settings: Mixed = {}) {
         super(settings.name || 'container');
@@ -47,6 +50,14 @@ class Container extends PublisherSubscriber implements ContainerInterface {
             .addExclusionRule(
                 (values: MixedInterface) => values instanceof Definition
             );
+
+        // does not catch any exception raised in notification publication system
+        this.stopPublicationOnException();
+        this.injectFeature(new ExceptionOnInvalidReferenceFeature(this));
+    }
+
+    private injectFeature(feature: IdentifiableInterface): void {
+        this.features[feature.getId()] = feature;
     }
 
     public getParameterBag(): ParameterBagInterface {

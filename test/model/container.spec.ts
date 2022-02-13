@@ -5,6 +5,7 @@ import ParameterBag from "../../src/core/parameter-bag/parameter-bag.model";
 import ReadOnlyParameterBag from "../../src/core/parameter-bag/read-only.parameter-bag";
 import ParameterNotFoundException from "../../src/core/exception/parameter-not-found.exception";
 import Alias from "../../src/core/models/alias.model";
+import ResourceNotFoundException from "../../src/core/exception/resource-not-found.exception";
 
 
 describe('Container', () => {
@@ -55,6 +56,7 @@ describe('Container', () => {
         expect(JSON.stringify(container.getParameterBag().all())).to.equals('{}');
     });
 
+    // @todo should be a "describe" and each spec a "it"
     it('get/set parameter', function () {
         const container = new Container({
             parameterBag: new ParameterBag({ foo: 'bar' })
@@ -62,6 +64,7 @@ describe('Container', () => {
 
         container.setParameter('bar', 'foo');
         expect(container.getParameter('bar')).to.equals('foo');
+        // check case sensivity
         container.setParameter('foo', 'baz');
         container.setParameter('Foo', 'baz1');
         expect(container.getParameter('foo')).to.equals('baz');
@@ -110,6 +113,21 @@ describe('Container', () => {
         expect(container.get('bar')).to.equals(foo2);
     });
 
-    // todo testSetWithNullOnInitializedPredefinedService
+    it('throws ServiceNotFound exception calling get with unknown id', function () {
+        const container = new Container();
+        container.set('foo', { name: 'foo' });
+        container.set('baz', { name: 'baz' });
+        container.set('bar', { name: 'bar' });
 
+        expect(container.get.bind(container, 'foo1')).to.throw(
+            ResourceNotFoundException,
+            'You have requested a non-existent service "foo1". Did you mean this: "foo"?'
+        );
+        expect(container.get.bind(container, 'bam')).to.throw(
+            ResourceNotFoundException,
+            'You have requested a non-existent service "bam". Did you mean one of these: "baz", "bar"?'
+        );
+    });
+
+    // todo testGetCircularReference
 });
