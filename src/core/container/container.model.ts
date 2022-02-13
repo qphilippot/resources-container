@@ -7,7 +7,6 @@ import CircularReferencesDetectorService from "../circular-references-detector.s
 import {PublisherSubscriber} from "@qphi/publisher-subscriber";
 import {INVALID_REFERENCE_ON_GET} from "./container-notification";
 import ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
-import ParameterBag from "../parameter-bag/parameter-bag.model";
 import {checkValidId} from "./container.helper";
 import SelfAliasingException from "../exception/self-aliasing.exception";
 import Reference from "../models/reference.model";
@@ -39,7 +38,6 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         super(settings.name || 'container');
         this.resources = {};
         this.aliases = {};
-        // this.parameters = {};
         this.factories = {};
 
         this.parameterBag = settings.parameterBag ?? new EnvPlaceholderBag();
@@ -122,6 +120,15 @@ class Container extends PublisherSubscriber implements ContainerInterface {
     public make(serviceId: string, invalidBehavior: number) {
         this.circularReferenceDetector.process(serviceId);
 
+        // todo resolve alias before compilation using AliasResolverService which contains own inlineContextualService and CircularDependencyDetector
+        // if (this.aliases[serviceId]) {
+        //     this.circularReferenceDetector.process(serviceId);
+        //     const aliased = this.get(this.aliases[serviceId].toString(), invalidBehavior);
+        //     if (aliased) {
+        //         return aliased;
+        //     }
+        // }
+
         this.publish(INVALID_REFERENCE_ON_GET, {invalidBehavior, id: serviceId});
 
         return null;
@@ -132,7 +139,7 @@ class Container extends PublisherSubscriber implements ContainerInterface {
     }
 
     public has(id: string) {
-        const resource = this.resources[id];
+        const resource = this.resources[id] ?? this.resources[this.getAlias(id)?.toString()];
         return (
             resource !== null &&
             typeof resource !== 'undefined'

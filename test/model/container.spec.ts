@@ -7,7 +7,6 @@ import ParameterNotFoundException from "../../src/core/exception/parameter-not-f
 import Alias from "../../src/core/models/alias.model";
 import ResourceNotFoundException from "../../src/core/exception/resource-not-found.exception";
 
-
 describe('Container', () => {
     it('automatically registers itself as a service', function (){
         const container = new Container();
@@ -129,5 +128,31 @@ describe('Container', () => {
         );
     });
 
-    // todo testGetCircularReference
+    // todo when container will resolved chained alias before compilation on this own
+    // it('detect circular dependency', function () {
+    //     const container = new Container();
+    //     container.setAlias('foo', new Alias('bar'));
+    //     container.setAlias('bar', new Alias('foo'));
+    //
+    //     expect(container.get.bind(container, 'foo')).to.throw(
+    //         CircularReferenceException,
+    //         'Circular reference detected for resource "foo", path: "foo=>bar".'
+    //     )
+    // })
+
+
+    it('"has" method works as expected', function () {
+        const container = new Container();
+        expect(container.has('foo')).to.be.false;
+        container.set('foo', { name: 'foo' });
+        expect(container.has('foo')).to.be.true;
+        container.set('foo', null);
+        expect(container.has('foo')).to.be.false;
+
+        container.set('bar', 42);
+        container.setAlias('foo', new Alias('bar'));
+        expect(container.has('foo')).to.be.true;
+        container.removeAlias('foo');
+        expect(container.has('foo')).to.be.false;
+    });
 });

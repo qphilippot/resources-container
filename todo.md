@@ -23,3 +23,11 @@ autoload:
 * Definition autoconfigured as feature
 * Voir s'il est possible de sortir l'env processor et toute cette logique du container.model et container-builder
 * Permettre au container d'utiliser des methodmap qui permettent d'invoquer une methode en fallback du get si aucun alias / service n'est trouvé. Ce fallback devrait retourner un service. ==> Ne pas supporter en V1 car pas de cas d'usage identifié.
+
+# My Own Rules
+## Container
+* Le container stock des services et des alias, il peut résoudre des alias et propose des hooks pour la gestion d'erreur. La compilation ne sert qu'à figer le parameter-bag ?
+
+## Container Builder 
+* Propose le concept de definition, synthethic, etc.
+* Lors de la compilation, il renvoi un container read-only classique ?

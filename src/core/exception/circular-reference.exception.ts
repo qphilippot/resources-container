@@ -5,7 +5,7 @@ export default class CircularReferenceException extends RuntimeException {
     private readonly path: string[];
 
     constructor(resourceId: string, path: string[]) {
-        super(`Circular reference detected for resource "${resourceId}", path "${path.join('->')}"`);
+        super(`Circular reference detected for resource "${resourceId}", path: "${path.join('=>')}".`);
         // Ensure the name of this error is the same as the class name
         this.name = this.constructor.name;
         this.path = path;

@@ -629,18 +629,19 @@ describe('container-builder tests', function () {
             expect(builder.getDefinition('foo').getResourceType()).to.equals('BazClass');
         });
 
-        it('resolve merged env placeholder', function () {
-            const builder = new ContainerBuilder();
-
-            const bag = new EnvPlaceholderBag();
-            bag.get('env(Foo)');
-
-            const anotherConfig = new ContainerBuilder({ parameterBag: bag });
-            // anotherConfig
-            builder.merge(anotherConfig);
-
-            expect(builder.getDefinition('foo').getResourceType()).to.equals('BazClass');
-        });
+        // todo
+        // it('resolve merged env placeholder', function () {
+        //     const builder = new ContainerBuilder();
+        //
+        //     const bag = new EnvPlaceholderBag();
+        //     bag.get('env(Foo)');
+        //
+        //     const anotherConfig = new ContainerBuilder({ parameterBag: bag });
+        //     // anotherConfig
+        //     builder.merge(anotherConfig);
+        //
+        //     expect(builder.getDefinition('foo').getResourceType()).to.equals('BazClass');
+        // });
 
 
     });
