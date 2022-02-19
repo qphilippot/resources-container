@@ -195,6 +195,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
         if (typeof value !== 'string' || value.length < 38) {
             return value;
         }
+
         let envPlaceholders = bag instanceof EnvPlaceholderBag ? bag.getEnvPlaceholders() : this.envPlaceholders;
 
         let completed = false;

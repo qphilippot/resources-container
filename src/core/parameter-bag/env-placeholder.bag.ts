@@ -18,6 +18,7 @@ export default class EnvPlaceholderBag extends ParameterBag {
         return /^[a-zA-Z0-9:_.-]+$/;
     }
 
+    // todo comprendre ce que fait le get avec les envPlaceholders
     public get(name: string, separator: string = '.'): any {
         const matches = name.match(this.getEnvRegex());
         if (matches !== null) {
@@ -48,7 +49,7 @@ export default class EnvPlaceholderBag extends ParameterBag {
                 }
             }
 
-            const uniqueName = name + '_' + EnvPlaceholderBag.counter++;
+            const uniqueName = md5(name + '_' + EnvPlaceholderBag.counter++);
             const placeholder = `${this.getEnvPlaceholderUniquePrefix()}_${env.replace(/[:.-]/g, '_')}_${uniqueName}`;
             this.envPlaceholders.set(env, [ placeholder ]);
 

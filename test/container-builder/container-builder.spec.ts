@@ -630,18 +630,20 @@ describe('container-builder tests', function () {
         });
 
         // todo
-        // it('resolve merged env placeholder', function () {
-        //     const builder = new ContainerBuilder();
-        //
-        //     const bag = new EnvPlaceholderBag();
-        //     bag.get('env(Foo)');
-        //
-        //     const anotherConfig = new ContainerBuilder({ parameterBag: bag });
-        //     // anotherConfig
-        //     builder.merge(anotherConfig);
-        //
-        //     expect(builder.getDefinition('foo').getResourceType()).to.equals('BazClass');
-        // });
+        it('resolve merged env placeholder', function () {
+            const builder = new ContainerBuilder();
+
+            const bag = new EnvPlaceholderBag();
+            bag.get('env(Foo)');
+
+            const anotherConfig = new ContainerBuilder({ parameterBag: bag });
+            // anotherConfig
+            builder.merge(anotherConfig);
+
+            expect(
+                JSON.stringify(anotherConfig.resolveEnvPlaceholders([ bag.get('env(Bar)')]))
+            ).to.equals('["%%env(Bar)%%"]');
+        });
 
 
     });
