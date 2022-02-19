@@ -2,6 +2,7 @@ import ParameterBag from "./parameter-bag.model";
 import InvalidArgumentException from "../exception/invalid-argument.exception";
 import RuntimeException from "../exception/runtime.exception";
 import * as md5 from 'md5'
+import ParameterBagInterface from "./parameter-bag.interface";
 export default class EnvPlaceholderBag extends ParameterBag {
     private envPlaceholderPrefix: string = '';
     private envPlaceholders: Map<string, any> = new Map<string, string[]>();
@@ -88,6 +89,14 @@ export default class EnvPlaceholderBag extends ParameterBag {
 
     public clearUnusedEnvPlaceholders() {
         this.unusedEnvPlaceholders.clear();
+    }
+
+    merge(bag: ParameterBagInterface) {
+        super.merge(bag);
+
+        if (bag instanceof EnvPlaceholderBag) {
+            this.mergeEnvPlaceholders(bag);
+        }
     }
 
     /**

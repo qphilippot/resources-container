@@ -9,14 +9,14 @@ export default interface ParameterBagInterface {
      *
      * @throws LogicException if the ParameterBagInterface can not be cleared
      */
-    clear();
+    clear():void;
 
     /**
      * Adds parameters to the service container parameters.
      *
      * @throws LogicException if the parameter can not be added
      */
-    add(parameters: MixedInterface);
+    add(parameters: MixedInterface):void;
 
     /**
      * Gets the service container parameters.
@@ -78,5 +78,6 @@ export default interface ParameterBagInterface {
     addExclusionRule(rule: (value: MixedInterface) => boolean): this;
 
     isResolved(): boolean;
+    merge(bag: ParameterBagInterface): void;
 
 }

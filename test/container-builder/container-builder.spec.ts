@@ -23,8 +23,8 @@ import {join} from "path";
 import BazClass from "./fixtures/BazClass";
 import InvalidArgumentException from "../../src/core/exception/invalid-argument.exception";
 import ChildDefinition from "../../src/core/models/child-definition.model";
-import ParameterBag from "../../src/core/parameter-bag/parameter-bag.model";
 import EnvPlaceholderBag from "../../src/core/parameter-bag/env-placeholder.bag";
+import {getEnvCounter} from "../../src/core/container/helper/container-builder.helper";
 
 describe('container-builder tests', function () {
     describe('basic definition operations', function () {
@@ -629,20 +629,17 @@ describe('container-builder tests', function () {
             expect(builder.getDefinition('foo').getResourceType()).to.equals('BazClass');
         });
 
-        // todo
         it('resolve merged env placeholder', function () {
             const builder = new ContainerBuilder();
-
             const bag = new EnvPlaceholderBag();
             bag.get('env(Foo)');
-
             const anotherConfig = new ContainerBuilder({ parameterBag: bag });
-            // anotherConfig
-            builder.merge(anotherConfig);
-
             expect(
                 JSON.stringify(anotherConfig.resolveEnvPlaceholders([ bag.get('env(Bar)')]))
             ).to.equals('["%%env(Bar)%%"]');
+
+            builder.merge(anotherConfig);
+            expect(JSON.stringify(getEnvCounter(builder))).to.equals('["Foo","Bar"]');
         });
 
 

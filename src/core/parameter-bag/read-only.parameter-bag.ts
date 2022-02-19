@@ -41,7 +41,7 @@ export default class ReadOnlyParameterBag implements ParameterBagInterface {
     }
 
     addExclusionRule(rule: (value: MixedInterface) => boolean): this {
-       return this;
+        return this;
     }
 
     isResolved(): boolean {
@@ -51,14 +51,18 @@ export default class ReadOnlyParameterBag implements ParameterBagInterface {
     /**
      * {@inheritdoc}
      */
-    public clear() {
+    public clear(): void {
         throw new LogicException('Impossible to call clear() on  a read-only ParameterBag.');
+    }
+
+    public merge(bag: ParameterBagInterface): void {
+        throw new LogicException('Impossible to call merge() on  a read-only ParameterBag.');
     }
 
     /**
      * {@inheritdoc}
      */
-    public add(parameters: MixedInterface) {
+    public add(parameters: MixedInterface): void {
         throw new LogicException('Impossible to call add() on  a read-only ParameterBag.');
     }
 

@@ -3,7 +3,7 @@ import ParameterBagInterface from "./parameter-bag.interface";
 import ParameterNotFoundException from "../exception/parameter-not-found.exception";
 import * as levenshtein from 'fast-levenshtein';
 import RuntimeException from "../exception/runtime.exception";
-import { checkKey } from "./parameter-bag.helper";
+import {checkKey} from "./parameter-bag.helper";
 import {searchAlternativesString} from "../helpers/string-alternatives.helper";
 
 // todo add setNestedDelimiter and setParameterDelimiter in order to allow customisation like: my.#param# or even my\#param#
@@ -20,10 +20,14 @@ export default class ParameterBag implements ParameterBagInterface {
         this.parameters = {};
     }
 
-    public add(parameters: MixedInterface) {
+    public add(parameters: MixedInterface): void {
         Object.keys(parameters).forEach(entry => {
             this.set(entry, parameters[entry])
         });
+    }
+
+    public merge(bag: ParameterBagInterface): void {
+        this.add(bag.all());
     }
 
     public addExclusionRule(rule: ((values: MixedInterface) => boolean)): this {
@@ -35,7 +39,7 @@ export default class ParameterBag implements ParameterBagInterface {
         return this.parameters;
     }
 
-    public get(name: string, separator:string = '.'): any {
+    public get(name: string, separator: string = '.'): any {
         if (typeof this.parameters[name] === 'undefined') {
             if (name.length === 0) {
                 throw new ParameterNotFoundException(name);
@@ -128,7 +132,9 @@ export default class ParameterBag implements ParameterBagInterface {
 
 
             if (Array.isArray(value) && value.length > 0) {
-                return value.map((item, index) => { return this.resolveValue(item, {...resolving});})
+                return value.map((item, index) => {
+                    return this.resolveValue(item, {...resolving});
+                })
             } else {
                 const args = {};
                 Object.keys(value).forEach(k => {
@@ -163,7 +169,7 @@ export default class ParameterBag implements ParameterBagInterface {
         const match = value.match(/^%([^%\s]+)%$/);
         if (match !== null) {
             const key = checkKey(match[1], resolving);
-            return this.resolved ? this.get(key) : this.resolveValue(this.get(key), { ...resolving });
+            return this.resolved ? this.get(key) : this.resolveValue(this.get(key), {...resolving});
         }
 
         return value.replace(/%%|%([^%\s]+)%/g, (substring, token,) => {
@@ -172,7 +178,7 @@ export default class ParameterBag implements ParameterBagInterface {
             }
 
             // as we are on for-loop, we don't want to add "key" to resolving map yet
-            const key = checkKey(token, { ...resolving });
+            const key = checkKey(token, {...resolving});
 
             let resolved = this.get(key);
 
@@ -188,7 +194,7 @@ export default class ParameterBag implements ParameterBagInterface {
                 this.isResolved()
                     ? resolved
                     // add key as a resolved entry for sub-levels of resolution in order to allow circular references detection
-                    : this.resolveString(resolved, { ...resolving, [key]: true })
+                    : this.resolveString(resolved, {...resolving, [key]: true})
             );
         });
     }
@@ -227,7 +233,9 @@ export default class ParameterBag implements ParameterBagInterface {
 
         if (typeof mixed === 'object' && mixed !== null) {
             if (Array.isArray(mixed) && mixed.length > 0) {
-                return mixed.map(item => { return this.unescapeValue(item) })
+                return mixed.map(item => {
+                    return this.unescapeValue(item)
+                });
             } else {
                 const escaped = {};
                 Object.keys(mixed).forEach(property => {
