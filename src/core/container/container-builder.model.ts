@@ -28,6 +28,7 @@ import InvalidArgumentException from "../exception/invalid-argument.exception";
 import ChildDefinition from "../models/child-definition.model";
 import ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
 import EnvPlaceholderBag from "../parameter-bag/env-placeholder.bag";
+import ReadOnlyParameterBag from "../parameter-bag/read-only.parameter-bag";
 
 // todo: return an error instead of null when a component is not found
 
@@ -202,9 +203,9 @@ class ContainerBuilder implements ContainerBuilderInterface {
         }
 
         let envPlaceholders = this.getEnvPlaceholders();
-
         let completed = false;
         let resolved: string = '';
+
         for (const env of envPlaceholders.keys()) {
             const placeholders = envPlaceholders.get(env);
             if (!Array.isArray(placeholders)) {
@@ -215,9 +216,9 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
             for (let i = 0; i < placeholders.length && completed === false; i++) {
                 const placeholder = placeholders[i];
-                if (placeholder.includes(value)) {
+                if (value.includes(placeholder)) {
                     if (format === true) {
-                        // resolved = bag.escapeValue(this.getEnv(env));
+                        resolved = bag.escapeValue(this.getEnv(env));
                     } else {
                         if (typeof format === "string") {
                             resolved = format.replace("%s", env);
@@ -234,7 +235,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
                         // }
 
                         if (typeof value === 'string') {
-                            value = value.replaceAll(placeholder, resolved);
+                            value = value.replace(placeholder, resolved);
                         }
 
                     }
@@ -249,6 +250,49 @@ class ContainerBuilder implements ContainerBuilderInterface {
         return value;
     }
 
+    protected getEnv(name: string): any {
+        const value = this.container.getEnv(name, this.getEnv.bind(this));
+        const bag = this.getParameterBag();
+        if (typeof value !== 'string' || !(bag instanceof EnvPlaceholderBag)) {
+
+            return value;
+        }
+        const envPlaceholders = bag.getEnvPlaceholders();
+
+        if (name.match(/^env\(.*/) === null && bag.has(`env(${name})`)) {
+            // @todo la copie sera probablement inutile quand on aura supprimé le comportement étrange au get() du EnvParameterBag
+            const parametersBag = new ReadOnlyParameterBag(bag.all());
+            return parametersBag.unescapeValue(parametersBag.get(`env(${name})`));
+        }
+
+        if (
+            envPlaceholders.has(name) &&
+            (envPlaceholders.get(name) as String[]).includes(value)
+        ) {
+            // @todo la copie sera probablement inutile quand on aura supprimé le comportement étrange au get() du EnvParameterBag
+            const parametersBag = new ReadOnlyParameterBag(bag.all());
+            return parametersBag.unescapeValue(parametersBag.get(`env(${name})`));
+        }
+
+        // As expression may contain several env() references, we have to check if they are all resolved
+        for (const envPlaceholder of envPlaceholders) {
+            // envPlaceholder[0] ==> supported env name
+            // envPlaceholder[1] ==> env variable used
+            const envVariablesUsed = envPlaceholder[1];
+            if (envVariablesUsed.includes(value)) {
+                return this.getEnv(value);
+            }
+        }
+
+        this.container.getCircularReferenceDetector().record(`env(${name})`);
+        try {
+            return bag.unescapeValue(
+                this.resolveEnvPlaceholders(bag.escapeValue(value), true)
+            );
+        } finally {
+            this.container.getCircularReferenceDetector().clear(`env(${name})`);
+        }
+    }
     /**
      * @throws AliasNotFoundException
      * @param alias
@@ -542,8 +586,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
             );
 
 
-        //
-        // // console.log('definitionArguments', definitionArguments);
         // const args = this.resolveServices(
         //     definitionArguments,
         //     inlineContextualServices
@@ -564,7 +606,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
         // );
 
         let definitionFactory = definition.getFactory();
-        // console.log('args', args);
 
         // A000
         // todo add a hook ?
@@ -823,11 +864,11 @@ class ContainerBuilder implements ContainerBuilderInterface {
     // // doResolveServices
     // // todo refactor with hook system
     // resolveDefinitionDependency(values: any, inlineServices: any[] = [], isConstructor = false): any {
-    //     console.log("resolveDefinitionDependency", values);
+    //
     //     // resolve values like: ['foo', 'bar', '%hello%' ]
     //     if (Array.isArray(values)) {
     //         const a = values.map(value => this.resolveDefinitionDependency(value, inlineServices, isConstructor));
-    //         // console.log('u', a);
+    //
     //         return a;
     //     } else if (typeof values === 'object') {
     //         // must be last condition
@@ -997,7 +1038,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
     // }
     //
     // process() {
-    //     console.log("== process ==");
     //     this.definitions.forEach(definition => {
     //         const dependencies = definition.getArguments();
     //
@@ -1011,8 +1051,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
     //
     //                 dependency = this.get(dependencyName);
     //             }
-    //             //
-    //             console.log('push', dependencyName, dependency || undefined);
+    //
     //             resolvedDependencies.push(dependency || undefined);
     //         });
     //
@@ -1171,7 +1210,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
     private mergeAliases(container: ContainerBuilderInterface): void {
         const aliases = container.getAliases();
         Object.keys(aliases).forEach(aliasId => {
-            console.log('add alias', aliases[aliasId], aliasId);
             this.addAlias(aliases[aliasId], aliasId);
         });
     }

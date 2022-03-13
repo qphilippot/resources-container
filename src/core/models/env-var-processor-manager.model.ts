@@ -51,7 +51,16 @@ export default class EnvVarProcessorManager implements EnvVarProcessorManagerInt
         }
     }
 
-    public addProcessor(processor: EnvVarProcessorInterface): void {
+    public addProcessor(processor: EnvVarProcessorInterface): this {
         this.processors.push(processor);
+        return this;
+    }
+
+    public addProcessors(processors: EnvVarProcessorInterface[]): this {
+        processors.forEach(processor => {
+            this.processors.push(processor);
+        });
+
+        return this;
     }
 }

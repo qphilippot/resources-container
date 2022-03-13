@@ -16,12 +16,24 @@ import ParameterCircularReferenceException from "../exception/parameter-circular
 import ReadOnlyParameterBag from "../parameter-bag/read-only.parameter-bag";
 import ExceptionOnInvalidReferenceFeature from "./features/exception-on-invalid-reference.feature";
 import IdentifiableInterface from "@qphi/publisher-subscriber/src/interfaces/identifiable.interface";
+import EnvVarProcessorManagerInterface from "../interfaces/env-var-processor-manager.interface";
+import EnvVarProcessorManager from "../models/env-var-processor-manager.model";
+import StringEnvProcessor from "../models/env-var-processor/string.env-processor";
+import BooleanEnvProcessor from "../models/env-var-processor/boolean.env-processor";
+import NotEnvProcessor from "../models/env-var-processor/not.env-processor";
+import IntEnvProcessor from "../models/env-var-processor/int.env-processor";
+import FloatEnvProcessor from "../models/env-var-processor/float.env-processor";
+import Base64EnvProcessor from "../models/env-var-processor/base-64.env-processor";
+import TrimEnvProcessor from "../models/env-var-processor/trim.env-processor";
+import JsonEnvProcessor from "../models/env-var-processor/json.env-processor";
+import KeyEnvProcessor from "../models/env-var-processor/key.env-processor";
 
 class Container extends PublisherSubscriber implements ContainerInterface {
     private resources: Mixed;
     private aliases: Record<string, Alias>;
     private factories: Mixed;
     private noCompilationIsNeeded: boolean = false;
+    private readonly envVarProcessorManager: EnvVarProcessorManagerInterface;
     /**
      * Contains parameters, not resources or alias
      * @private
@@ -52,6 +64,19 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         // does not catch any exception raised in notification publication system
         this.stopPublicationOnException();
         this.injectFeature(new ExceptionOnInvalidReferenceFeature(this));
+
+        this.envVarProcessorManager = new EnvVarProcessorManager(this);
+        this.envVarProcessorManager.addProcessors([
+            new StringEnvProcessor(),
+            new BooleanEnvProcessor(),
+            new NotEnvProcessor(),
+            new IntEnvProcessor(),
+            new FloatEnvProcessor(),
+            new Base64EnvProcessor(),
+            new TrimEnvProcessor(),
+            new JsonEnvProcessor(),
+            new KeyEnvProcessor()
+        ]);
     }
 
     private injectFeature(feature: IdentifiableInterface): void {
@@ -213,8 +238,8 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         return typeof this.aliases[alias] !== 'undefined';
     }
 
-    public getEnv(name: string): any {
-        const envName = `env(${name})`
+    public getEnv(name: string, recursiveCall: (string, Function) => any): any {
+        const envName = `env(${name})`;
         if (typeof (this.resolving[envName]) !== 'undefined') {
             throw new ParameterCircularReferenceException(Object.keys(this.resolving));
         }
@@ -223,6 +248,23 @@ class Container extends PublisherSubscriber implements ContainerInterface {
             return this.envCache.get(name);
         }
 
+        let prefix, localName;
+        const words = name.split(':');
+        if (words.length > 1) {
+            prefix = words.shift();
+            localName = words.join(':');
+        } else {
+            prefix = 'string';
+            localName = name;
+        }
+
+        // this.resolving[envName] = true;
+        this.getCircularReferenceDetector().record(envName);
+        try {
+            return this.envCache[name] = this.envVarProcessorManager.getEnv(prefix, localName, recursiveCall ?? this.getEnv.bind(this));
+        } finally {
+            this.getCircularReferenceDetector().clear(envName);
+        }
         // todo resolve from processor
         // const id = 'container.env_var_processors_locator';
         // if (!this.has(id)) {

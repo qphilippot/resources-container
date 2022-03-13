@@ -23,6 +23,9 @@ autoload:
 * Definition autoconfigured as feature
 * Voir s'il est possible de sortir l'env processor et toute cette logique du container.model et container-builder
 * Permettre au container d'utiliser des methodmap qui permettent d'invoquer une methode en fallback du get si aucun alias / service n'est trouvé. Ce fallback devrait retourner un service. ==> Ne pas supporter en V1 car pas de cas d'usage identifié.
+* registerForAutoconfiguration
+* Comprendre pourquoi le EnvParameterBag fait des choses étranges lors du get (un get ne devrait pas modifier le state d'une collection...)
+* Comprendre ce que signifie la variable format dans le container builder resolveEnvPlaceholders
 
 # My Own Rules
 ## Container
@@ -31,3 +34,6 @@ autoload:
 ## Container Builder 
 * Propose le concept de definition, synthethic, etc.
 * Lors de la compilation, il renvoi un container read-only classique ?
+* Si une variable d'environnement existe dans un env-placeholder-parameter-bag en tant que paramètre sous la forme env(FOO) on préfére résoudre cette variable en tant que paramètre et ne pas prendre la variable d'env
+## Env Placeholder Bag
+* Les placeholders sont le nom des variables gérées par le bag ainsi que les différentes références qui lui sont faîtes (utile pour le merge de config ?) 

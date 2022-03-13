@@ -2,6 +2,7 @@
  * The EnvVarProcessorInterface is implemented by objects that manage environment-like variables.*
  */
 import ContainerInterface from "./container.interface";
+import EnvVarProcessorInterface from "./env-var-processor.interface";
 
 export default interface EnvVarProcessorManagerInterface
 {
@@ -25,4 +26,6 @@ export default interface EnvVarProcessorManagerInterface
 
     getContainer(): ContainerInterface;
     getLoadedVar();
+    addProcessor(processor: EnvVarProcessorInterface): this;
+    addProcessors(processors: EnvVarProcessorInterface[]): this;
 }

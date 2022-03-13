@@ -633,16 +633,27 @@ describe('container-builder tests', function () {
             const builder = new ContainerBuilder();
             const bag = new EnvPlaceholderBag();
             bag.get('env(Foo)');
-            const anotherConfig = new ContainerBuilder({ parameterBag: bag });
+            const anotherConfig = new ContainerBuilder({parameterBag: bag});
             expect(
-                JSON.stringify(anotherConfig.resolveEnvPlaceholders([ bag.get('env(Bar)')]))
+                JSON.stringify(anotherConfig.resolveEnvPlaceholders([bag.get('env(Bar)')]))
             ).to.equals('["%%env(Bar)%%"]');
 
             builder.merge(anotherConfig);
             expect(JSON.stringify(getEnvCounter(builder))).to.equals('["Foo","Bar"]');
         });
+    });
 
+    describe('other', function () {
+        it('resolve env values', function () {
+            process.env['DUMMY_ENV_VAR'] = 'du%%y';
+            process.env['DUMMY_SERVER_VAR'] = 'ABC';
+            process.env['HTTP_DUMMY_VAR'] = 'DEF';
+            const container = new ContainerBuilder();
+            container.setParameter('bar', '%% %env(DUMMY_ENV_VAR)% %env(DUMMY_SERVER_VAR)% %env(HTTP_DUMMY_VAR)%');
+            container.setParameter('env(HTTP_DUMMY_VAR)', '123');
 
+            expect(container.resolveEnvPlaceholders('%bar%', true)).to.equals('%% du%%%%y ABC 123');
+        });
     });
 
 
