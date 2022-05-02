@@ -36,9 +36,8 @@ class Container extends PublisherSubscriber implements ContainerInterface {
     private readonly envVarProcessorManager: EnvVarProcessorManagerInterface;
     /**
      * Contains parameters, not resources or alias
-     * @private
      */
-    private parameterBag: ParameterBagInterface;
+    protected parameterBag: ParameterBagInterface;
     private circularReferenceDetector: CircularReferencesDetectorService = new CircularReferencesDetectorService();
     protected resolving = {};
     protected envCache = new Map<string, any>();
@@ -85,6 +84,10 @@ class Container extends PublisherSubscriber implements ContainerInterface {
 
     public getParameterBag(): ParameterBagInterface {
         return this.parameterBag;
+    }
+
+    public setParameterBag(bag: ParameterBagInterface): void {
+        this.parameterBag = bag;
     }
 
     public getCircularReferenceDetector(): CircularReferencesDetectorService {

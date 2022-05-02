@@ -1,8 +1,8 @@
 import CompilerInterface from "./interfaces/compiler.interface";
 import ContainerBuilderInterface from "./interfaces/container-builder.interface";
 import CompilerPassInterface from "./interfaces/compiler-pass.interface";
-import { DEFAULT_COMPILER_STEP } from './compiler-step.enum'
-import { Publisher } from '@qphi/publisher-subscriber';
+import {DEFAULT_COMPILER_STEP} from './compiler-step.enum'
+import {Publisher} from '@qphi/publisher-subscriber';
 import PassesManager from "./passes-manager.model";
 import {PASS_ADDED, STEP_ADDED} from "./compiler.notification";
 

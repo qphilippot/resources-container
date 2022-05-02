@@ -196,8 +196,9 @@ export default class Definition {
         return this.type;
     }
 
-    public setup(propertyPath: string, value: any) {
+    public setup(propertyPath: string, value: any): this {
         flexible.set(propertyPath, value, this.settings);
+        return this;
     }
 
     public getSetting(propertyPath: string): any {

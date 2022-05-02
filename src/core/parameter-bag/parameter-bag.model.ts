@@ -1,7 +1,6 @@
 import MixedInterface from "../../utils/mixed.interface";
 import ParameterBagInterface from "./parameter-bag.interface";
 import ParameterNotFoundException from "../exception/parameter-not-found.exception";
-import * as levenshtein from 'fast-levenshtein';
 import RuntimeException from "../exception/runtime.exception";
 import {checkKey} from "./parameter-bag.helper";
 import {searchAlternativesString} from "../helpers/string-alternatives.helper";
@@ -129,12 +128,10 @@ export default class ParameterBag implements ParameterBagInterface {
         }
 
         if (typeof value === 'object' && value !== null) {
-
-
             if (Array.isArray(value) && value.length > 0) {
                 return value.map((item, index) => {
                     return this.resolveValue(item, {...resolving});
-                })
+                });
             } else {
                 const args = {};
                 Object.keys(value).forEach(k => {
@@ -169,11 +166,13 @@ export default class ParameterBag implements ParameterBagInterface {
         const match = value.match(/^%([^%\s]+)%$/);
         if (match !== null) {
             const key = checkKey(match[1], resolving);
-            return this.resolved ? this.get(key) : this.resolveValue(this.get(key), {...resolving});
+            return this.isResolved() ? this.get(key) : this.resolveValue(this.get(key), {...resolving});
         }
 
         return value.replace(/%%|%([^%\s]+)%/g, (substring, token,) => {
             if (typeof token === 'undefined') {
+                // todo replace by a function
+                // string does not contains any part that should be resolved
                 return substring;
             }
 

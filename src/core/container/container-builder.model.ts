@@ -11,7 +11,8 @@ import BadMethodCallException from "../exception/bad-method-call.exception";
 import ResourceNotFoundException from "../exception/resource-not-found.exception";
 import Alias from "../models/alias.model";
 import {
-    EXCEPTION_ON_INVALID_REFERENCE, IGNORE_ON_INVALID_REFERENCE,
+    EXCEPTION_ON_INVALID_REFERENCE,
+    IGNORE_ON_INVALID_REFERENCE,
     IGNORE_ON_UNINITIALIZED_REFERENCE,
     NULL_ON_INVALID_REFERENCE
 } from "./container-builder.invalid-behaviors";
@@ -23,12 +24,14 @@ import Reference from "../models/reference.model";
 import {checkValidId} from "./container.helper";
 import AliasNotFoundException from "../exception/alias-not-found.exception";
 import CompilerPassInterface from "../interfaces/compiler-pass.interface";
-import {BEFORE_OPTIMIZATION} from "../compiler-step.enum";
+import {BEFORE_OPTIMIZATION, DEFAULT_COMPILER_STEP} from "../compiler-step.enum";
 import InvalidArgumentException from "../exception/invalid-argument.exception";
 import ChildDefinition from "../models/child-definition.model";
 import ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
 import EnvPlaceholderBag from "../parameter-bag/env-placeholder.bag";
 import ReadOnlyParameterBag from "../parameter-bag/read-only.parameter-bag";
+import ResolveEnvPlaceholderPass from "../compilation-passes/standard/resolve-env-placeholder.pass";
+import ParameterBag from "../parameter-bag/parameter-bag.model";
 
 // todo: return an error instead of null when a component is not found
 
@@ -136,17 +139,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
         return this.reflexionService;
     }
 
-    // createResource(resource_id: string, resourceType: InstanceType<any>, injection: MixedInterface) {
-    //     const resource = new resourceType({
-    //         ...this.getContainer(),
-    //         ...injection
-    //     });
-    // }
-
-    // recordResource(resource_id: string, type: InstanceType<any>, parameters: any) {
-    //     this.addResource(new type(parameters), resource_id)
-    // }
-
 
     public addAlias(alias, id) {
         this.flexible.set(id, alias, this.container.getAliases());
@@ -162,21 +154,24 @@ class ContainerBuilder implements ContainerBuilderInterface {
     }
 
     /**
-     * Resolves env parameter placeholders in a string or an array.
+     * Resolves env parameter placeholders in a string or an array. Example => "env(foo)" to "FooEnvValue" (assume env(foo) == FooEnvValue)
      *
-     * @param string|true|null $format    A sprintf() format returning the replacement for each env var name or
+     * @param string|true|null format    A sprintf() format returning the replacement for each env var name or
      *                                    null to resolve back to the original "%env(VAR)%" format or
      *                                    true to resolve to the actual values of the referenced env vars
-     * @param array            &$usedEnvs Env vars found while resolving are added to this array
+     * @param array            usedEnvs Env vars found while resolving are added to this array
      *
      * @return mixed The value with env parameters resolved if a string or an array is passed
      */
     public resolveEnvPlaceholders(value: any, format: string | boolean | null = null, usedEnvs: any[] = []): MixedInterface {
+        // resolve back to the original "%env(VAR)%" format
+        // todo split in different function
         if (null === format) {
             format = '%%env(%s)%%';
         }
 
         let bag = this.getParameterBag();
+        // resolve to the actual values of the referenced env vars
         if (true === format) {
             value = bag.resolveValue(value);
         }
@@ -186,12 +181,11 @@ class ContainerBuilder implements ContainerBuilderInterface {
         }
 
         if (typeof value === 'object' && value !== null) {
-            let result = Object.keys(value).map(k => {
+            const result = Array.isArray(value) ? [] : {};
+
+            Object.keys(value).forEach(k => {
                 const v = value[k];
-                // const keyAsNumber = parseInt(k, 10);
-                // const resolvedKey = keyAsNumber === NaN ? this.resolveEnvPlaceholders(k, format, usedEnvs) : keyAsNumber;
-                // result[k] = this.resolveEnvPlaceholders(v, format, usedEnvs);
-                return this.resolveEnvPlaceholders(v, format, usedEnvs);
+                result[k] = this.resolveEnvPlaceholders(v, format, usedEnvs);
             });
 
             return result;
@@ -258,12 +252,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
             return value;
         }
         const envPlaceholders = bag.getEnvPlaceholders();
-
-        if (name.match(/^env\(.*/) === null && bag.has(`env(${name})`)) {
-            // @todo la copie sera probablement inutile quand on aura supprimé le comportement étrange au get() du EnvParameterBag
-            const parametersBag = new ReadOnlyParameterBag(bag.all());
-            return parametersBag.unescapeValue(parametersBag.get(`env(${name})`));
-        }
 
         if (
             envPlaceholders.has(name) &&
@@ -1078,8 +1066,46 @@ class ContainerBuilder implements ContainerBuilderInterface {
         return this.compiler;
     }
 
-    compile() {
-        this.getCompiler().compile(this);
+    /**
+     * Compiles the container.
+     *
+     * This method passes the container to compiler
+     * passes whose job is to manipulate and optimize
+     * the container.
+     *
+     * The main compiler passes roughly do four things:
+     *
+     *  * The extension configurations are merged;
+     *  * Parameter values are resolved;
+     *  * The parameter bag is frozen;
+     *  * Extension loading is disabled.
+     *
+     * @param {boolean} resolveEnvPlaceholders Whether %env()% parameters should be resolved using the current
+     *                                     env vars or be replaced by uniquely identifiable placeholders.
+     *                                     Set to "true" when you want to use the current ContainerBuilder
+     *                                     directly, keep to "false" when the container is dumped instead.
+     */
+    compile(resolveEnvPlaceholder: boolean = false): void {
+        const compiler = this.getCompiler();
+
+        const bag = this.getParameterBag();
+        if (resolveEnvPlaceholder && bag instanceof EnvPlaceholderBag) {
+            compiler.addPass(
+                new ResolveEnvPlaceholderPass(),
+                DEFAULT_COMPILER_STEP.AFTER_REMOVING,
+                -1000
+            );
+        }
+
+        compiler.compile(this);
+
+        if (bag instanceof EnvPlaceholderBag) {
+            if (resolveEnvPlaceholder) {
+                this.container.setParameterBag(new ParameterBag(
+                    this.resolveEnvPlaceholders(bag.all(), true)
+                ));
+            }
+        }
         // this.noCompilationIsNeeded = true;
         this.container.compile();
     }
