@@ -128,7 +128,7 @@ export default class ParameterBag implements ParameterBagInterface {
         }
 
         if (typeof value === 'object' && value !== null) {
-            if (Array.isArray(value) && value.length > 0) {
+            if (Array.isArray(value)) {
                 return value.map((item, index) => {
                     return this.resolveValue(item, {...resolving});
                 });
@@ -222,7 +222,7 @@ export default class ParameterBag implements ParameterBagInterface {
     }
 
     public unescapeValue(mixed: any): any {
-        if (this.isExcluded(mixed)) {
+        if (this.isExcluded(mixed) || this.isResolved()) {
             return mixed;
         }
 

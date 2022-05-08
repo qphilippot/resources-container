@@ -8,7 +8,14 @@ export default abstract class AbstractRecursivePassModel implements CompilerPass
 
     process(containerBuilder: ContainerBuilderInterface): void {
         this.containerBuilder = containerBuilder;
-        this.processValue(containerBuilder.getDefinitions(), true);
+        try {
+            this.processValue(containerBuilder.getDefinitions(), true);
+        }
+        catch (error) {
+            console.error(error);
+            throw error;
+        }
+
     }
 
     /**
@@ -19,8 +26,21 @@ export default abstract class AbstractRecursivePassModel implements CompilerPass
      * @returns {Object} The processed value
      */
     protected processValue(value: any, isRoot: boolean = false): any {
-        if (value instanceof Definition) {
+        if (Array.isArray(value)) {
+            value.forEach((v, k) => {
+               if (isRoot) {
+                   this.currentId = k.toString();
+               }
+
+               const processedValue = this.processValue(v, isRoot);
+               if (v !== processedValue) {
+                   value[k] = processedValue;
+               }
+            });
+        }
+        else if (value instanceof Definition) {
             value.setArguments(this.processValue(value.getArguments()));
+            value.setInjectionProperties(this.processValue(value.getInjectionProperties()));
             value.setMethodCalls(this.processValue(value.getMethodCalls()));
 
             if (value.hasFactory()) {

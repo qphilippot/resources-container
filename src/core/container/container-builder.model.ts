@@ -30,7 +30,7 @@ import ChildDefinition from "../models/child-definition.model";
 import ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
 import EnvPlaceholderBag from "../parameter-bag/env-placeholder.bag";
 import ReadOnlyParameterBag from "../parameter-bag/read-only.parameter-bag";
-import ResolveEnvPlaceholderPass from "../compilation-passes/standard/resolve-env-placeholder.pass";
+import ResolveEnvPlaceholdersPass from "../compilation-passes/standard/resolve-env-placeholders.pass";
 import ParameterBag from "../parameter-bag/parameter-bag.model";
 
 // todo: return an error instead of null when a component is not found
@@ -162,6 +162,8 @@ class ContainerBuilder implements ContainerBuilderInterface {
      * @param array            usedEnvs Env vars found while resolving are added to this array
      *
      * @return mixed The value with env parameters resolved if a string or an array is passed
+     *
+     * @todo split in several functions => 1 function by type and format /!\
      */
     public resolveEnvPlaceholders(value: any, format: string | boolean | null = null, usedEnvs: any[] = []): MixedInterface {
         // resolve back to the original "%env(VAR)%" format
@@ -183,9 +185,13 @@ class ContainerBuilder implements ContainerBuilderInterface {
         if (typeof value === 'object' && value !== null) {
             const result = Array.isArray(value) ? [] : {};
 
-            Object.keys(value).forEach(k => {
+            Object.keys(value).forEach((k: string) => {
                 const v = value[k];
-                result[k] = this.resolveEnvPlaceholders(v, format, usedEnvs);
+                let key: string | number = parseInt(k);
+                if (Number.isNaN(key)) {
+                    key = this.resolveEnvPlaceholders(k, format, usedEnvs) as unknown as string;
+                }
+                result[key] = this.resolveEnvPlaceholders(v, format, usedEnvs);
             });
 
             return result;
@@ -244,11 +250,10 @@ class ContainerBuilder implements ContainerBuilderInterface {
         return value;
     }
 
-    protected getEnv(name: string): any {
+    public getEnv(name: string): any {
         const value = this.container.getEnv(name, this.getEnv.bind(this));
         const bag = this.getParameterBag();
         if (typeof value !== 'string' || !(bag instanceof EnvPlaceholderBag)) {
-
             return value;
         }
         const envPlaceholders = bag.getEnvPlaceholders();
@@ -281,6 +286,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
             this.container.getCircularReferenceDetector().clear(`env(${name})`);
         }
     }
+
     /**
      * @throws AliasNotFoundException
      * @param alias
@@ -337,8 +343,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
 
         return this.resolveGetBeforeCompilation(key, invalidBehavior);
-
-        // do get
     }
 
     /**
@@ -573,7 +577,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
                 inlineContextualServices
             );
 
-
         // const args = this.resolveServices(
         //     definitionArguments,
         //     inlineContextualServices
@@ -705,19 +708,26 @@ class ContainerBuilder implements ContainerBuilderInterface {
         const definitionPropertiesName = Object.keys(definitionProperties);
 
         definitionPropertiesName.forEach(propertyName => {
-            const resolvedProperty = this.resolveServices(
-                parameterBag.unescapeValue(
-                    parameterBag.resolveValue(definitionProperties[propertyName])
-                ),
-
-                inlineContextualServices
-            );
-
             if (propertyName in service) {
+                // todo replace with voter system (use some middleware according to type)
+                let propertyValue = definitionProperties[propertyName];
+                if (typeof propertyValue === 'string' && propertyValue.length > 4) {
+                    propertyValue = this.resolveEnvPlaceholders(propertyValue, true)
+                }
+
+                const resolvedProperty = this.resolveServices(
+                    parameterBag.unescapeValue(
+                        parameterBag.resolveValue(
+                            propertyValue
+                        )),
+
+                    inlineContextualServices
+                );
+
                 service[propertyName] = resolvedProperty;
             }
-
         });
+
 
         definition.getMethodCalls().forEach((call, index) => {
             // call Method PHP method equivalent
@@ -1019,7 +1029,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
     //             this.addResource(resource, definition.id);
     //         }
     //         catch (e) {
-    //             console.error(e);
     //         }
     //         // if (definition)
     //     });
@@ -1052,7 +1061,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
     //             this.addResource(resource, definition.id);
     //         }
     //         catch (e) {
-    //             console.error(e);
     //         }
     //         // if (definition)
     //     });
@@ -1091,7 +1099,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
         const bag = this.getParameterBag();
         if (resolveEnvPlaceholder && bag instanceof EnvPlaceholderBag) {
             compiler.addPass(
-                new ResolveEnvPlaceholderPass(),
+                new ResolveEnvPlaceholdersPass(),
                 DEFAULT_COMPILER_STEP.AFTER_REMOVING,
                 -1000
             );
@@ -1101,13 +1109,38 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
         if (bag instanceof EnvPlaceholderBag) {
             if (resolveEnvPlaceholder) {
-                this.container.setParameterBag(new ParameterBag(
-                    this.resolveEnvPlaceholders(bag.all(), true)
-                ));
+                const bagData = {};
+                const oldBagData = bag.all();
+                Object.keys(oldBagData).forEach(propertyName => {
+                    const resolvedProperty = bag.resolveValue(
+                            // @variation
+                            this.resolveEnvPlaceholders(bag.get(propertyName), true)
+                        );
+
+                    bagData[propertyName] = resolvedProperty;
+                });
+
+                this.container.setParameterBag(new ParameterBag(bagData));
             }
+
+            this.envPlaceholders = bag.getEnvPlaceholders();
         }
-        // this.noCompilationIsNeeded = true;
+
         this.container.compile();
+
+        // todo should be a compilation pass
+        this.getDefinitions().forEach(definition => {
+            if (!definition.isPublic()) {
+                this.removedIds[definition.getId()] = true;
+            }
+        });
+
+        Object.keys(this.getAliases()).forEach((id) => {
+            const alias = this.getAlias(id);
+            if (!alias.isPublic()) {
+                this.removedIds[id] = true;
+            }
+        })
     }
 
     isCompiled(): boolean {

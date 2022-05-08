@@ -24,7 +24,12 @@ export default class ReflexionService {
     }
 
     public findClass(className: string): Class | undefined {
-        return this.dictionary.get(className);
+        switch (className) {
+            case 'Object':
+                return Object;
+            default:
+                return this.dictionary.get(className);
+        }
     }
 
     /**
@@ -46,10 +51,10 @@ export default class ReflexionService {
         const args = tokens[1];
 
         // Split the arguments string into an array comma delimited.
-        return [ name ].concat(args.split(',').map(function(arg) {
+        return [name].concat(args.split(',').map(function (arg) {
             // Ensure no inline comments are parsed and trim the whitespace.
             return arg.replace(/\/\*.*\*\//, '').trim();
-        }).filter(function(arg) {
+        }).filter(function (arg) {
             // Ensure no undefined values are added.
             return arg;
         }));

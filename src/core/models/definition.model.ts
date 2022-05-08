@@ -4,8 +4,6 @@ import OutOfBoundsException from "../exception/out-of-bounds.exception";
 import InvalidArgumentException from "../exception/invalid-argument.exception";
 import Reference from "./reference.model";
 
-const flexible = new FlexibleService();
-
 export default class Definition {
     private id: string;
     private type?: InstanceType<any>;
@@ -194,15 +192,6 @@ export default class Definition {
 
     public getResourceType(): InstanceType<any> {
         return this.type;
-    }
-
-    public setup(propertyPath: string, value: any): this {
-        flexible.set(propertyPath, value, this.settings);
-        return this;
-    }
-
-    public getSetting(propertyPath: string): any {
-        return flexible.get(propertyPath, this.settings);
     }
 
     /**

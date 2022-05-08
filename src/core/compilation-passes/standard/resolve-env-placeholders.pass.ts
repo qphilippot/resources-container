@@ -3,9 +3,9 @@ import AbstractRecursivePassModel from "./abstract-recursive-pass.model";
 import Definition from "../../models/definition.model";
 
 /**
- * Replaces all references to aliases with references to the actual service.
+ * Replaces env var placeholders by their current values.
  */
-export default class ResolveEnvPlaceholderPass extends AbstractRecursivePassModel implements CompilerPassInterface {
+export default class ResolveEnvPlaceholdersPass extends AbstractRecursivePassModel implements CompilerPassInterface {
     protected processValue(value: any, isRoot: boolean = false): any {
         if (typeof value === 'string') {
             return this.containerBuilder.resolveEnvPlaceholders(value, true);
@@ -28,9 +28,10 @@ export default class ResolveEnvPlaceholderPass extends AbstractRecursivePassMode
 
         value = super.processValue(value, isRoot);
 
-        if (Array.isArray(value) && !isRoot) {
+        if (Array.isArray(value) && !isRoot && value.length > 0) {
+            const resolved = this.containerBuilder.resolveEnvPlaceholders(Object.keys(value), true) as Array<any>;
             value = [
-                ...this.containerBuilder.resolveEnvPlaceholders(Object.keys(value), true) as Array<any>,
+                ...resolved,
                 value
             ]
         }

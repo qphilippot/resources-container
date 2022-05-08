@@ -453,6 +453,7 @@ describe('container-builder tests', function () {
             );
 
             builder.setParameter('value', 'bar');
+            // Quand on resolve bar (avec l'ancienne méthode, on renvoi un objet vide, avec la nouvelle, on ne remplace pas la référence par le "vrai" service (objet vide)
             expect(JSON.stringify(['bar', builder.get('bar'), '%unescape_it%'])).to.equals(JSON.stringify(builder.get('foo1').bar));
         });
 
@@ -643,7 +644,7 @@ describe('container-builder tests', function () {
         });
     });
 
-    describe('other', function () {
+    describe('Resolving env values', function () {
         it('resolve env values', function () {
             process.env['DUMMY_ENV_VAR'] = 'du%%y';
             process.env['DUMMY_SERVER_VAR'] = 'ABC';
@@ -674,6 +675,21 @@ describe('container-builder tests', function () {
             delete process.env['ANOTHER_DUMMY_ENV_VAR'];
         });
 
+        it('Env values take precedence over parameters in bag', function () {
+            process.env['DUMMY_ENV_VAR'] = 'du%%y';
+
+            const container = new ContainerBuilder();
+            expect(container.getEnv('DUMMY_ENV_VAR')).to.equals('du%%y');
+            container.setParameter('env(DUMMY_ENV_VAR)', 'GHI');
+            expect(container.getEnv('DUMMY_ENV_VAR')).to.equals('du%%y');
+
+            container.compile(true);
+            expect(container.getParameter('env(DUMMY_ENV_VAR)')).to.equals('du%%y');
+
+            delete process.env['DUMMY_ENV_VAR'];
+        });
+
+
         it('resolve env values with array - 2', function () {
             // todo (EnvParameterBag): set as spec "process.env" value takes precedence over setParameter
             process.env['DUMMY_ENV_VAR'] = 'du%%y';
@@ -687,14 +703,17 @@ describe('container-builder tests', function () {
             container.setParameter('foo', '%env(FOO)%');
             container.setParameter('baz', '%foo%');
             container.setParameter('env(HTTP_DUMMY_VAR)', '123');
-            container.register('teatime', Object).setup('foo', '%env(DUMMY_ENV_VAR)%').setPublic(true);
+            container.register('teatime', 'Footable').setInjectionProperty('foo', '%env(DUMMY_ENV_VAR)%').setPublic(true);
+
+            container.getReflexionService().recordClass('Footable', class Footable {
+                // each parameters should have a value
+                foo = undefined;
+            });
 
             container.compile(true);
-
-            // TODO le problème bien du getEnv qui résoud pas correctement DUMMY_ENV_VAR si on l'ajoute dans le parameter bag
             expect(container.getParameter('bar')).to.equals('% du%%y ABC DEF');
-            // expect(container.getParameter('baz')).to.equals('Foo');
-            // expect(container.get('teatime').foo).to.equals('du%%y');
+            expect(container.getParameter('baz')).to.equals('Foo');
+            expect(container.get('teatime').foo).to.equals('du%%y');
             delete process.env['DUMMY_ENV_VAR'];
             delete process.env['DUMMY_SERVER_VAR'];
             delete process.env['HTTP_DUMMY_VAR'];
