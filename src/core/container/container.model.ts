@@ -229,6 +229,10 @@ class Container extends PublisherSubscriber implements ContainerInterface {
         return id;
     }
 
+    public clearAliases(): void {
+        this.aliases = {};
+    }
+
     public removeAlias(alias: string): void {
         delete this.aliases[alias];
     }

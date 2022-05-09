@@ -1,8 +1,8 @@
 import type MixedInterface from "../../utils/mixed.interface";
-import FlexibleService from "../../utils/flexible.service";
 import OutOfBoundsException from "../exception/out-of-bounds.exception";
 import InvalidArgumentException from "../exception/invalid-argument.exception";
 import Reference from "./reference.model";
+import {BoundArgument} from "./bound-argument.model";
 
 export default class Definition {
     private id: string;
@@ -25,7 +25,40 @@ export default class Definition {
     private synthetic: boolean = false;
     // @todo better type...
     private configurator: ((any) => void) | string | Array<any> | null = null;
-    private _instanceof: MixedInterface= {};
+    private _instanceof: MixedInterface = {};
+
+    private bindings: Record<string, BoundArgument | string> = {};
+
+    public getBindings(): Record<string, BoundArgument | string> {
+        return this.bindings;
+    }
+
+    /**
+     * Sets bindings.
+     *
+     * Bindings map $named or FQCN arguments to values that should be
+     * injected in the matching parameters (of the constructor, of methods
+     * called and of controller actions).
+     *
+     */
+    public setBindings(bindings: Record<string, BoundArgument | string >): this {
+        Object.keys(bindings).forEach(key => {
+            const binding = bindings[key];
+            const k = key.replace('/[ \t]*\/', ' ');
+            if (key.includes('$') && key !== k) {
+                delete bindings[key];
+                key = k;
+                bindings[key] = binding;
+            }
+            if (!(binding instanceof BoundArgument)) {
+                bindings[key] = new BoundArgument(binding);
+            }
+        });
+
+        this.bindings = bindings;
+
+        return this;
+    }
 
     /**
      * Whether this definition is synthetic, that is not constructed by the
@@ -349,7 +382,7 @@ export default class Definition {
     }
 
     public getMethodCalls(): Array<any> {
-        return this.calls.slice(0);
+        return this.calls.slice(0) || [];
     }
 
     public setMethodCalls(calls: Array<any>): Definition {

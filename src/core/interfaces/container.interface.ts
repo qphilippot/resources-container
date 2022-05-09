@@ -25,6 +25,7 @@ export default interface ContainerInterface {
     hasAlias(alias: string): boolean;
     getAlias(alias: string): Alias;
     removeAlias(alias: string):void;
+    clearAliases(): void;
 
     /**
      * @deprecated

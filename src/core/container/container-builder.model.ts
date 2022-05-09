@@ -148,6 +148,10 @@ class ContainerBuilder implements ContainerBuilderInterface {
         return this.container.getAliases();
     }
 
+    public clearAliases(): void {
+        this.container.clearAliases();
+    }
+
     public getEnvPlaceholders(): Map<string, string[]> {
         const bag = this.getParameterBag();
         return bag instanceof EnvPlaceholderBag ? bag.getEnvPlaceholders() : this.envPlaceholders;
