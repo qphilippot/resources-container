@@ -222,7 +222,7 @@ export default class ParameterBag implements ParameterBagInterface {
     }
 
     public unescapeValue(mixed: any): any {
-        if (this.isExcluded(mixed) || this.isResolved()) {
+        if (this.isExcluded(mixed)) {
             return mixed;
         }
 

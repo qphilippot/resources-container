@@ -22,7 +22,9 @@ export default class ResolveNamedArgumentsPass extends AbstractRecursivePassMode
         const calls: Array<any> = value.getMethodCalls();
         calls.push(['constructor', value.getArguments()]);
 
-        calls.forEach(call => {
+
+        // todo modifier car je n'aime pas trop modifier la collection sur laquelle on itère
+        calls.forEach((call, callerIndex) => {
             const [ method, args ] = call;
             const parameters = null;
             const resolvedArgs: MixedInterface = {};
@@ -34,23 +36,17 @@ export default class ResolveNamedArgumentsPass extends AbstractRecursivePassMode
                 if (arg instanceof AbstractArgument && !arg.hasContext()) {
                     const caller = method === 'constructor'
                         ? `resource ${this.currentId}`
-                        : `method call ${this.currentId}::${method}`;
+                        : `method ${this.currentId}::${method}`;
 
                     arg.setContext(`Argument ${key} of ${caller}`);
                 }
 
-                if (Number.isInteger(key) && key >= 0) {
+                if (Number.isInteger(key) && key >= 0 && !Number.isNaN(key)) {
                     resolvedArgs[key] = arg;
                     return;
                 }
-            });
-
-
-
-            //
-
-
                 // todo need reflection method
+                resolvedArgs[key] = arg;
                 //if (null === $parameters) {
                 //                     $r = $this->getReflectionMethod($value, $method);
                 //                     $class = $r instanceof \ReflectionMethod ? $r->class : $this->currentId;
@@ -97,6 +93,14 @@ export default class ResolveNamedArgumentsPass extends AbstractRecursivePassMode
                 //                 }
 
                 // argIterator++;
+            });
+
+
+
+            //
+
+
+
             // }
             //
             // if (resolvedArgs !== call[1]) {
@@ -116,11 +120,11 @@ export default class ResolveNamedArgumentsPass extends AbstractRecursivePassMode
             value.setMethodCalls(calls);
         }
 
-        value.getInjectionProperties().forEach((property, index) => {
-           if (property instanceof AbstractArgument && !property.hasContext()) {
-               property.setContext(`Property "${this.currentId}" of service "${this.currentId}"`);
-           }
-        });
+        // Object.values(value.getInjectionProperties()).forEach((property, index) => {
+        //    if (property instanceof AbstractArgument && !property.hasContext()) {
+        //        property.setContext(`Property "${this.currentId}" of service "${this.currentId}"`);
+        //    }
+        // });
 
         return super.processValue(value, isRoot);
     }

@@ -87,22 +87,22 @@ describe('Standard CheckDefinitionValidity works as expected', () => {
         );
     });
 
-    // todo: require env truc bidule
-    it('detect dynamic public alias name', () => {
-        const container = new ContainerBuilder();
-        // $this->expectException(EnvParameterException::class);
-        const env = container.getParameter('env(BAR)');
-        const alias = new Alias('class');
-        alias.setPublic(true);
-        container.setAlias("foo.$env", alias);
-
-
-        const pass = new CheckDefinitionValidityPass();
-        expect(pass.process.bind(pass, container)).to.throw(
-            BadDefinitionValidityException,
-            'A "tags" attribute must be of a scalar-type for service "a", tags "bar".'
-        );
-    });
+    // todo: require env  bidule
+    // it('detect dynamic public alias name', () => {
+    //     const container = new ContainerBuilder();
+    //     // $this->expectException(EnvParameterException::class);
+    //     const env = container.getParameter('env(BAR)');
+    //     const alias = new Alias('class');
+    //     alias.setPublic(true);
+    //     container.setAlias(`foo.${env}`, alias);
+    //
+    //
+    //     const pass = new CheckDefinitionValidityPass();
+    //     expect(pass.process.bind(pass, container)).to.throw(
+    //         BadDefinitionValidityException,
+    //         'A "tags" attribute must be of a scalar-type for service "a", tags "bar".'
+    //     );
+    // });
 
     it('allows dynamic private name', () => {
         const container = new ContainerBuilder();

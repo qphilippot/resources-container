@@ -56,6 +56,11 @@ describe('ResolveReferencesToAliasesPass works as expected', () => {
         expect(JSON.stringify(fooDefinition.getMethodCalls())).to.equals('[["foobar",["bar",{"bar":"baz"}],false]]');
     });
 
+
+    it('resolves injection properties', () => {
+        expect(JSON.stringify(fooDefinition.getInjectionProperties())).to.equals('{"bar":"baz"}');
+    });
+
 //     public function testPropertyParametersShouldBeResolved()
 //     {
 //         $this->assertSame(['bar' => 'baz'], $this->fooDefinition->getProperties());

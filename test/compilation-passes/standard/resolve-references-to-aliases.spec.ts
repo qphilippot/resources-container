@@ -36,9 +36,8 @@ describe('ResolveReferencesToAliasesPass works as expected', () => {
 
     it('test "process" method recursively', () => {
         const container = new ContainerBuilder();
-        container
-            .setAliasFromString('bar', 'foo')
-            .setAliasFromString('moo', 'bar');
+        container.setAliasFromString('bar', 'foo');
+        container.setAliasFromString('moo', 'bar');
 
         const definition = container.register('foobar');
         definition.setArguments([ new Reference('moo') ]);
@@ -52,15 +51,14 @@ describe('ResolveReferencesToAliasesPass works as expected', () => {
 
     it('test alias circular reference detection', () => {
         const container = new ContainerBuilder();
-        container
-            .setAlias('bar', new Alias('foo'))
-            .setAlias('foo', new Alias('bar'));
+        container.setAlias('bar', new Alias('foo'));
+        container.setAlias('foo', new Alias('bar'));
 
 
         const pass = new ResolveReferencesToAliasesPass();
         expect(pass.process.bind(pass, container)).to.throw(
             CircularReferenceException,
-            'Circular reference detected for resource "foo", path "foo->foo"'
+            'Circular reference detected for resource "foo", path: "foo=>foo".'
         );
     });
 

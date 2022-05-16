@@ -28,13 +28,14 @@ export default class ResolveEnvPlaceholdersPass extends AbstractRecursivePassMod
 
         value = super.processValue(value, isRoot);
 
-        if (Array.isArray(value) && !isRoot && value.length > 0) {
-            const resolved = this.containerBuilder.resolveEnvPlaceholders(Object.keys(value), true) as Array<any>;
-            value = [
-                ...resolved,
-                value
-            ]
+        if (typeof value === 'object' && value !== null && !isRoot && Object.keys(value).length > 0) {
+            const resolved = this.containerBuilder.resolveEnvPlaceholders(value, true) as Array<any>;
+           value = {
+                ...value,
+                ...resolved
+            }
         }
+
 
         return value;
     }

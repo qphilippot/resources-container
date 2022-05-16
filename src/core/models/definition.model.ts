@@ -14,7 +14,7 @@ export default class Definition {
     private settings: MixedInterface = {};
     protected arguments: MixedInterface = {};
     // https://symfony.com/blog/new-in-symfony-5-1-autowire-public-typed-properties
-    private injectedProperties: Array<any> = [];
+    private injectedProperties: Record<string, any> = {};
     private changes: MixedInterface = {};
     private calls: Array<any> = [];
     private shared: boolean = true;
@@ -371,7 +371,7 @@ export default class Definition {
         return this.injectedProperties;
     }
 
-    public setInjectionProperties(properties: Array<any>): Definition {
+    public setInjectionProperties(properties: Record<string, any>): Definition {
         this.injectedProperties = properties;
         return this;
     }
