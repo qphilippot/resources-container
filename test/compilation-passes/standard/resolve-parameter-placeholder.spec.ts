@@ -15,7 +15,7 @@ const createTestContainer = (): ContainerBuilder => {
     containerBuilder.setParameter('foo.method', 'foobar');
     containerBuilder.setParameter('foo.property.name', 'bar');
     containerBuilder.setParameter('foo.property.value', 'baz');
-    containerBuilder.setParameter('foo.file', 'foo.php');
+    containerBuilder.setParameter('foo.file', 'foo.js');
     containerBuilder.setParameter('alias.id', 'bar');
 
     const fooDefinition = containerBuilder.register('foo', '%foo.class%');
@@ -33,9 +33,10 @@ const createTestContainer = (): ContainerBuilder => {
 
 describe('ResolveReferencesToAliasesPass works as expected', () => {
     let fooDefinition;
+    let container;
     before(() => {
         const pass = new ResolveParameterPlaceHoldersPass();
-        const container = createTestContainer();
+        container = createTestContainer();
         pass.process(container);
         fooDefinition = container.getDefinition('foo');
     });
@@ -61,27 +62,20 @@ describe('ResolveReferencesToAliasesPass works as expected', () => {
         expect(JSON.stringify(fooDefinition.getInjectionProperties())).to.equals('{"bar":"baz"}');
     });
 
-//     public function testPropertyParametersShouldBeResolved()
-//     {
-//         $this->assertSame(['bar' => 'baz'], $this->fooDefinition->getProperties());
-//     }
-//
-//     public function testFileParametersShouldBeResolved()
-//     {
-//         $this->assertSame('foo.php', $this->fooDefinition->getFile());
-//     }
-//
-//     public function testAliasParametersShouldBeResolved()
-//     {
-//         $this->assertSame('foo', $this->container->getAlias('bar')->__toString());
-//     }
-//
-//     public function testBindingsShouldBeResolved()
-//     {
-//         [$boundValue] = $this->container->getDefinition('foo')->getBindings()['$baz']->getValues();
-//
-//         $this->assertSame($this->container->getParameterBag()->resolveValue('%env(BAZ)%'), $boundValue);
-//     }
+    it('resolves path', () => {
+        expect(fooDefinition.getFilePath()).to.equals('foo.js');
+    });
+
+    it('resolves alias', () => {
+        expect(container.getAlias('bar').toString()).to.equals('foo');
+    });
+
+    it('resolves bindings', () => {
+        const {baz} = container.getDefinition('foo').getBindings();
+        expect(baz.getValues()[0].value).to.equals(container.getParameterBag().resolveValue('%env(BAZ)%'));
+    });
+
+
 //
 //     public function testParameterNotFoundExceptionsIsThrown()
 //     {
