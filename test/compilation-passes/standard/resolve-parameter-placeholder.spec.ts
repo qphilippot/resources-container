@@ -88,32 +88,15 @@ describe('ResolveReferencesToAliasesPass works as expected', () => {
         );
     });
 
+    it('could quiet parameter not found exception', () => {
+        const builder = new ContainerBuilder();
+        const definition = builder.register('baz_service_id');
+        definition.setArgument(0, '%non_existent_param%');
 
+        const pass = new ResolveParameterPlaceHoldersPass();
+        pass.enableThrowExceptionOnResolve(false);
+        pass.process(builder);
 
-//
-//     public function testParameterNotFoundExceptionsIsThrown()
-//     {
-//         $this->expectException(ParameterNotFoundException::class);
-//         $this->expectExceptionMessage('The service "baz_service_id" has a dependency on a non-existent parameter "non_existent_param".');
-//
-//         $containerBuilder = new ContainerBuilder();
-//         $definition = $containerBuilder->register('baz_service_id');
-//         $definition->setArgument(0, '%non_existent_param%');
-//
-//         $pass = new ResolveParameterPlaceHoldersPass();
-//         $pass->process($containerBuilder);
-//     }
-//
-//     public function testParameterNotFoundExceptionsIsNotThrown()
-//     {
-//         $containerBuilder = new ContainerBuilder();
-//         $definition = $containerBuilder->register('baz_service_id');
-//         $definition->setArgument(0, '%non_existent_param%');
-//
-//         $pass = new ResolveParameterPlaceHoldersPass(true, false);
-//         $pass->process($containerBuilder);
-//
-//         $this->assertCount(1, $definition->getErrors());
-//     }
-
+        expect(definition.getErrors().length).to.equals(1);
+    });
 });

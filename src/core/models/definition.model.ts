@@ -29,6 +29,10 @@ export default class Definition {
 
     private bindings: Record<string, BoundArgument | string> = {};
 
+
+    /* TODO definition-error-tracker-feature */
+    private errors: string[] = [];
+
     public getBindings(): Record<string, BoundArgument | string> {
         return this.bindings;
     }
@@ -41,7 +45,7 @@ export default class Definition {
      * called and of controller actions).
      *
      */
-    public setBindings(bindings: Record<string, BoundArgument | string >): this {
+    public setBindings(bindings: Record<string, BoundArgument | string>): this {
         Object.keys(bindings).forEach(key => {
             const binding = bindings[key];
             const k = key.replace('/[ \t]*\/', ' ');
@@ -427,4 +431,23 @@ export default class Definition {
         return this._instanceof;
     }
 
+
+    /**
+     * Add an error that occurred when building this Definition.
+     *
+     * @return this
+     */
+    addError(error: string): this {
+
+        this.errors.push(error);
+        return this;
+    }
+
+
+    /**
+     * Returns any errors that occurred while building this Definition.
+     */
+    getErrors(): string[] {
+        return this.errors;
+    }
 }

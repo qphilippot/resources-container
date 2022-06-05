@@ -75,7 +75,7 @@ export default class ResolveParameterPlaceHoldersPass extends AbstractRecursiveP
 
                     v = null;
                     // todo use pubsub to decorate error in order to use error messages
-                    this.containerBuilder.getDefinition(this.currentId);//.addError(e.getMessage());
+                    this.containerBuilder.getDefinition(this.currentId).addError(err.message);
                 }
             }
 

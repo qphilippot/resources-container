@@ -37,3 +37,6 @@ autoload:
 * Si une variable d'environnement existe dans un env-placeholder-parameter-bag en tant que paramètre sous la forme env(FOO) on préfére résoudre cette variable en tant que paramètre et ne pas prendre la variable d'env
 ## Env Placeholder Bag
 * Les placeholders sont le nom des variables gérées par le bag ainsi que les différentes références qui lui sont faîtes (utile pour le merge de config ?) 
+
+## Definition
+* Le tracking des erreurs doit passer par un plugin / decorator / feature spécialisé et ne pas être directement dans le modèle
