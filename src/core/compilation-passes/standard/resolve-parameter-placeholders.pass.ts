@@ -47,8 +47,10 @@ export default class ResolveParameterPlaceHoldersPass extends AbstractRecursiveP
             });
 
         } catch (err) {
-            if (err instanceof ParameterNotFoundException)
+            if (err instanceof ParameterNotFoundException) {
                 err.setSourceId(this.currentId);
+            }
+
 
             throw err;
         }

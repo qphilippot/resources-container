@@ -10,9 +10,8 @@ export default abstract class AbstractRecursivePassModel implements CompilerPass
         this.containerBuilder = containerBuilder;
         try {
             this.processValue(containerBuilder.getDefinitions(), true);
-        }
-        catch (error) {
-            console.error(error);
+        } catch (error) {
+            // console.error(error);
             throw error;
         }
 
@@ -28,17 +27,20 @@ export default abstract class AbstractRecursivePassModel implements CompilerPass
     protected processValue(value: any, isRoot: boolean = false): any {
         if (Array.isArray(value)) {
             value.forEach((v, k) => {
-               if (isRoot) {
-                   this.currentId = k.toString();
-               }
+                if (isRoot) {
+                    if (v instanceof Definition) {
+                        this.currentId = v.getId();
+                    } else {
+                        this.currentId = k.toString();
+                    }
+                }
 
-               const processedValue = this.processValue(v, isRoot);
-               if (v !== processedValue) {
-                   value[k] = processedValue;
-               }
+                const processedValue = this.processValue(v, isRoot);
+                if (v !== processedValue) {
+                    value[k] = processedValue;
+                }
             });
-        }
-        else if (value instanceof Definition) {
+        } else if (value instanceof Definition) {
             value.setArguments(this.processValue(value.getArguments()));
             value.setInjectionProperties(this.processValue(value.getInjectionProperties()));
             value.setMethodCalls(this.processValue(value.getMethodCalls()));
@@ -54,8 +56,7 @@ export default abstract class AbstractRecursivePassModel implements CompilerPass
             typeof value['getValues'] === 'function'
         ) {
             value.setValues(this.processValue(value.getValues()));
-        }
-        else if (typeof value === 'object' && value !== null) {
+        } else if (typeof value === 'object' && value !== null) {
             Object.keys(value).forEach(key => {
                 if (isRoot) {
                     this.currentId = key;
@@ -69,7 +70,6 @@ export default abstract class AbstractRecursivePassModel implements CompilerPass
                 }
             });
         }
-
 
 
         return value;

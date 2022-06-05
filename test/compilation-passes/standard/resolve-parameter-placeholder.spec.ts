@@ -4,6 +4,7 @@ import ContainerBuilder from "../../../src/core/container/container-builder.mode
 import Alias from "../../../src/core/models/alias.model";
 import ResolveParameterPlaceHoldersPass
     from "../../../src/core/compilation-passes/standard/resolve-parameter-placeholders.pass";
+import ParameterNotFoundException from "../../../src/core/exception/parameter-not-found.exception";
 
 const createTestContainer = (): ContainerBuilder => {
     const containerBuilder = new ContainerBuilder();
@@ -74,6 +75,19 @@ describe('ResolveReferencesToAliasesPass works as expected', () => {
         const {baz} = container.getDefinition('foo').getBindings();
         expect(baz.getValues()[0].value).to.equals(container.getParameterBag().resolveValue('%env(BAZ)%'));
     });
+
+    it('throws an exception on parameter not found', () => {
+        const builder = new ContainerBuilder();
+        const definition = builder.register('baz_service_id');
+        definition.setArgument(0, '%non_existent_param%');
+
+        const pass = new ResolveParameterPlaceHoldersPass();
+        expect(pass.process.bind(pass, builder)).to.throw(
+            ParameterNotFoundException,
+            'The service "baz_service_id" has a dependency on a non-existent parameter "non_existent_param".'
+        );
+    });
+
 
 
 //
