@@ -40,3 +40,18 @@ autoload:
 
 ## Definition
 * Le tracking des erreurs doit passer par un plugin / decorator / feature spécialisé et ne pas être directement dans le modèle
+
+## Yaml parser
+* utiliser un système de path générique compatible s3
+
+### Workflow
+* Récupérer le fichier
+* Le parser
+* Passe de validation / vérification validité syntaxe de configuration
+* (système d'extension ?)
+* déclare le fichier au builder comme une source valide
+* parsing des imports
+* ajout des paramètres
+* ajout des extensions
+* ajout des services
+* Créer une classe spéciale pour le value resovler du yamlConfigLoader

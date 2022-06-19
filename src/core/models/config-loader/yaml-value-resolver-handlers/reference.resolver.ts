@@ -1,5 +1,5 @@
 import HandlerInterface from "../../../interfaces/handler.interface";
-import Publisher from "../../../../publisher-subscriber/model/publisher.model";
+import {Publisher} from "@qphi/publisher-subscriber";
 import Manager from "../../manager.model";
 import {
     EXCEPTION_ON_INVALID_REFERENCE,

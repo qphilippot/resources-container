@@ -3,7 +3,7 @@ import ConfigLoaderHandlerInterface from "./config-loader-handler.interface";
 import ContainerBuilderInterface from "../../interfaces/container-builder.interface";
 import InvalidArgumentException from "../../exception/invalid-argument.exception";
 import {dirname} from 'path';
-import {Publisher} from '@qphi/publisher-subscriber';
+import {Publisher, PublisherInterface} from '@qphi/publisher-subscriber';
 import CONFIG_LOADER_HANDLER_EVENTS from "./config-loader-handler.event";
 import ManagerInterface from "../../interfaces/manager.interface";
 import Manager from "../manager.model";
@@ -83,10 +83,11 @@ const DEFAULTS_KEYWORDS = [
 
 export default class YamlConfigLoader
     extends Publisher
-    implements ConfigLoaderHandlerInterface, ManagerInterface {
+    implements ConfigLoaderHandlerInterface, ManagerInterface, PublisherInterface {
 
     private fileLoader: YamlLoader = new YamlLoader();
     protected readonly valueResolver: Manager = new Manager('yaml-value-manager');
+    protected readonly defaultResolver: handlerInterface = new DefaultResolver(this.valueResolver, 'default-resolver')
     private instanceOf = [];
     private isLoadingInstanceOf: boolean = false;
 
@@ -94,10 +95,10 @@ export default class YamlConfigLoader
 
     constructor(id) {
         super(id);
-        this.initializeHandler();
+        this.initializeHandler()
     }
 
-    public initializeHandler() {
+    public initializeHandler(): void {
         this.addHandler(new DefaultResolver(this.valueResolver, 'default-resolver'), 'default-resolver');
     }
 
@@ -118,6 +119,7 @@ export default class YamlConfigLoader
             return;
         }
 
+        // loadContent(
         this.parseImport(content, path, container);
         this.parseParameters(content.parameters, path, container);
         // this.parseExtensions(content.extensions) // not yet
@@ -301,7 +303,13 @@ export default class YamlConfigLoader
     }
 
     public resolveValue(value) {
-        return this.valueResolver.process(value);
+        try {
+            return this.valueResolver.process(value);
+        } catch (err) {
+            console.error(err);
+
+        }
+
     }
 
     public parseImport(content, path: string, container: ContainerBuilderInterface) {

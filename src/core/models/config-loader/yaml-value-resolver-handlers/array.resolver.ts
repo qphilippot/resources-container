@@ -14,11 +14,13 @@ export default class ArrayResolver extends Publisher implements HandlerInterface
         return Array.isArray(data);
     }
 
-    public process(data: any) {
-        Object.keys(data).forEach(property => {
-            data[property] = this.manager.process(property);
+    public process(data: any[]) {
+        const resolved: any[] = [];
+
+        data.forEach(property => {
+            resolved.push(this.manager.process(property));
         });
 
-        return data;
+        return resolved;
     }
 }
