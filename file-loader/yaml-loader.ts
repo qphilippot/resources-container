@@ -1,5 +1,7 @@
 import FileLoader from "./file-loader.model";
-import { load } from 'js-yaml';
+import { load, YAMLException } from 'js-yaml';
+import InvalidIdException from "../src/core/exception/invalid-id.exception";
+import InvalidArgumentException from "../src/core/exception/invalid-argument.exception";
 
 export default class YamlLoader extends FileLoader {
     constructor() {
@@ -9,6 +11,15 @@ export default class YamlLoader extends FileLoader {
 
     load(path: string) {
         const data = super.load(path);
-        return load(data);
+
+        try {
+            return load(data);
+        } catch (err) {
+            if (err instanceof YAMLException) {
+                throw new InvalidArgumentException(
+                    `The file "${path}" does not contain valid YAML.`
+                );
+            }
+        }
     }
 }

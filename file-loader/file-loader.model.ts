@@ -1,6 +1,7 @@
 import HandlerInterface from "../src/core/interfaces/handler.interface";
 import { readFileSync } from 'fs';
 import { Publisher, PublisherInterface } from "@qphi/publisher-subscriber";
+import InvalidArgumentException from "../src/core/exception/invalid-argument.exception";
 
 export default abstract class FileLoader extends Publisher implements HandlerInterface, PublisherInterface
 {
@@ -27,7 +28,16 @@ export default abstract class FileLoader extends Publisher implements HandlerInt
     }
 
     load(path) {
-        return readFileSync(path, 'utf8');
+        try {
+            return readFileSync(path, 'utf8');
+        } catch (err) {
+            if (err.message.startsWith('ENOENT:')) {
+                throw new InvalidArgumentException(
+                    `The file "${path}" does not exist.`
+                )
+            }
+        }
+
     }
 
     getExtension(path: string): string {

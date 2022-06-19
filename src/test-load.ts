@@ -21,7 +21,7 @@ const content = loader.process({
     container
 });
 
-// console.log('content', container);
+console.log('parameters', container.getParameterBag().all());
 
 // const reflexionService = new ReflexionService();
 // const meta = generateClassesMetadata({

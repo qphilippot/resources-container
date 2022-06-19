@@ -119,38 +119,57 @@ export default class YamlConfigLoader
             return;
         }
 
+        // validate
+        if (typeof content !== 'object') {
+            throw new InvalidArgumentException(
+                `The service file "${path}" is not valid. It should contain an array. Check your YAML syntax.`
+            );
+        }
+
+        // check first level are valid entry
+        Object.keys(content).forEach(entry => {
+            if (
+                !['imports', 'parameters', 'services'].includes(entry)
+            ) {
+              // todo str_starts_with($namespace, 'when@')
+              // todo check supported extensions
+                throw new InvalidArgumentException(
+                  `There is no extension able to load the configuration for "${entry}" (in "${path}"). Looked for namespace "${entry}", found "none".`
+                );
+            }
+        });
+
         // loadContent(
-        this.parseImport(content, path, container);
+        this.parseImports(content, path, container);
         this.parseParameters(content.parameters, path, container);
         // this.parseExtensions(content.extensions) // not yet
-        this.parseResources(content.resources, path, container);
+        this.parseServices(content.services, path, container);
     }
 
-    public parseResources(parameters, path, container: ContainerBuilderInterface) {
-        if (typeof parameters === 'undefined') {
+    public parseServices(services, path, container: ContainerBuilderInterface) {
+        if (typeof services === 'undefined') {
             return;
         }
 
-        if (typeof parameters !== 'object') {
+        if (typeof services !== 'object') {
             throw new InvalidArgumentException(
                 `The "services" key should contain an array in "${path}". Check your YAML syntax.`
             );
         }
 
         // todo transform in feature
-        if (typeof parameters['_instanceof'] !== 'undefined') {
-            const _instanceof = parameters._instanceof;
-            delete parameters._instanceof;
+        if (typeof services['_instanceof'] !== 'undefined') {
+            const _instanceof = services._instanceof;
+            delete services._instanceof;
             this.resolveInstanceOf(_instanceof, path, container);
         }
 
         this.isLoadingInstanceOf = false;
-        const defaults = this.parseDefaults(parameters, path);
-        
-        Object.keys(parameters.services).forEach(id => {
-            const service = parameters.services[id];
-            this.parseDefinition(id, service, path, defaults);
-        })
+        const defaults = this.parseDefaults(services, path);
+
+        Object.keys(services).forEach(id => {
+            this.parseDefinition(id, services[id], path, defaults);
+        });
     }
 
     /**
@@ -312,7 +331,7 @@ export default class YamlConfigLoader
 
     }
 
-    public parseImport(content, path: string, container: ContainerBuilderInterface) {
+    public parseImports(content, path: string, container: ContainerBuilderInterface) {
         if (typeof content.imports === 'undefined') {
             return;
         }
@@ -330,7 +349,7 @@ export default class YamlConfigLoader
                 entry = { resource: entry};
             }
 
-            if (typeof entry['resource'] === 'undefined') {
+            if (typeof entry['resource'] === 'undefined' || entry['resource'] === null) {
                 throw new InvalidArgumentException(
                     `An import should provide a "resource" in "${path}". Check your YAML syntax.`
                 );
