@@ -14,62 +14,62 @@ import YamlDefinitionParser from "./YamlDefinitionParser.model";
 
 /* eslint-disable  @typescript-eslint/no-unused-vars */
 const SERVICE_KEYWORDS = {
-    'alias' : 'alias',
-    'parent' : 'parent',
-    'class' : 'class',
-    'shared' : 'shared',
-    'synthetic' : 'synthetic',
-    'lazy' : 'lazy',
-    'public' : 'public',
-    'abstract' : 'abstract',
-    'deprecated' : 'deprecated',
-    'factory' : 'factory',
-    'file' : 'file',
-    'arguments' : 'arguments',
-    'properties' : 'properties',
-    'configurator' : 'configurator',
-    'calls' : 'calls',
-    'tags' : 'tags',
-    'decorates' : 'decorates',
-    'decoration_inner_name' : 'decoration_inner_name',
-    'decoration_priority' : 'decoration_priority',
-    'decoration_on_invalid' : 'decoration_on_invalid',
-    'autowire' : 'autowire',
-    'autoconfigure' : 'autoconfigure',
-    'bind' : 'bind',
+    'alias': 'alias',
+    'parent': 'parent',
+    'class': 'class',
+    'shared': 'shared',
+    'synthetic': 'synthetic',
+    'lazy': 'lazy',
+    'public': 'public',
+    'abstract': 'abstract',
+    'deprecated': 'deprecated',
+    'factory': 'factory',
+    'file': 'file',
+    'arguments': 'arguments',
+    'properties': 'properties',
+    'configurator': 'configurator',
+    'calls': 'calls',
+    'tags': 'tags',
+    'decorates': 'decorates',
+    'decoration_inner_name': 'decoration_inner_name',
+    'decoration_priority': 'decoration_priority',
+    'decoration_on_invalid': 'decoration_on_invalid',
+    'autowire': 'autowire',
+    'autoconfigure': 'autoconfigure',
+    'bind': 'bind',
 };
 
 const PROTOTYPE_KEYWORDS = {
-    'resource' : 'resource',
-    'namespace' : 'namespace',
-    'exclude' : 'exclude',
-    'parent' : 'parent',
-    'shared' : 'shared',
-    'lazy' : 'lazy',
-    'public' : 'public',
-    'abstract' : 'abstract',
-    'deprecated' : 'deprecated',
-    'factory' : 'factory',
-    'arguments' : 'arguments',
-    'properties' : 'properties',
-    'configurator' : 'configurator',
-    'calls' : 'calls',
-    'tags' : 'tags',
-    'autowire' : 'autowire',
-    'autoconfigure' : 'autoconfigure',
-    'bind' : 'bind',
+    'resource': 'resource',
+    'namespace': 'namespace',
+    'exclude': 'exclude',
+    'parent': 'parent',
+    'shared': 'shared',
+    'lazy': 'lazy',
+    'public': 'public',
+    'abstract': 'abstract',
+    'deprecated': 'deprecated',
+    'factory': 'factory',
+    'arguments': 'arguments',
+    'properties': 'properties',
+    'configurator': 'configurator',
+    'calls': 'calls',
+    'tags': 'tags',
+    'autowire': 'autowire',
+    'autoconfigure': 'autoconfigure',
+    'bind': 'bind',
 };
 
 const INSTANCEOF_KEYWORDS = {
-    'shared' : 'shared',
-    'lazy' : 'lazy',
-    'public' : 'public',
-    'properties' : 'properties',
-    'configurator' : 'configurator',
-    'calls' : 'calls',
-    'tags' : 'tags',
-    'autowire' : 'autowire',
-    'bind' : 'bind',
+    'shared': 'shared',
+    'lazy': 'lazy',
+    'public': 'public',
+    'properties': 'properties',
+    'configurator': 'configurator',
+    'calls': 'calls',
+    'tags': 'tags',
+    'autowire': 'autowire',
+    'bind': 'bind',
 };
 
 const DEFAULTS_KEYWORDS = [
@@ -95,7 +95,7 @@ export default class YamlConfigLoader
 
     constructor(id) {
         super(id);
-        this.initializeHandler()
+        this.initializeHandler();
     }
 
     public initializeHandler(): void {
@@ -131,10 +131,10 @@ export default class YamlConfigLoader
             if (
                 !['imports', 'parameters', 'services'].includes(entry)
             ) {
-              // todo str_starts_with($namespace, 'when@')
-              // todo check supported extensions
+                // todo str_starts_with($namespace, 'when@')
+                // todo check supported extensions
                 throw new InvalidArgumentException(
-                  `There is no extension able to load the configuration for "${entry}" (in "${path}"). Looked for namespace "${entry}", found "none".`
+                    `There is no extension able to load the configuration for "${entry}" (in "${path}"). Looked for namespace "${entry}", found "none".`
                 );
             }
         });
@@ -179,10 +179,10 @@ export default class YamlConfigLoader
         if (typeof parameters['_default'] === 'undefined') {
             return {};
         }
-        
+
         const defaults = parameters._default;
         delete parameters._default;
-        
+
         if (typeof defaults !== 'object') {
             throw new InvalidArgumentException(
                 `Service "_defaults" key must be an array, "${typeof defaults}" given in "${path}".`
@@ -210,16 +210,14 @@ export default class YamlConfigLoader
                 let name: string;
 
                 if (typeof entry === 'string') {
-                    tag = { name: entry };
+                    tag = {name: entry};
                 }
 
                 const keys = Object.keys(tag);
                 if (keys.length === 1 && typeof tag[keys[0]] === 'object') {
                     name = keys[0];
                     tag = tag[keys[0]];
-                }
-
-                else {
+                } else {
                     if (typeof tag.name !== 'undefined') {
                         throw new InvalidArgumentException(
                             `A "tags" entry in "_defaults" is missing a "name" key in "${path}".`
@@ -236,7 +234,7 @@ export default class YamlConfigLoader
                     );
                 }
 
-                Object.keys(tag).forEach((attribute:string) => {
+                Object.keys(tag).forEach((attribute: string) => {
                     const value = tag[attribute];
                     const isScalar = /boolean|number|string/.test(typeof value);
                     if (!isScalar && value !== null) {
@@ -264,6 +262,7 @@ export default class YamlConfigLoader
             return defaults;
         }
     }
+
     /**
      * Parses a definition.
      * @param id
@@ -276,6 +275,7 @@ export default class YamlConfigLoader
     public parseDefinition(id: string, resource: object | string | null, path: string, defaults, shouldReturn = false) {
         this.definitionParser.parse(id, resource, path, shouldReturn);
     }
+
     /* eslint-disable  @typescript-eslint/no-unused-vars */
     public resolveInstanceOf(_instanceof, path, container: ContainerBuilderInterface) {
         if (typeof _instanceof !== 'object') {
@@ -346,7 +346,7 @@ export default class YamlConfigLoader
         const defaultDirectory = dirname(path);
         content.imports.forEach(entry => {
             if (typeof entry === 'string') {
-                entry = { resource: entry};
+                entry = {resource: entry};
             }
 
             if (typeof entry['resource'] === 'undefined' || entry['resource'] === null) {

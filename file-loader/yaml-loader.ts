@@ -36,6 +36,8 @@ export default class YamlLoader extends FileLoader {
                     `The file "${path}" does not contain valid YAML.`
                 );
             }
+
+            throw  err;
         }
     }
 }

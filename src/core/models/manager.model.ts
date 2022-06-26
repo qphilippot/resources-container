@@ -8,6 +8,7 @@ export default class Manager extends PublisherSubscriber implements ManagerInter
     protected handlers: Record<string, HandlerInterface> = {};
 
     public addHandler(handler: HandlerInterface, name: string): void {
+        handler.stopPublicationOnException();
         this.handlers[name] = handler;
     }
 

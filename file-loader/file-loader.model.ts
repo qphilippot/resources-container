@@ -36,6 +36,8 @@ export default abstract class FileLoader extends Publisher implements HandlerInt
                     `The file "${path}" does not exist.`
                 )
             }
+
+            throw err;
         }
 
     }
