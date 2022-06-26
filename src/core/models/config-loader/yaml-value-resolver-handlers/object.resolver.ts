@@ -16,7 +16,7 @@ export default class ObjectResolver extends Publisher implements HandlerInterfac
 
     public process(data: any) {
         Object.keys(data).forEach(property => {
-            data[property] = this.manager.process(property);
+            data[property] = this.manager.process(data[property]);
         });
 
         return data;

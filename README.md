@@ -82,3 +82,9 @@ https://symfony.com/doc/current/components/expression_language.html
 
 ### TS/JS
 * La destructuration (spread operator) implique la perte du type (le prototype n'est pas copié).
+
+## YAML Config
+### Variables
+To refers some config variables you have to use `!Ref` tag with the following var name as `!Ref INT_MAX` 
+#### Dictionary
+* INT_MAX returns max sage integer value

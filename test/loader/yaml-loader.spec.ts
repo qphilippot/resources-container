@@ -4,6 +4,7 @@ import YamlContainerConfigLoader from "../../src/core/models/config-loader/yaml-
 import ContainerBuilder from "../../src/core/container/container-builder.model";
 import InvalidArgumentException from "../../src/core/exception/invalid-argument.exception";
 import * as path from "path";
+import Reference from "../../src/core/models/reference.model";
 
 const fixturePath =  path.resolve(__dirname, "../fixtures/");
 
@@ -54,5 +55,32 @@ describe('Container', () => {
             );
         })
 
+    });
+
+    it('load parameters', function () {
+        const loader = new YamlContainerConfigLoader('test-yaml-config-loader');
+        const builder = new ContainerBuilder();
+        const filePath = path.resolve(fixturePath, './yaml/services2.yml');
+        loader.load(filePath, builder);
+
+        const parameters = builder.getParameterBag().all();
+
+        expect(parameters.foo).to.equals('bar');
+        expect(JSON.stringify(parameters.mixedcase)).to.equals('{"MixedCaseKey":"value"}');
+        expect(JSON.stringify(parameters.values)).to.equals(JSON.stringify([ true, false, 0, 1000.3, Number.MAX_SAFE_INTEGER ]));
+        expect(parameters.bar).to.equals('foo');
+        expect(parameters.escape).to.equals('@escapeme');
+        expect(parameters.foo_bar.toString()).to.equals((new Reference('foo_bar')).toString());
+
+        expect(JSON.stringify(parameters).length).to.equals(JSON.stringify({
+            'foo': 'bar',
+            'mixedcase': {
+                'MixedCaseKey': 'value'
+            },
+            values: [ true, false, 0, 1000.3, Number.MAX_SAFE_INTEGER],
+            bar: 'foo',
+            escape: '@escapeme',
+            foo_bar: new Reference('foo_bar')
+        }).length);
     });
 });
