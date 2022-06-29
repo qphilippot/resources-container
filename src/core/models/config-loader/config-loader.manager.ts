@@ -25,7 +25,8 @@ export default class ConfigLoaderManager extends Manager {
                         requirement.config?.ignore_errors !== true &&
                         !(requirement.config?.ignore_errors === 'not_found' && error.message.includes('does not exist.'))
                     ) {
-                        throw new CannotImportFileException(importPath, requirement.path, 0);
+                        console.error(error);
+                        throw new CannotImportFileException(importPath, requirement.path, 0, error);
                     }
                 }
             }

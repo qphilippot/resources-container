@@ -316,6 +316,9 @@ export default class Definition {
         return this.changes;
     }
 
+    public tareChanges() {
+        this.changes = [];
+    }
     /**
      * Whether this definition is abstract, that means it merely serves as a
      * template for other definitions.

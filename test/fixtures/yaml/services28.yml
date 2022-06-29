@@ -25,7 +25,8 @@ services:
 
     with_defaults_aliased_short: '@with_defaults'
 
-    Acme\WithShortCutArgs: [foo]
+#   short syntax is not supported
+#   Acme\WithShortCutArgs: [foo]
 
     child_def:
         parent: with_defaults

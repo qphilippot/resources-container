@@ -88,3 +88,7 @@ https://symfony.com/doc/current/components/expression_language.html
 To refers some config variables you have to use `!Ref` tag with the following var name as `!Ref INT_MAX` 
 #### Dictionary
 * INT_MAX returns max sage integer value
+
+
+## Décisions
+* Ne supporte pas le "short syntax" pour déclarer des services.

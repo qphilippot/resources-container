@@ -1,3 +1,5 @@
+import FileNotFoundException from "../../../../file-loader/file-not-found.exception";
+
 export default class CannotImportFileException extends Error {
     /**
      * @param resource       The resource that could not be imported
@@ -15,12 +17,16 @@ export default class CannotImportFileException extends Error {
     ) {
         let message = '';
 
-        if (previous instanceof Error) {
+        if (previous) {
             // Include the previous exception, to help the user see what might be the underlying cause
             // Trim the trailing period of the previous message.
             const str = previous.message;
             const prefix = str.endsWith('.') ? str.substring(0, str.length - 1) : str;
-            message = `${prefix} in ${resource} `;
+            message = `${prefix} `;
+
+            if (!(previous instanceof FileNotFoundException)) {
+                message += `in ${resource} `;
+            }
 
             // show tweaked trace to complete the human readable sentence
             if (sourceResource === null) {

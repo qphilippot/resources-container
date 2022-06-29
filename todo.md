@@ -56,3 +56,4 @@ autoload:
 * ajout des services
 * Créer une classe spéciale pour le value resovler du yamlConfigLoader
 * Documenter le ignore_errors et les valeurs possibles pour le chargement de resources
+* support when@env config feature
