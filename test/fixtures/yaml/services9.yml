@@ -41,7 +41,7 @@ services:
         public: true
     method_call1:
         class: Bar\FooClass
-        file: '%path%foo.php'
+        file: '%path%foo.js'
         calls:
             - [setBar, ['@foo']]
             - [setBar, ['@?foo2']]

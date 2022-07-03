@@ -11,75 +11,7 @@ import handlerInterface from "../../interfaces/handler.interface";
 import DefaultResolver from "./yaml-value-resolver-handlers/default.resolver";
 import {BoundArgument} from "../bound-argument.model";
 import YamlDefinitionParser from "./YamlDefinitionParser.model";
-
-/* eslint-disable  @typescript-eslint/no-unused-vars */
-const SERVICE_KEYWORDS = {
-    'alias': 'alias',
-    'parent': 'parent',
-    'class': 'class',
-    'shared': 'shared',
-    'synthetic': 'synthetic',
-    'lazy': 'lazy',
-    'public': 'public',
-    'abstract': 'abstract',
-    'deprecated': 'deprecated',
-    'factory': 'factory',
-    'file': 'file',
-    'arguments': 'arguments',
-    'properties': 'properties',
-    'configurator': 'configurator',
-    'calls': 'calls',
-    'tags': 'tags',
-    'decorates': 'decorates',
-    'decoration_inner_name': 'decoration_inner_name',
-    'decoration_priority': 'decoration_priority',
-    'decoration_on_invalid': 'decoration_on_invalid',
-    'autowire': 'autowire',
-    'autoconfigure': 'autoconfigure',
-    'bind': 'bind',
-};
-
-const PROTOTYPE_KEYWORDS = {
-    'resource': 'resource',
-    'namespace': 'namespace',
-    'exclude': 'exclude',
-    'parent': 'parent',
-    'shared': 'shared',
-    'lazy': 'lazy',
-    'public': 'public',
-    'abstract': 'abstract',
-    'deprecated': 'deprecated',
-    'factory': 'factory',
-    'arguments': 'arguments',
-    'properties': 'properties',
-    'configurator': 'configurator',
-    'calls': 'calls',
-    'tags': 'tags',
-    'autowire': 'autowire',
-    'autoconfigure': 'autoconfigure',
-    'bind': 'bind',
-};
-
-const INSTANCEOF_KEYWORDS = {
-    'shared': 'shared',
-    'lazy': 'lazy',
-    'public': 'public',
-    'properties': 'properties',
-    'configurator': 'configurator',
-    'calls': 'calls',
-    'tags': 'tags',
-    'autowire': 'autowire',
-    'bind': 'bind',
-};
-
-const DEFAULTS_KEYWORDS = [
-    'public',
-    'tags',
-    'autowire',
-    'autoconfigure',
-    'bind'
-];
-/* eslint-enable  @typescript-eslint/no-unused-vars */
+import {DEFAULTS_KEYWORDS} from "./default.config";
 
 export default class YamlConfigLoader
     extends Publisher

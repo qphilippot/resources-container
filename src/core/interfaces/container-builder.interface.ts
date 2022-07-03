@@ -25,6 +25,7 @@ interface ContainerBuilderInterface extends ContainerInterface {
      * @throws {ResourceNotFoundException} if the service definition does not exist
      */
     getDefinition(definitionId: string): Definition;
+    setDefinition(definitionId: string, definition: Definition): void;
     getParameterBag(): ParameterBagInterface;
 
     register(id: string, aClass: InstanceType<any> | undefined): Definition;

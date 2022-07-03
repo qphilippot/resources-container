@@ -8,6 +8,8 @@ import Reference from "../../src/core/models/reference.model";
 import ConfigLoaderManager from "../../src/core/models/config-loader/config-loader.manager";
 import CannotImportFileException from "../../src/core/models/config-loader/cannot-import-file.exception";
 import FileNotFoundException from "../../file-loader/file-not-found.exception";
+import {Scope} from "eslint";
+import Definition from '../../src/core/models/definition.model';
 
 const fixturePath = path.resolve(__dirname, "../fixtures/");
 
@@ -36,15 +38,15 @@ describe('Container', () => {
 
     it('throw an exception loading invalid YAML file', function () {
         const invalidYaml = [
-            // 'bad_parameters.yml',
-            // 'bad_imports.yml',
-            // 'bad_import.yml',
-            // 'bad_services.yml',
-            // 'bad_service.yml',
-            'bad_calls.yml', // broken
-            // 'bad_format.yml',
-            // 'nonvalid1.yml',
-            // 'nonvalid2.yml'
+            'bad_parameters.yml',
+            'bad_imports.yml',
+            'bad_import.yml',
+            'bad_services.yml',
+            'bad_service.yml',
+            'bad_calls.yml',
+            'bad_format.yml',
+            'nonvalid1.yml',
+            'nonvalid2.yml'
         ];
 
         const loader = new YamlContainerConfigLoader('test-yaml-config-loader');
@@ -165,22 +167,41 @@ describe('Container', () => {
     //
     // });
 
-    // describe('load services', function () {
-    //     it('default behavior', function () {
-    //         const loader = new YamlContainerConfigLoader('test-yaml-config-loader');
-    //         const builder = new ContainerBuilder();
-    //         const filePath = path.resolve(fixturePath, './yaml');
-    //         loader.load(path.resolve(filePath, 'services6.yml'), builder);
-    //         const definitions = builder.getDefinitions();
-    //         console.log(definitions);
-    //
-    //         // TODO finir la méthode parseDefinition 🤯🤯
-    //         // difference: load only yaml config files
-    //         // Check overrides
-    //         // expect(Object.keys(definitions)).to.contains('foo');
-    //         // expect(JSON.stringify(parameters.values)).to.equals(JSON.stringify([true, false]));
-    //         // // Check overrides does not remove any keys
-    //         // expect(Object.keys(parameters).length).to.equals(6);
-    //     });
-    // });
+    describe('load services', function () {
+        it('default behavior', function () {
+            const loader = new YamlContainerConfigLoader('test-yaml-config-loader');
+            const builder = new ContainerBuilder();
+            const filePath = path.resolve(fixturePath, './yaml');
+            loader.load(path.resolve(filePath, 'services6.yml'), builder);
+            // const definitions = builder.getDefinitions();
+
+            // foo definition exists and its class it "FooClass"
+            expect(builder.getDefinition.bind(builder,'foo')).to.not.throw();
+            expect(builder.getDefinition('foo').getResourceType()).to.equals('FooClass');
+
+            // not_shared exists and it is not shared
+            expect(builder.getDefinition.bind(builder,'not_shared')).to.not.throw();
+            expect(builder.getDefinition('not_shared').isShared()).to.be.false;
+
+            // file exists and has right filepath
+            expect(builder.getDefinition.bind(builder,'file')).to.not.throw();
+            expect(builder.getDefinition('file').getFilePath()).to.equals('%path%/foo.js');
+
+            // arguments exists and has right args
+            expect(builder.getDefinition.bind(builder,'arguments')).to.not.throw();
+            const args = builder.getDefinition("arguments").getArguments();
+            expect(args[0]).to.equals('foo');
+            expect(args[1]).to.be.instanceof(Reference);
+            expect(args[1].toString()).to.equals('foo');
+            expect(JSON.stringify(args[2])).to.equals('[true,false]');
+
+            // TODO finir la méthode parseDefinition 🤯🤯
+            // difference: load only yaml config files
+            // Check overrides
+            // expect(definitions.find((definition: Definition) => definition.getId() === 'foo')).to.be.instanceof(Definition);
+            // expect(JSON.stringify(parameters.values)).to.equals(JSON.stringify([true, false]));
+            // // Check overrides does not remove any keys
+            // expect(Object.keys(parameters).length).to.equals(6);
+        });
+    });
 });
