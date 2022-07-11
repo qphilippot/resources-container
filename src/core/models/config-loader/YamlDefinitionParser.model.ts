@@ -46,8 +46,6 @@ export default class YamlDefinitionParser {
             resource = [];
         }
 
-
-        // console.log("== resource== ", resource);
         if (!Array.isArray(resource) && (typeof resource !== 'object' || resource === null)) {
             throw new InvalidArgumentException(
                 `A service definition must be an array or a string starting with "@" but "${typeof resource}" found for service "${id}" in "${path}". Check your YAML syntax.`
@@ -211,8 +209,12 @@ export default class YamlDefinitionParser {
             //             definition.setDeprecated(deprecation['package'] ?? '', deprecation['version'] ?? '', deprecation['message'] ?? '');
             //         }
             //
-            //         if (service['factory'])) {
-            //             definition.setFactory(this.parseCallable(service['factory'], 'factory', id, file));
+
+        }
+
+        if (resource['factory']) {
+            // todo use helper
+            definition.setFactory(this.parseFactory(resource['factory'], id, path));
         }
 
         if (resource['file']) {
@@ -243,7 +245,6 @@ export default class YamlDefinitionParser {
 
 
             const calls = resource['calls'];
-            console.log(calls);
             calls.forEach(call => {
                 if (!Array.isArray(call) && (typeof call !== 'object' || call === null)) {
                     //     if (!\is_array(call) && (!\is_string(k) || !call instanceof TaggedValue)) {
@@ -281,7 +282,6 @@ export default class YamlDefinitionParser {
                     //      - setLogger: ['@logger']
                     // ==> { setLogger: [ '@logger' ] }
                 }
-                console.log('call', call)
                 // todo use real type for callableDefinitionMethods
 
 
@@ -616,5 +616,41 @@ export default class YamlDefinitionParser {
         }
 
         return value;
+    }
+
+    private parseFactory(factoryData: any, id: string, path: string) {
+        if (typeof factoryData === 'string') {
+            if (factoryData.startsWith('@=')) {
+                // factory: '@=parameter("kernel.debug") ? service("tracable_newsletter") : service("newsletter")'
+                throw `todo: supports expressions`;
+            }
+
+            if (factoryData.startsWith('@')) {
+                // it's an alias
+                if (!factoryData.includes(':')) {
+                    return [ this.resolveServices(factoryData, path), '__invoke' ];
+                }
+
+                throw new InvalidArgumentException(
+                  `The value of the "factory" option for the "${id}" service must be the id of the service without the "@" prefix (replace "${factoryData}" with "${factoryData.substring(1, factoryData.length-1)}" in "${path}").`
+                );
+            }
+
+            return factoryData;
+        }
+
+        if (Array.isArray(factoryData) && factoryData.length === 2) {
+            //  factory: ['@App\Email\NewsletterManagerFactory', 'createNewsletterManager']
+            if (factoryData[0] !== null) {
+                return [ this.resolveServices(factoryData[0], path), factoryData[1] ];
+            } else {
+                // factory: [~, getInstance]
+                return factoryData;
+            }
+        }
+
+        throw new InvalidArgumentException(
+            `Parameter "factory" must be a string or an array for service "${id}" in "${path}". Check your YAML syntax.
+        `);
     }
 }

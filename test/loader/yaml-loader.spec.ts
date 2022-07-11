@@ -204,7 +204,6 @@ describe('Container', () => {
             // expect(Object.keys(parameters).length).to.equals(6);
 
             const methodCalls = builder.getDefinition('method_call2').getMethodCalls();
-            console.log('methodCalls', methodCalls);
             const call = methodCalls[0];
             expect(call[0]).to.equals('setBar');
             expect(call[1][0]).to.equals('foo');
@@ -213,7 +212,26 @@ describe('Container', () => {
 
             expect(JSON.stringify(call[1][2])).to.equals('[true,false]');
 
-            // $this->assertEquals([['setBar', ['foo', new Reference('foo'), [true, false]]]], $services['method_call2']->getMethodCalls(), '->load() parses the method_call tag');
+            expect(builder.getDefinition('new_factory1').getFactory()).to.equals('factory');
+            let newFactory2 = builder.getDefinition('new_factory2').getFactory();
+            expect(Array.isArray(newFactory2)).to.be.true;
+
+            expect((newFactory2 as Array<any>)[0]).to.be.instanceof(Reference);
+            expect((newFactory2 as Array<any>)[0].toString()).to.be.equals('baz');
+            expect((newFactory2 as Array<any>)[1]).to.equals('getClass');
+
+            let newFactory3 = builder.getDefinition('new_factory3').getFactory();
+            expect(Array.isArray(newFactory3)).to.be.true;
+            expect(JSON.stringify(newFactory3)).to.equals('["BazClass","getInstance"]');
+            let newFactory4 = builder.getDefinition('new_factory4').getFactory();
+            expect(Array.isArray(newFactory4)).to.be.true;
+            expect(JSON.stringify(newFactory4)).to.equals('[null,"getInstance"]');
+
+            let newFactory5 = builder.getDefinition('new_factory5').getFactory();
+            expect(Array.isArray(newFactory5)).to.be.true;
+            expect((newFactory5 as Array<any>)[0]).to.be.instanceof(Reference);
+            expect((newFactory5 as Array<any>)[0].toString()).to.be.equals('baz');
+            expect((newFactory5 as Array<any>)[1]).to.equals('__invoke');
 
         });
     });
