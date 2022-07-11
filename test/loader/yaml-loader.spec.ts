@@ -202,6 +202,19 @@ describe('Container', () => {
             // expect(JSON.stringify(parameters.values)).to.equals(JSON.stringify([true, false]));
             // // Check overrides does not remove any keys
             // expect(Object.keys(parameters).length).to.equals(6);
+
+            const methodCalls = builder.getDefinition('method_call2').getMethodCalls();
+            console.log('methodCalls', methodCalls);
+            const call = methodCalls[0];
+            expect(call[0]).to.equals('setBar');
+            expect(call[1][0]).to.equals('foo');
+            expect(call[1][1]).to.be.instanceof(Reference);
+            expect(call[1][1].toString()).to.equals('foo');
+
+            expect(JSON.stringify(call[1][2])).to.equals('[true,false]');
+
+            // $this->assertEquals([['setBar', ['foo', new Reference('foo'), [true, false]]]], $services['method_call2']->getMethodCalls(), '->load() parses the method_call tag');
+
         });
     });
 });

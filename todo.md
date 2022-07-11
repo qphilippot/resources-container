@@ -57,3 +57,7 @@ autoload:
 * Créer une classe spéciale pour le value resovler du yamlConfigLoader
 * Documenter le ignore_errors et les valeurs possibles pour le chargement de resources
 * support when@env config feature
+* support configurator ?
+* support expression
+* support taggedValues
+* create setterInjectionPayload in order to parse "calls" properly

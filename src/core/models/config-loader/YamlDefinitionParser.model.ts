@@ -233,6 +233,7 @@ export default class YamlDefinitionParser {
             // definition.setConfigurator(this.parseCallable(service['configurator'], 'configurator', id, file));
         }
 
+
         if (resource['calls']) {
             if (!Array.isArray(resource['calls'])) {
                 throw new InvalidArgumentException(
@@ -242,19 +243,61 @@ export default class YamlDefinitionParser {
 
 
             const calls = resource['calls'];
-            // for (const entry in calls) {
-            //     const call = calls[entry];
-            //     if (
-            //         (typeof call !== 'object' || call === null) && )
-            // }
-            // foreach (service['calls'] as k => call) {
-            //     if (!\is_array(call) && (!\is_string(k) || !call instanceof TaggedValue)) {
-            //         throw new InvalidArgumentException(sprintf('Invalid method call for service "%s": expected map or array, "%s" given in "%s".', id, call instanceof TaggedValue ? '!'.call.getTag() : get_debug_type(call), file));
-            //     }
+            console.log(calls);
+            calls.forEach(call => {
+                if (!Array.isArray(call) && (typeof call !== 'object' || call === null)) {
+                    //     if (!\is_array(call) && (!\is_string(k) || !call instanceof TaggedValue)) {
+                    throw new InvalidArgumentException(
+                        `Invalid method call for service "${id}": expected or object array, "${typeof calls}" given in "${path}".`
+                    );
+                }
+
+                let callMethod = {
+                    method: '',
+                    args: null,
+                    returnsClone: false
+                };
+
+                if (Array.isArray(call)) {
+                    // example :
+                    // calls:
+                    //     - [ setBar, [ foo, '@foo', [true, false] ] ]
+                    callMethod.method = call[0] as string;
+                    callMethod.args = call[1];
+                    callMethod.returnsClone = call[2] || false;
+                } else if (typeof call === 'object') {
+                    const properties = Object.keys(call);
+                    if (properties.length !== 1) {
+                        throw new InvalidArgumentException(
+                            `Invalid call for service "${id}": the method must be defined as the first index of an array or as the only key of a map in "${path}".`
+                        );
+                    }
+                    callMethod.method = properties[0];
+                    callMethod.args = call[properties[0]] ?? [];
+                    callMethod.returnsClone = false;
+
+                    // example :
+                    //    calls:
+                    //      - setLogger: ['@logger']
+                    // ==> { setLogger: [ '@logger' ] }
+                }
+                console.log('call', call)
+                // todo use real type for callableDefinitionMethods
+
+
+                this.resolveServices(callMethod.args, path);
+                definition.addMethodCall(
+                    callMethod.method,
+                    callMethod.args,
+                    callMethod.returnsClone
+                );
+            });
+
+
             //
-            //     if (\is_string(k)) {
-            //         throw new InvalidArgumentException(sprintf('Invalid method call for service "%s", did you forgot a leading dash before "%s: ..." in "%s"?', id, k, file));
-            //     }
+            // if (\is_string(k)) {
+            //     throw new InvalidArgumentException(sprintf('Invalid method call for service "%s", did you forgot a leading dash before "%s: ..." in "%s"?', id, k, file));
+            // }
             //
             //     if (call['method']) && \is_string(call['method']) {
             //         method = call['method'];
