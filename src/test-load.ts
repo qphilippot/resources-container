@@ -21,14 +21,15 @@ const content = loader.process({
     container
 });
 
-console.log('parameters', container.getParameterBag().all());
+// console.log('parameters', container.getParameterBag().all());
 
 // const reflexionService = new ReflexionService();
 // const meta = generateClassesMetadata({
 //     path: "C:\\Users\\Quentin\\resources-container\\src\\core\\models\\config-loader\\yaml-config-loader.ts",
 //     debug: true
 // });
-//
+
+
 // reflexionService.setMetadata(meta);
 
 // const loader = new YamlLoader();
@@ -39,3 +40,39 @@ console.log('parameters', container.getParameterBag().all());
 // const content = loader.process(filepath);
 //
 // console.log(JSON.stringify(content, null, 4));
+
+
+const mupath = resolve(__dirname, '../test/reflexivity/generate-classes-metadata/fixtures/a/classes');
+const meta = generateClassesMetadata({
+    path: mupath,
+    debug: true,
+    aliasRules: [
+        {
+            replace: resolve(__dirname, './..'),
+            by: 'app'
+        }
+    ]
+});
+
+Object.keys(meta).forEach(async entry => {
+    const value = meta[entry];
+    let _constructor;
+
+    if (value.export.type === 'export:default') {
+        _constructor = require(value.export.path).default;
+    }
+    if (value.export.type === 'export:named') {
+        _constructor = require(value.export.path)[value.name];
+    }
+
+    container.getReflexionService().recordClass(entry, _constructor);
+    container.register(entry, entry);
+});
+
+// container.getDefinitions().forEach(definition => {
+//     console.log(definition.getId(), definition.getResourceType());
+// });
+
+// console.log('defintion', container.getDefinition('app/test/reflexivity/generate-classes-metadata/fixtures/a/classes/export-sapristi::abc'));
+console.log('ABC', container.get('app/test/reflexivity/generate-classes-metadata/fixtures/a/classes/export-sapristi::abc'));
+

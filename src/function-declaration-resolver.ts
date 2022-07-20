@@ -63,6 +63,8 @@ export default class FunctionDeclarationResolver {
                     return 'object';
                 case 'TSNullKeyword':
                     return 'null';
+                case 'TSVoidKeyword':
+                    return 'void';
                 case 'TSUnionType':
                     return  node.types.map(node => this.retrieveTypeFromNode(node)).join('|');
                 case 'AssignmentPattern':

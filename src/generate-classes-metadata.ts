@@ -1,19 +1,18 @@
 import {scan} from 'dree';
-import {readFileSync} from 'fs';
+import {readFileSync, writeFile} from 'fs';
 import {resolve} from 'path';
 import FunctionDeclarationResolver from "./function-declaration-resolver";
 
-import {writeFile} from 'fs';
-
-import { parse } from "@babel/parser";
 import type {ParseResult} from "@babel/parser";
+import {parse} from "@babel/parser";
 import type {
+    ClassDeclaration,
+    ClassMethod,
+    ExportDefaultDeclaration,
+    ExportNamedDeclaration,
     File,
     Program,
-    ClassDeclaration,
-    ExportDefaultDeclaration,
-    TSExpressionWithTypeArguments,
-    ClassMethod
+    TSExpressionWithTypeArguments
 } from '@babel/types';
 
 interface ClassMetadata {
@@ -21,7 +20,11 @@ interface ClassMetadata {
     superClass: string,
     implements: string[],
     constructor: any,
-    methods: any
+    methods: any,
+    export: {
+        type: string,
+        path: string
+    }
 }
 
 interface generateClassesMetadataOptions {
@@ -32,6 +35,47 @@ interface generateClassesMetadataOptions {
     extensions?: string[]
 }
 
+// todo as babel does not export this interface, complete it here...
+type BaseNode = ClassDeclaration | ExportDefaultDeclaration | ExportNamedDeclaration;
+
+interface ClassDeclarationWrapper {
+    node: ClassDeclaration,
+    parentNodeType: string
+}
+
+function findClassDefinitionsInProgram(program: Program): ClassDeclarationWrapper[] {
+    const declarations: ClassDeclarationWrapper[] = [];
+    program.body.filter(node => node.type === 'ClassDeclaration').forEach(node => {
+        declarations.push({
+            node: node as ClassDeclaration,
+            parentNodeType: 'Program'
+        });
+    });
+
+    program.body.filter(child => child.type === 'ExportNamedDeclaration').forEach((entry: ExportDefaultDeclaration) => {
+        if (entry.declaration.type === 'ClassDeclaration') {
+            declarations.push({
+                node: entry.declaration as unknown as ClassDeclaration,
+                parentNodeType: 'ExportNamedDeclaration'
+            });
+        }
+    });
+
+    const exportDefaultDeclarationNode = program.body.find(
+        node => node.type === 'ExportDefaultDeclaration'
+    ) as ExportDefaultDeclaration;
+
+    if (exportDefaultDeclarationNode?.declaration?.type === 'ClassDeclaration') {
+        declarations.push({
+            node: exportDefaultDeclarationNode.declaration as unknown as ClassDeclaration,
+            parentNodeType: 'ExportDefaultDeclaration'
+        });
+    }
+
+    console.log('findClassDefinitionsInProgram', declarations);
+    return declarations;
+}
+
 export function generateClassesMetadata(
     {
         path,
@@ -40,7 +84,7 @@ export function generateClassesMetadata(
         aliasRules = [
             {
                 replace: __dirname,
-                by: 'app'
+                by: 'App'
             }
         ],
         extensions = ['ts']
@@ -68,7 +112,7 @@ export function generateClassesMetadata(
                 // remove file's extension
                 .replace(/\..*$/, '')
                 // replace path separator by "."
-                .replace(/\\/g, '.');
+                .replace(/\\/g, '/');
 
             const content = readFileSync(element.path, 'utf-8');
             const fileNode: ParseResult<File> = parse(content, {
@@ -78,9 +122,8 @@ export function generateClassesMetadata(
                 ]
             });
 
-
             const programNode: Program = fileNode.program;
-            if (debug === true) {
+            if (debug === true && element.path.includes('export-sapristi')) {
                 writeFile(
                     'program.json',
                     JSON.stringify(programNode, null, 4),
@@ -89,106 +132,108 @@ export function generateClassesMetadata(
                     }
                 );
             }
-            let allClassDeclarationNodes: ClassDeclaration[] = programNode.body.filter(node => node.type === 'ClassDeclaration') as ClassDeclaration[];
 
-            if (allClassDeclarationNodes.length === 0) {
-                const exportDefaultDeclaration: ExportDefaultDeclaration = programNode.body.find(
-                    node => node.type === 'ExportDefaultDeclaration'
-                ) as ExportDefaultDeclaration;
+            let allClassDeclarationNodes: ClassDeclarationWrapper[] = findClassDefinitionsInProgram(programNode);
+            const hasMultipleDeclarationInProgram = allClassDeclarationNodes.length > 1;
 
-                if (exportDefaultDeclaration?.declaration?.type === 'ClassDeclaration') {
-                    allClassDeclarationNodes = [exportDefaultDeclaration.declaration];
+            allClassDeclarationNodes.forEach(classDeclarationWrapper => {
+                const classDeclarationNode = classDeclarationWrapper.node;
+
+                let superClassName: string = 'undefined';
+                if (
+                    classDeclarationNode.superClass !== null &&
+                    typeof classDeclarationNode.superClass !== 'undefined' &&
+                    'name' in classDeclarationNode.superClass
+                ) {
+                    superClassName = classDeclarationNode.superClass.name;
                 }
-            }
 
-            if (allClassDeclarationNodes.length !== 1) {
-                return;
-            }
-
-            const classDeclarationNode = allClassDeclarationNodes[0];
-            let superClassName: string = 'undefined';
-            if (
-                classDeclarationNode.superClass !== null &&
-                typeof classDeclarationNode.superClass !== 'undefined' &&
-                'name' in classDeclarationNode.superClass
-            ) {
-                superClassName = classDeclarationNode.superClass.name;
-            }
-
-            const classMeta: ClassMetadata = {
-                name: classDeclarationNode.id.name,
-                superClass: superClassName,
-                implements: [],
-                constructor: {},
-                methods: {}
-            };
-
-
-            classDeclarationNode?.implements?.forEach(node => {
-                if (node.type === 'TSExpressionWithTypeArguments') {
-                    const expression = (node as TSExpressionWithTypeArguments).expression;
-                    if ("name" in expression) {
-                        classMeta.implements.push(expression.name);
+                const classMeta: ClassMetadata = {
+                    name: classDeclarationNode.id.name,
+                    superClass: superClassName,
+                    implements: [],
+                    constructor: {},
+                    methods: {},
+                    export: {
+                        path: element.path,
+                        type: 'default'
                     }
+                };
+
+                if (classDeclarationWrapper.parentNodeType === 'ExportDefaultDeclaration') {
+                    classMeta.export.type = 'export:default';
+                } else if (classDeclarationWrapper.parentNodeType === 'ExportNamedDeclaration') {
+                    classMeta.export.type = 'export:named';
+                } else {
+                    classMeta.export.type = 'inline';
                 }
-            });
 
 
-            classDeclarationNode.body.body.filter(node => node.type === 'ClassMethod').forEach(
-                (node: ClassMethod) => {
-                if (node.kind === 'constructor') {
-                    const parameters = parser.retrieveSignature(node).parameters;
-                    classMeta.constructor = parameters;
-                } else if (node.kind === 'method') {
-                    let nodeName = '';
-
-                    if ("name" in node.key) {
-                        nodeName = node.key.name;
+                classDeclarationNode?.implements?.forEach(node => {
+                    if (node.type === 'TSExpressionWithTypeArguments') {
+                        const expression = (node as TSExpressionWithTypeArguments).expression;
+                        if ("name" in expression) {
+                            classMeta.implements.push(expression.name);
+                        }
                     }
+                });
 
-                    const methodMeta = {
-                        static: node.static,
-                        computed: node.computed,
-                        async: node.async,
-                        name: nodeName,
-                        parameters: node.params.map(param => {
-                            const data = {
-                                name: '',
-                                type: 'unkown',
-                                defaultValue: undefined
+
+                classDeclarationNode.body.body.filter(node => node.type === 'ClassMethod').forEach(
+                    (node: ClassMethod) => {
+                        if (node.kind === 'constructor') {
+                            const parameters = parser.retrieveSignature(node).parameters;
+                            classMeta.constructor = parameters;
+                        } else if (node.kind === 'method') {
+                            let nodeName = '';
+
+                            if ("name" in node.key) {
+                                nodeName = node.key.name;
+                            }
+
+                            const methodMeta = {
+                                static: node.static,
+                                computed: node.computed,
+                                async: node.async,
+                                name: nodeName,
+                                parameters: node.params.map(param => {
+                                    const data = {
+                                        name: '',
+                                        type: 'unkown',
+                                        defaultValue: undefined
+                                    };
+
+                                    const isAssignmentPattern = param.type === 'AssignmentPattern';
+
+                                    if (isAssignmentPattern && 'left' in param && 'name' in param.left) {
+                                        data.name = param.left.name;
+                                    } else {
+                                        if ('name' in param) {
+                                            data.name = param.name;
+                                        } else {
+                                            data.name = 'undefined';
+                                        }
+                                    }
+
+                                    data.type = parser.retrieveTypeFromNode(param);
+
+                                    if (isAssignmentPattern) {
+                                        data.defaultValue = parser.retrieveDefaultValueFromNode(param)
+                                    }
+
+
+                                    return data;
+                                }),
+                                returnType: node.returnType ? parser.retrieveTypeFromNode(node.returnType) : 'unknown'
                             };
 
-                            const isAssignmentPattern = param.type === 'AssignmentPattern';
+                            classMeta.methods[methodMeta.name] = methodMeta;
+                        }
+                    });
 
-                            if (isAssignmentPattern && 'left' in param && 'name' in param.left) {
-                                data.name = param.left.name;
-                            }
-                            else {
-                                if ('name' in param) {
-                                    data.name = param.name;
-                                }
-                                else {
-                                    data.name = 'undefined';
-                                }
-                            }
-
-                            data.type = parser.retrieveTypeFromNode(param);
-
-                            if (isAssignmentPattern) {
-                                data.defaultValue = parser.retrieveDefaultValueFromNode(param)
-                            }
-
-
-                            return data;
-                        }),
-                        returnType: node.returnType ? parser.retrieveTypeFromNode(node.returnType) : 'unknown'
-                    };
-
-                    classMeta.methods[methodMeta.name] = methodMeta;
-                }
+                const finalEntryName = entryName + (hasMultipleDeclarationInProgram ? `::${classMeta.name.toLowerCase()}` : '');
+                classesMetadata[finalEntryName] = classMeta;
             });
-
-            classesMetadata[entryName] = classMeta;
         }
     );
 
