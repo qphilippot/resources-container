@@ -30,16 +30,20 @@ export function checkDeprecation(id: string, container: ContainerInterface) {
 }
 /* eslint-enable  @typescript-eslint/no-unused-vars */
 
+
+export function isValidDefinitionId(id: string): boolean {
+    return (
+        id.trim().length > 0 &&
+        id.match(/\\$/) === null &&
+        id.length === (id.match(/[^\0\r\n']/g))?.length
+    );
+}
 /**
  * @throws InvalidIdException
  * @param id
  */
 export function checkValidId(id: string) {
-    if (
-        id.trim().length === 0 ||
-        id.match(/\\$/) !== null ||
-        id.length !== (id.match(/[^\0\r\n']/g))?.length
-    ) {
+    if (!isValidDefinitionId(id)) {
         throw new InvalidIdException(id);
     }
 }

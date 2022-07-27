@@ -26,6 +26,8 @@ autoload:
 * registerForAutoconfiguration
 * Comprendre pourquoi le EnvParameterBag fait des choses étranges lors du get (un get ne devrait pas modifier le state d'une collection...)
 * Comprendre ce que signifie la variable format dans le container builder resolveEnvPlaceholders
+* Supporter les `ChildDefinition`
+* Supporter les tags ainsi que les _instanceof (ajout de la passe `ResolveInstanceofConditionalsPass`)
 
 # My Own Rules
 ## Container
