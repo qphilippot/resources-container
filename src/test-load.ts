@@ -54,6 +54,7 @@ const meta = generateClassesMetadata({
     ]
 });
 
+const debugDefinitionName = 'app/test/reflexivity/generate-classes-metadata/fixtures/a/classes/export-sapristi::abc';
 Object.keys(meta).forEach(async entry => {
     const value = meta[entry];
     let _constructor;
@@ -66,13 +67,23 @@ Object.keys(meta).forEach(async entry => {
     }
 
     container.getReflexionService().recordClass(entry, _constructor);
-    container.register(entry, entry);
+
+    const definition = container.register(entry, entry);
+    if (entry === debugDefinitionName) {
+        console.log(value);
+    }
+
+    definition
+        .setFilePath(value.export.path)
+        .setAutowired(true)
+        .setAbstract(value.abstract);
 });
+
 
 // container.getDefinitions().forEach(definition => {
 //     console.log(definition.getId(), definition.getResourceType());
 // });
 
-// console.log('defintion', container.getDefinition('app/test/reflexivity/generate-classes-metadata/fixtures/a/classes/export-sapristi::abc'));
-console.log('ABC', container.get('app/test/reflexivity/generate-classes-metadata/fixtures/a/classes/export-sapristi::abc'));
+console.log('defintion', container.getDefinition(debugDefinitionName));
+// console.log('ABC', container.get('app/test/reflexivity/generate-classes-metadata/fixtures/a/classes/export-sapristi::abc'));
 

@@ -1,3 +1,5 @@
+import {AbstractABC} from "./abstract/some-abstract";
+
 export class ExportSapristi {
     constructor(id) {
     }
@@ -29,6 +31,7 @@ export class ExportSapristi {
     }
 }
 
-export class ABC {
+
+export class ABC extends AbstractABC {
     public text = 'def';
 }

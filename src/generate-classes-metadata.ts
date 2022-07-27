@@ -17,7 +17,8 @@ import type {
 
 interface ClassMetadata {
     name: string,
-    superClass: string,
+    superClass: string | null,
+    abstract: boolean,
     implements: string[],
     constructor: any,
     methods: any,
@@ -72,7 +73,6 @@ function findClassDefinitionsInProgram(program: Program): ClassDeclarationWrappe
         });
     }
 
-    console.log('findClassDefinitionsInProgram', declarations);
     return declarations;
 }
 
@@ -123,7 +123,7 @@ export function generateClassesMetadata(
             });
 
             const programNode: Program = fileNode.program;
-            if (debug === true && element.path.includes('export-sapristi')) {
+            if (debug === true) {
                 writeFile(
                     'program.json',
                     JSON.stringify(programNode, null, 4),
@@ -139,7 +139,8 @@ export function generateClassesMetadata(
             allClassDeclarationNodes.forEach(classDeclarationWrapper => {
                 const classDeclarationNode = classDeclarationWrapper.node;
 
-                let superClassName: string = 'undefined';
+                let superClassName: string | null = null;
+
                 if (
                     classDeclarationNode.superClass !== null &&
                     typeof classDeclarationNode.superClass !== 'undefined' &&
@@ -151,6 +152,7 @@ export function generateClassesMetadata(
                 const classMeta: ClassMetadata = {
                     name: classDeclarationNode.id.name,
                     superClass: superClassName,
+                    abstract: classDeclarationNode.abstract ?? false,
                     implements: [],
                     constructor: {},
                     methods: {},
