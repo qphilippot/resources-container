@@ -145,7 +145,6 @@ describe('container-builder tests', function () {
                 .recordClass('FooClass', FooClass);
 
             container.register('bar', 'FooClass');
-            //
             expect(container.get('bar')).to.equals(container.get('bar'));
         });
 

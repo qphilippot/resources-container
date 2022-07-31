@@ -15,7 +15,7 @@ import type {
     TSExpressionWithTypeArguments
 } from '@babel/types';
 
-interface ClassMetadata {
+export interface ClassMetadata {
     name: string,
     superClass: string | null,
     abstract: boolean,
