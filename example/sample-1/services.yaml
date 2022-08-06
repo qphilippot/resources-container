@@ -2,6 +2,7 @@ services:
   App/src/MainClass:
     # might be omitted and filled on compilation by ResolveClassPass
     class: App/src/MainClass
+    public: true
     arguments:
       - '@App/src/HandlerA'
       - '@App/src/HandlerB'
@@ -9,6 +10,8 @@ services:
 #  Without autowiring, you have to add theses definitions manually
   App/src/HandlerA:
     class: App/src/HandlerA
+#    public: true
 
   App/src/HandlerB:
     class: App/src/HandlerB
+#    public: true

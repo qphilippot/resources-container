@@ -2,12 +2,15 @@ import ParameterBag from "./parameter-bag.model";
 import MixedInterface from "../../utils/mixed.interface";
 import ParameterBagInterface from "./parameter-bag.interface";
 import LogicException from "../exception/logic.exception";
+import {setupDefaultParameterBagExclusionRules} from "../container/container.helper";
 
 export default class ReadOnlyParameterBag implements ParameterBagInterface {
     private encapsuledBag: ParameterBag;
 
     constructor(parameters: MixedInterface = {}) {
-        this.encapsuledBag = new ParameterBag(parameters);
+        this.encapsuledBag = setupDefaultParameterBagExclusionRules(
+            new ParameterBag(parameters)
+        ) as ParameterBag;
         this.encapsuledBag.setAsResolved();
 
     }

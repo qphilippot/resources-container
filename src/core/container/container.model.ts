@@ -1,5 +1,4 @@
 import Mixed from "../../utils/mixed.interface";
-import MixedInterface from "../../utils/mixed.interface";
 import ContainerInterface from "../interfaces/container.interface";
 import Alias from "../models/alias.model";
 import {EXCEPTION_ON_INVALID_REFERENCE} from "./container-builder.invalid-behaviors";
@@ -7,10 +6,8 @@ import CircularReferencesDetectorService from "../circular-references-detector.s
 import {PublisherSubscriber} from "@qphi/publisher-subscriber";
 import {INVALID_REFERENCE_ON_GET} from "./container-notification";
 import ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
-import {checkValidId} from "./container.helper";
+import {checkValidId, setupDefaultParameterBagExclusionRules} from "./container.helper";
 import SelfAliasingException from "../exception/self-aliasing.exception";
-import Reference from "../models/reference.model";
-import Definition from "../models/definition.model";
 import EnvPlaceholderBag from "../parameter-bag/env-placeholder.bag";
 import ParameterCircularReferenceException from "../exception/parameter-circular-reference.exception";
 import ReadOnlyParameterBag from "../parameter-bag/read-only.parameter-bag";
@@ -45,20 +42,16 @@ class Container extends PublisherSubscriber implements ContainerInterface {
     private dataSlot: Record<string, any> = {};
     private features: Record<string, any> = {};
 
+
     constructor(settings: Mixed = {}) {
         super(settings.name || 'container');
         this.resources = {};
         this.aliases = {};
         this.factories = {};
 
-        this.parameterBag = settings.parameterBag ?? new EnvPlaceholderBag();
-        this.parameterBag
-            .addExclusionRule(
-                (values: MixedInterface) => values instanceof Reference
-            )
-            .addExclusionRule(
-                (values: MixedInterface) => values instanceof Definition
-            );
+        this.parameterBag = setupDefaultParameterBagExclusionRules(
+            settings.parameterBag ?? new EnvPlaceholderBag()
+        );
 
         // does not catch any exception raised in notification publication system
         this.stopPublicationOnException();

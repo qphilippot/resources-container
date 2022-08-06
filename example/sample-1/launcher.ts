@@ -3,6 +3,7 @@ import {ClassMetadata, generateClassesMetadata} from "../../src/generate-classes
 import {resolve} from "path";
 import ConfigLoaderManager from "../../src/core/models/config-loader/config-loader.manager";
 import YamlContainerConfigLoader from "../../src/core/models/config-loader/yaml-container-config-loader";
+import DefaultContainer from "../../src/core/container/default-container.model";
 
 export default class Launcher {
     private readonly container: ContainerBuilder;
@@ -14,14 +15,13 @@ export default class Launcher {
 
     constructor(absoluteSourcePath: string, projectNameSpace: string = 'App') {
         this.sourcePath = absoluteSourcePath;
-        this.container = new ContainerBuilder();
+        this.container = new DefaultContainer();
 
         this.projectNamespace = projectNameSpace;
 
         this.initializeConfigManager();
         this.analyseProjectFiles();
         this.initializeReflexionService();
-        // this.addDefinitionFromMetadata();
     }
 
     private initializeConfigManager(): void {
@@ -29,7 +29,6 @@ export default class Launcher {
     }
 
     private analyseProjectFiles(): void {
-        console.log("analuse project file", resolve(__dirname))
         this.projectFilesMetadata = generateClassesMetadata({
             path: this.sourcePath,
             debug: process.env.NODE_ENV === 'dev',
@@ -45,7 +44,6 @@ export default class Launcher {
     private initializeReflexionService(): void {
         const reflexionService = this.container.getReflexionService();
         Object.keys(this.projectFilesMetadata).forEach(entry => {
-            console.log('==>', entry);
             const value = this.projectFilesMetadata[entry];
             let _constructor;
 
@@ -78,24 +76,16 @@ export default class Launcher {
             container: this.container,
             path
         });
-
-        console.log("=== Container Definitions ===");
-        console.log(this.container.getDefinitions());
-// console.log(filepath);
-//         const content = loader.process({
-//             path: filepath,
-//             container
-//         });
     }
 
     public start(): void {
-        // this.container.compile();
+        this.container.compile();
 
-        console.log("=== Container Definitions (After compilation) ===");
-        console.log(this.container.getDefinitions());
         const mainClass = this.container.get('App/src/MainClass');
-        console.log(this.container.getReflexionService());
-        console.log(mainClass);
+
         console.log(mainClass.hello());
+        // Todo implement test
+        // expect right message
+        // expect get(HandlerA) and get(HandlerB) to throws an error
     }
 }

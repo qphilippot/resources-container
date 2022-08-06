@@ -21,7 +21,7 @@ import RuntimeException from "../exception/runtime.exception";
 import NullOnInvalidReferenceFeature from "./features/null-on-invalid-reference.feature";
 import InlineContextualServices from "./inline-contextual-services";
 import Reference from "../models/reference.model";
-import {checkValidId} from "./container.helper";
+import {checkValidId, setupDefaultParameterBagExclusionRules} from "./container.helper";
 import AliasNotFoundException from "../exception/alias-not-found.exception";
 import CompilerPassInterface from "../interfaces/compiler-pass.interface";
 import {BEFORE_OPTIMIZATION, DEFAULT_COMPILER_STEP} from "../compiler-step.enum";
@@ -1124,7 +1124,9 @@ class ContainerBuilder implements ContainerBuilderInterface {
                     bagData[propertyName] = resolvedProperty;
                 });
 
-                this.container.setParameterBag(new ParameterBag(bagData));
+                this.container.setParameterBag(
+                    setupDefaultParameterBagExclusionRules(new ParameterBag(bagData))
+                );
             }
 
             this.envPlaceholders = bag.getEnvPlaceholders();
