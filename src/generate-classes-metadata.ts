@@ -11,17 +11,20 @@ import type {
     ExportDefaultDeclaration,
     ExportNamedDeclaration,
     File,
+    ImportDeclaration,
     Program,
     TSExpressionWithTypeArguments
 } from '@babel/types';
 
 export interface ClassMetadata {
+    namespace: string,
     name: string,
     superClass: string | null,
     abstract: boolean,
     implements: string[],
     constructor: any,
     methods: any,
+    imports: any,
     export: {
         type: string,
         path: string
@@ -32,7 +35,7 @@ interface generateClassesMetadataOptions {
     path: string,
     exclude?: RegExp | RegExp[],
     debug?: boolean,
-    aliasRules?: { replace: string | RegExp, by: string }[],
+    aliasRules?: AliasRule[],
     extensions?: string[]
 }
 
@@ -42,6 +45,25 @@ type BaseNode = ClassDeclaration | ExportDefaultDeclaration | ExportNamedDeclara
 interface ClassDeclarationWrapper {
     node: ClassDeclaration,
     parentNodeType: string
+}
+
+interface ImportsMeta {
+    name?: string,
+    path?: string
+}
+
+function retrieveImportsFromProgramNode(program: Program): ImportsMeta[] {
+    const imports: ImportsMeta[] = [];
+    (program.body.filter(node => node.type === 'ImportDeclaration') as ImportDeclaration[])
+        .forEach((importDeclarationNode: ImportDeclaration) => {
+                imports.push({
+                    name: importDeclarationNode.specifiers?.[0].local?.name,
+                    path: importDeclarationNode.source.value
+                });
+            }
+        );
+
+    return imports;
 }
 
 function findClassDefinitionsInProgram(program: Program): ClassDeclarationWrapper[] {
@@ -76,6 +98,30 @@ function findClassDefinitionsInProgram(program: Program): ClassDeclarationWrappe
     return declarations;
 }
 
+function getNamespaceFromNamespacedEntry(entry: string): string {
+    const tokens = entry.split('/');
+    tokens.pop();
+    return tokens.join('/');
+}
+
+interface AliasRule {
+    replace: string | RegExp,
+    by: string
+}
+
+function getNamespacedEntry(name: string, rules: AliasRule[]): string {
+    let alias = name;
+    rules.forEach(rule => {
+        alias = alias.replace(rule.replace, rule.by);
+    });
+
+    return  alias
+        // remove file's extension
+        .replace(/\..*$/, '')
+        // replace path separator by "."
+        .replace(/\\/g, '/');
+}
+
 export function generateClassesMetadata(
     {
         path,
@@ -103,17 +149,6 @@ export function generateClassesMetadata(
         },
 
         element => {
-            let alias = element.path;
-            aliasRules.forEach(rule => {
-                alias = alias.replace(rule.replace, rule.by);
-            });
-
-            const entryName = alias
-                // remove file's extension
-                .replace(/\..*$/, '')
-                // replace path separator by "."
-                .replace(/\\/g, '/');
-
             const content = readFileSync(element.path, 'utf-8');
             const fileNode: ParseResult<File> = parse(content, {
                 sourceType: 'module',
@@ -122,6 +157,7 @@ export function generateClassesMetadata(
                 ]
             });
 
+            const entryName = getNamespacedEntry(element.path, aliasRules);
             const programNode: Program = fileNode.program;
             if (debug === true) {
                 writeFile(
@@ -150,17 +186,34 @@ export function generateClassesMetadata(
                 }
 
                 const classMeta: ClassMetadata = {
+                    namespace: getNamespaceFromNamespacedEntry(entryName),
                     name: classDeclarationNode.id.name,
                     superClass: superClassName,
                     abstract: classDeclarationNode.abstract ?? false,
                     implements: [],
                     constructor: {},
                     methods: {},
+                    imports: retrieveImportsFromProgramNode(programNode),
                     export: {
                         path: element.path,
                         type: 'default'
                     }
                 };
+
+                // rewrite local import path by their namespace
+                if (classMeta.namespace?.length > 1) {
+                    classMeta.imports.forEach(_import => {
+                        // Path is absolute (add it to path helper)
+                        // if (resolve(_import.path) == path.normalize(_import.path)) {
+                        //     // do some stuff
+                        // } else {
+                            _import.path = getNamespacedEntry(
+                                resolve(element.path, '../', _import.path),
+                                aliasRules
+                            );
+                        // }
+                    });
+                }
 
                 if (classDeclarationWrapper.parentNodeType === 'ExportDefaultDeclaration') {
                     classMeta.export.type = 'export:default';

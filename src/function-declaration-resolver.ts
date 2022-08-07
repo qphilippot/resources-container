@@ -127,10 +127,12 @@ export default class FunctionDeclarationResolver {
                 type = this.retrieveTypeFromNode(parameterNode);
             }
 
+            let namespace = undefined;
             parameters.push({
                 name: parameterName,
                 type,
-                defaultValue
+                defaultValue,
+                namespace
             });
         });
 
