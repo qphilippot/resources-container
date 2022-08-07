@@ -63,3 +63,4 @@ autoload:
 * support expression
 * support taggedValues
 * create setterInjectionPayload in order to parse "calls" properly
+* Rework synthetic spec in order to return share and return synthetic public before and after compilation

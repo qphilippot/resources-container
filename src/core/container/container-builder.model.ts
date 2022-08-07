@@ -21,7 +21,7 @@ import RuntimeException from "../exception/runtime.exception";
 import NullOnInvalidReferenceFeature from "./features/null-on-invalid-reference.feature";
 import InlineContextualServices from "./inline-contextual-services";
 import Reference from "../models/reference.model";
-import {checkValidId, setupDefaultParameterBagExclusionRules} from "./container.helper";
+import {checkValidId, resolveAlias, setupDefaultParameterBagExclusionRules} from "./container.helper";
 import AliasNotFoundException from "../exception/alias-not-found.exception";
 import CompilerPassInterface from "../interfaces/compiler-pass.interface";
 import {BEFORE_OPTIMIZATION, DEFAULT_COMPILER_STEP} from "../compiler-step.enum";
@@ -342,6 +342,12 @@ class ContainerBuilder implements ContainerBuilderInterface {
             this.removedIds[key] &&
             invalidBehavior <= EXCEPTION_ON_INVALID_REFERENCE
         ) {
+            if (!this.getDefinition(key).isPublic()) {
+                throw new RuntimeException(
+                    `Unable to get the following service "${key}" after compilation because it is private.`
+                )
+            }
+
             return this.container.get(key, invalidBehavior);
         }
 

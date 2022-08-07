@@ -4,6 +4,7 @@ import {resolve} from "path";
 import ConfigLoaderManager from "../../src/core/models/config-loader/config-loader.manager";
 import YamlContainerConfigLoader from "../../src/core/models/config-loader/yaml-container-config-loader";
 import DefaultContainer from "../../src/core/container/default-container.model";
+import ContainerInterface from "../../src/core/interfaces/container.interface";
 
 export default class Launcher {
     private readonly container: ContainerBuilder;
@@ -78,14 +79,17 @@ export default class Launcher {
         });
     }
 
-    public start(): void {
+    public start(useConsole = true): void {
         this.container.compile();
 
         const mainClass = this.container.get('App/src/MainClass');
 
-        console.log(mainClass.hello());
-        // Todo implement test
-        // expect right message
-        // expect get(HandlerA) and get(HandlerB) to throws an error
+        if (useConsole) {
+            console.log(mainClass.hello());
+        }
+    }
+
+    public getContainer(): ContainerInterface {
+        return this.container;
     }
 }

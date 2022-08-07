@@ -178,19 +178,43 @@ describe('container-builder tests', function () {
             expect(container.get('foo')).to.equals(foo);
         });
 
+        it('throws an exception by getting private service after compilation', function () {
+            const container = new ContainerBuilder();
+            container.getReflexionService()
+                .recordClass('FooClass', FooClass);
+            container.register('foo', 'FooClass').setPublic(false);
+
+
+            // before compilation it's ok
+            expect(container.get('foo')).to.be.instanceof(FooClass);
+
+            container.compile();
+
+            // container.getDefinition('foo')
+
+            expect(container.get.bind(container, 'foo')).to.throws(
+                RuntimeException,
+                'Unable to get the following service "foo" after compilation because it is private.'
+            );
+
+        });
+
         it('unset loading service when create service throws an exception', function () {
             const container = new ContainerBuilder();
             container.getReflexionService()
                 .recordClass('FooClass', FooClass);
+
             container.register('foo', 'FooClass').setSynthetic(true);
 
-            // process first get and update private loading service list
+            // we expect a RuntimeException here as foo is synthetic
+            // TODO get does not need to "construct" service if it's already instancied (aka synthetic)
+            // Should rework this spec in order to return share and return synthetic public
             expect(container.get.bind(container, 'foo')).to.throws(
                 RuntimeException,
                 'You have requested a synthetic service ("foo"). The DIC does not know how to construct this service.'
             );
 
-            // if service is still loaded, exception won't be thrown anymore
+            // we must also have the same RuntimeException here
             expect(container.get.bind(container, 'foo')).to.throws(
                 RuntimeException,
                 'You have requested a synthetic service ("foo"). The DIC does not know how to construct this service.'

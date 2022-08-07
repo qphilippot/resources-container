@@ -17,7 +17,7 @@ export default interface ContainerInterface {
      *
      * @see Reference
      */
-    get(id: string, invalidBehavior: number): any;
+    get(id: string, invalidBehavior?: number): any;
 
     getResources(): Mixed;
 
