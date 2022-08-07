@@ -10,8 +10,6 @@ services:
 #  Without autowiring, you have to add theses definitions manually
   App/src/HandlerA:
     class: App/src/HandlerA
-#    public: true
 
   App/src/HandlerB:
     class: App/src/HandlerB
-#    public: true
