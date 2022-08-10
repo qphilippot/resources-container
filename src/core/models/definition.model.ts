@@ -270,7 +270,7 @@ export default class Definition {
     }
 
     public setArguments(args: MixedInterface) {
-        this.arguments = {...args};
+        this.arguments = args;
         return this;
     }
 

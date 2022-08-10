@@ -5,6 +5,7 @@ import ConfigLoaderManager from "../../src/core/models/config-loader/config-load
 import YamlContainerConfigLoader from "../../src/core/models/config-loader/yaml-container-config-loader";
 import DefaultContainer from "../../src/core/container/default-container.model";
 import ContainerInterface from "../../src/core/interfaces/container.interface";
+import Reference from "../../src/core/models/reference.model";
 
 export default class Launcher {
     private readonly container: ContainerBuilder;
@@ -70,6 +71,10 @@ export default class Launcher {
                 .setAutowired(true)
                 .setAbstract(value.abstract);
 
+            value.constructor?.forEach((param, index) => {
+                definition.setArgument(index, new Reference(param.namespace ?? param.type ?? param.name));
+            });
+
             // check constructor arguments in order to add arguments
             if (entry === 'App/src/MainClass') {
                 console.log(value);
@@ -85,14 +90,14 @@ export default class Launcher {
     }
 
     public start(useConsole = true): void {
-        // console.log(this.container.getDefinitions());
+        console.log(this.container.getDefinition('App/src/MainClass'));
         // this.container.compile();
         //
-        // const mainClass = this.container.get('App/src/MainClass');
-        //
-        // if (useConsole) {
-        //     console.log(mainClass.hello());
-        // }
+        const mainClass = this.container.get('App/src/MainClass');
+
+        if (useConsole) {
+            console.log(mainClass.hello());
+        }
     }
 
     public getContainer(): ContainerInterface {

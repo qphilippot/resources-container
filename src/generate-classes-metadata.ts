@@ -22,7 +22,7 @@ export interface ClassMetadata {
     superClass: string | null,
     abstract: boolean,
     implements: string[],
-    constructor: any,
+    constructor: any[],
     methods: any,
     imports: any,
     export: {
@@ -54,14 +54,16 @@ interface ImportsMeta {
 
 function retrieveImportsFromProgramNode(program: Program): ImportsMeta[] {
     const imports: ImportsMeta[] = [];
-    (program.body.filter(node => node.type === 'ImportDeclaration') as ImportDeclaration[])
-        .forEach((importDeclarationNode: ImportDeclaration) => {
+    (program.body.filter(node => node.type === 'ImportDeclaration') as ImportDeclaration[]).forEach(
+        (importDeclarationNode: ImportDeclaration) => {
+            importDeclarationNode.specifiers.forEach(specifier => {
                 imports.push({
-                    name: importDeclarationNode.specifiers?.[0].local?.name,
+                    name: specifier.local?.name,
                     path: importDeclarationNode.source.value
                 });
-            }
-        );
+            });
+        }
+    );
 
     return imports;
 }
@@ -115,11 +117,15 @@ function getNamespacedEntry(name: string, rules: AliasRule[]): string {
         alias = alias.replace(rule.replace, rule.by);
     });
 
-    return  alias
-        // remove file's extension
-        .replace(/\..*$/, '')
-        // replace path separator by "."
-        .replace(/\\/g, '/');
+    return alias
+        .replace(/.(min.)?(js|ts|mjs)/, '')
+        .replace(/\\/g, '/')
+        .replace(/([-_.][a-z])/ig, ($1) => {
+            return $1.toUpperCase()
+                .replace('-', '')
+                .replace('.', '')
+                .replace('_', '');
+        });
 }
 
 export function generateClassesMetadata(
@@ -191,7 +197,7 @@ export function generateClassesMetadata(
                     superClass: superClassName,
                     abstract: classDeclarationNode.abstract ?? false,
                     implements: [],
-                    constructor: {},
+                    constructor: [],
                     methods: {},
                     imports: retrieveImportsFromProgramNode(programNode),
                     export: {
@@ -202,16 +208,15 @@ export function generateClassesMetadata(
 
                 // rewrite local import path by their namespace
                 if (classMeta.namespace?.length > 1) {
-                    classMeta.imports.forEach(_import => {
+                    classMeta.imports.forEach((_import, index) => {
                         // Path is absolute (add it to path helper)
                         // if (resolve(_import.path) == path.normalize(_import.path)) {
                         //     // do some stuff
                         // } else {
-                            _import.path = getNamespacedEntry(
-                                resolve(element.path, '../', _import.path),
-                                aliasRules
-                            );
-                        // }
+                        _import.path = getNamespacedEntry(
+                            resolve(element.path, '../', _import.path),
+                            aliasRules
+                        );
                     });
                 }
 
@@ -237,7 +242,7 @@ export function generateClassesMetadata(
                 classDeclarationNode.body.body.filter(node => node.type === 'ClassMethod').forEach(
                     (node: ClassMethod) => {
                         if (node.kind === 'constructor') {
-                            const parameters = parser.retrieveSignature(node).parameters;
+                            const parameters = parser.retrieveSignature(node, classMeta.imports).parameters;
                             classMeta.constructor = parameters;
                         } else if (node.kind === 'method') {
                             let nodeName = '';

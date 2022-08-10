@@ -1,5 +1,5 @@
-import HandlerA from "./HandlerA";
 import HandlerB from "./HandlerB";
+import HandlerA from "./HandlerA";
 
 export default class MainClass {
     private handlerA: HandlerA;

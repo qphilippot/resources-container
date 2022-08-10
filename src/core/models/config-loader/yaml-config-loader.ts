@@ -79,7 +79,7 @@ export default class YamlConfigLoader
     }
 
     public parseServices(services, path, container: ContainerBuilderInterface) {
-        if (typeof services === 'undefined') {
+        if (typeof services === 'undefined' || services === null) {
             return;
         }
 

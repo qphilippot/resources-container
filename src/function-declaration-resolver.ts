@@ -104,7 +104,7 @@ export default class FunctionDeclarationResolver {
 
     }
 
-    public retrieveSignature(functionNode) {
+    public retrieveSignature(functionNode, importsContext: any = {}) {
         const name = functionNode.id?.name;
         const parameters: Array<any> = [];
         const returnType = undefined;
@@ -127,7 +127,7 @@ export default class FunctionDeclarationResolver {
                 type = this.retrieveTypeFromNode(parameterNode);
             }
 
-            let namespace = undefined;
+            let namespace = importsContext.find(_import => _import.name === type)?.path ?? undefined;
             parameters.push({
                 name: parameterName,
                 type,
