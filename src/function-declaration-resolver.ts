@@ -1,5 +1,6 @@
 import * as babelParser from "@babel/parser";
 import InvalidArgumentException from "./core/exception/invalid-argument.exception";
+import {ObjectLocation} from "./generate-classes-metadata";
 
 export default class FunctionDeclarationResolver {
     private parser;
@@ -104,7 +105,7 @@ export default class FunctionDeclarationResolver {
 
     }
 
-    public retrieveSignature(functionNode, importsContext: any = {}) {
+    public retrieveSignature(functionNode, importsContext: ObjectLocation[] = []) {
         const name = functionNode.id?.name;
         const parameters: Array<any> = [];
         const returnType = undefined;
@@ -127,7 +128,7 @@ export default class FunctionDeclarationResolver {
                 type = this.retrieveTypeFromNode(parameterNode);
             }
 
-            let namespace = importsContext.find(_import => _import.name === type)?.path ?? undefined;
+            let namespace = importsContext.find(_import => _import.name === type)?.namespace ?? undefined;
             parameters.push({
                 name: parameterName,
                 type,

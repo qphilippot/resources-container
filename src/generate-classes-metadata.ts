@@ -19,9 +19,9 @@ import type {
 export interface ClassMetadata {
     namespace: string,
     name: string,
-    superClass: string | null,
+    superClass:  ObjectLocation | null,
     abstract: boolean,
-    implements: string[],
+    implements: ObjectLocation[],
     constructor: any[],
     methods: any,
     imports: any,
@@ -47,19 +47,19 @@ interface ClassDeclarationWrapper {
     parentNodeType: string
 }
 
-interface ImportsMeta {
-    name?: string,
-    path?: string
+export interface ObjectLocation {
+    name: string,
+    namespace: string
 }
 
-function retrieveImportsFromProgramNode(program: Program): ImportsMeta[] {
-    const imports: ImportsMeta[] = [];
+function retrieveImportsFromProgramNode(program: Program): ObjectLocation[] {
+    const imports: ObjectLocation[] = [];
     (program.body.filter(node => node.type === 'ImportDeclaration') as ImportDeclaration[]).forEach(
         (importDeclarationNode: ImportDeclaration) => {
             importDeclarationNode.specifiers.forEach(specifier => {
                 imports.push({
                     name: specifier.local?.name,
-                    path: importDeclarationNode.source.value
+                    namespace: importDeclarationNode.source.value
                 });
             });
         }
@@ -181,20 +181,10 @@ export function generateClassesMetadata(
             allClassDeclarationNodes.forEach(classDeclarationWrapper => {
                 const classDeclarationNode = classDeclarationWrapper.node;
 
-                let superClassName: string | null = null;
-
-                if (
-                    classDeclarationNode.superClass !== null &&
-                    typeof classDeclarationNode.superClass !== 'undefined' &&
-                    'name' in classDeclarationNode.superClass
-                ) {
-                    superClassName = classDeclarationNode.superClass.name;
-                }
-
                 const classMeta: ClassMetadata = {
                     namespace: getNamespaceFromNamespacedEntry(entryName),
                     name: classDeclarationNode.id.name,
-                    superClass: superClassName,
+                    superClass: null,
                     abstract: classDeclarationNode.abstract ?? false,
                     implements: [],
                     constructor: [],
@@ -213,11 +203,23 @@ export function generateClassesMetadata(
                         // if (resolve(_import.path) == path.normalize(_import.path)) {
                         //     // do some stuff
                         // } else {
-                        _import.path = getNamespacedEntry(
-                            resolve(element.path, '../', _import.path),
+                        _import.namespace = getNamespacedEntry(
+                            resolve(element.path, '../', _import.namespace),
                             aliasRules
                         );
                     });
+                }
+
+                if (
+                    classDeclarationNode.superClass !== null &&
+                    typeof classDeclarationNode.superClass !== 'undefined' &&
+                    'name' in classDeclarationNode.superClass
+                ) {
+                    classMeta.superClass = resolveLocalResourceLocation(
+                        classDeclarationNode.superClass.name,
+                        classMeta.imports,
+                        entryName
+                    );
                 }
 
                 if (classDeclarationWrapper.parentNodeType === 'ExportDefaultDeclaration') {
@@ -233,7 +235,11 @@ export function generateClassesMetadata(
                     if (node.type === 'TSExpressionWithTypeArguments') {
                         const expression = (node as TSExpressionWithTypeArguments).expression;
                         if ("name" in expression) {
-                            classMeta.implements.push(expression.name);
+                            classMeta.implements.push(resolveLocalResourceLocation(
+                                expression.name,
+                                classMeta.imports,
+                                entryName
+                            ));
                         }
                     }
                 });
@@ -291,7 +297,7 @@ export function generateClassesMetadata(
                         }
                     });
 
-                const finalEntryName = entryName + (hasMultipleDeclarationInProgram ? `::${classMeta.name.toLowerCase()}` : '');
+                const finalEntryName = getFinalEntryName(entryName, hasMultipleDeclarationInProgram, classMeta);
                 classesMetadata[finalEntryName] = classMeta;
             });
         }
@@ -310,5 +316,29 @@ export function generateClassesMetadata(
     return classesMetadata;
 }
 
+
+function getFinalEntryName(entryName: string, hasMultipleDeclarationInProgram: boolean, classMeta: ClassMetadata): string {
+    return entryName + (
+        (hasMultipleDeclarationInProgram && classMeta.export.type !== 'export:default')
+            ? `::${classMeta.name.toLowerCase()}`
+            : ''
+    );
+}
+
+function resolveLocalResourceLocation(entry: string, _imports: ObjectLocation[], currentNamespace: string): ObjectLocation {
+    const importedObjectLocation = _imports.find(location => location.name === entry);
+    const location = {
+        name: entry,
+        namespace: ''
+    };
+
+    if (importedObjectLocation) {
+        location.namespace = importedObjectLocation.namespace;
+    } else {
+        location.namespace = `${currentNamespace}::${entry}`;
+    }
+
+    return location;
+}
 
 

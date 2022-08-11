@@ -5,3 +5,5 @@ export default class HandlerA implements HandlerAInterface {
         return 'hello from HandlerA'
     }
 }
+
+export class toto {};
