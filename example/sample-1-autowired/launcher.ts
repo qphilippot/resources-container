@@ -6,6 +6,7 @@ import YamlContainerConfigLoader from "../../src/core/models/config-loader/yaml-
 import DefaultContainer from "../../src/core/container/default-container.model";
 import ContainerInterface from "../../src/core/interfaces/container.interface";
 import Reference from "../../src/core/models/reference.model";
+import {buildInheritanceTreeFromClassMetadataCollection} from "../../src/reflection/reflection.helper";
 
 export default class Launcher {
     private readonly container: ContainerBuilder;
@@ -60,90 +61,7 @@ export default class Launcher {
             reflexionService.recordClass(entry, _constructor);
         });
 
-        const inheritanceSchema = {
-            extendsClass: {},
-            implementsInterface: {}
-        };
-
-        Object.keys(this.projectFilesMetadata).forEach(entry => {
-           // console.log('entry', entry, this.projectFilesMetadata[entry]);
-           const meta = this.projectFilesMetadata[entry];
-
-        //    meta.implements.forEach(interfaceLocation => {
-        //        console.log(entry, 'implements', interfaceLocation.namespace);
-        //        if(Array.isArray(inheritanceSchema.implementsInterface[interfaceLocation.namespace])) {
-        //            inheritanceSchema.implementsInterface[interfaceLocation.namespace].push(entry);
-        //        } else {
-        //            inheritanceSchema.implementsInterface[interfaceLocation.namespace] = [ entry ]
-        //        }
-        //    });
-        //
-        //     if (meta.superClass !== null) {
-        //         const superClassName: string = meta.superClass.namespace;
-        //         if(Array.isArray(inheritanceSchema.extendsClass[superClassName])) {
-        //             inheritanceSchema.extendsClass[superClassName].push(entry);
-        //         } else {
-        //             inheritanceSchema.extendsClass[superClassName] = [ entry ]
-        //         }
-        //     }
-        //
-        //     if (!Array.isArray(inheritanceSchema.extendsClass[entry])) {
-        //         inheritanceSchema.extendsClass[entry] = [];
-        //     }
-        //
-        //     if (!Array.isArray(inheritanceSchema.implementsInterface[entry])) {
-        //         inheritanceSchema.implementsInterface[entry] = [];
-        //     }
-        // });
-
-            inheritanceSchema.implementsInterface[entry] = meta.implements.map(interfaceLocation => interfaceLocation.namespace);
-            inheritanceSchema.extendsClass[entry] = meta.superClass ? [meta.superClass.namespace] : [ ];
-        });
-
-
-        console.log('inheritanceSchema', inheritanceSchema);
-
-        Object.keys(this.projectFilesMetadata).forEach(entry => {
-            let ancestors = inheritanceSchema.extendsClass[entry];
-            if (ancestors.length > 0) {
-                let oldestAncestor = ancestors[ancestors.length - 1];
-                ancestors =  inheritanceSchema.extendsClass[oldestAncestor];
-
-                while (ancestors.length > 0) {
-                    inheritanceSchema.extendsClass[entry] = inheritanceSchema.extendsClass[entry].concat(ancestors);
-                    oldestAncestor = ancestors[ancestors.length - 1];
-                    ancestors = inheritanceSchema.extendsClass[oldestAncestor];
-                }
-            }
-
-            let interfacesToCheck = inheritanceSchema.implementsInterface[entry];
-            console.log('interfacesToCheck', interfacesToCheck, entry);
-            const interfacesSeen = {};
-            // resolve interface inheritance
-            while (interfacesToCheck.lenght > 0) {
-                let newInterfaceToCheck = [];
-                for (const interfaceName of interfacesToCheck) {
-                    if (interfacesSeen[interfaceName]) {
-                        continue;
-                    }
-
-                    interfacesSeen[interfaceName] = true;
-
-                    if (inheritanceSchema.implementsInterface[interfaceName].length > 0) {
-                        newInterfaceToCheck = newInterfaceToCheck.concat(inheritanceSchema.implementsInterface[interfaceName]);
-                    }
-                }
-
-                inheritanceSchema.implementsInterface[entry] = inheritanceSchema.implementsInterface[entry].concat(newInterfaceToCheck);
-                interfacesToCheck = newInterfaceToCheck;
-            }
-        });
-
-        Object.keys(this.projectFilesMetadata).forEach(entry => {
-            inheritanceSchema.implementsInterface[entry] = inheritanceSchema.implementsInterface[entry].concat(
-                inheritanceSchema.extendsClass[entry].map(superClass => inheritanceSchema.implementsInterface[superClass]).flat()
-            );
-        });
+        const inheritanceSchema = buildInheritanceTreeFromClassMetadataCollection(this.projectFilesMetadata);
 
 
         console.log('inheritanceSchema', inheritanceSchema);

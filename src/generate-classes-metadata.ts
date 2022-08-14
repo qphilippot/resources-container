@@ -7,6 +7,7 @@ import type {ParseResult} from "@babel/parser";
 import {parse} from "@babel/parser";
 import type {
     ClassDeclaration,
+    TSInterfaceDeclaration,
     ClassMethod,
     ExportDefaultDeclaration,
     ExportNamedDeclaration,
@@ -47,6 +48,11 @@ interface ClassDeclarationWrapper {
     parentNodeType: string
 }
 
+interface InterfaceDeclarationWrapper {
+    node: TSInterfaceDeclaration,
+    parentNodeType: string
+}
+
 export interface ObjectLocation {
     name: string,
     namespace: string
@@ -68,6 +74,40 @@ function retrieveImportsFromProgramNode(program: Program): ObjectLocation[] {
     return imports;
 }
 
+function findInterfaceDefinitionInProgram(program: Program): InterfaceDeclarationWrapper[] {
+    const declarations: InterfaceDeclarationWrapper[] = [];
+    program.body.filter(node => node.type === 'TSInterfaceDeclaration').forEach(node => {
+        declarations.push({
+            node: node as TSInterfaceDeclaration,
+            parentNodeType: 'Program'
+        });
+    });
+
+    program.body.filter(child => child.type === 'ExportNamedDeclaration').forEach((entry: ExportDefaultDeclaration) => {
+        // @ts-ignore
+        if (entry.declaration.type === 'TSInterfaceDeclaration') {
+            declarations.push({
+                node: entry.declaration as unknown as TSInterfaceDeclaration,
+                parentNodeType: 'ExportNamedDeclaration'
+            });
+        }
+    });
+
+    const exportDefaultDeclarationNode = program.body.find(
+        node => node.type === 'ExportDefaultDeclaration'
+    ) as ExportDefaultDeclaration;
+
+    // @ts-ignore
+    if (exportDefaultDeclarationNode?.declaration?.type === 'TSInterfaceDeclaration') {
+        declarations.push({
+            node: exportDefaultDeclarationNode.declaration as unknown as TSInterfaceDeclaration,
+            parentNodeType: 'ExportDefaultDeclaration'
+        });
+    }
+
+    return declarations;
+}
+
 function findClassDefinitionsInProgram(program: Program): ClassDeclarationWrapper[] {
     const declarations: ClassDeclarationWrapper[] = [];
     program.body.filter(node => node.type === 'ClassDeclaration').forEach(node => {
@@ -77,6 +117,7 @@ function findClassDefinitionsInProgram(program: Program): ClassDeclarationWrappe
         });
     });
 
+
     program.body.filter(child => child.type === 'ExportNamedDeclaration').forEach((entry: ExportDefaultDeclaration) => {
         if (entry.declaration.type === 'ClassDeclaration') {
             declarations.push({
@@ -85,6 +126,7 @@ function findClassDefinitionsInProgram(program: Program): ClassDeclarationWrappe
             });
         }
     });
+
 
     const exportDefaultDeclarationNode = program.body.find(
         node => node.type === 'ExportDefaultDeclaration'
