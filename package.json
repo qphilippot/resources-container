@@ -9,7 +9,8 @@
     "server:start": "ts-node src/test-load.ts"
   },
   "dependencies": {
-    "@babel/parser": "^7.15.3",
+    "@babel/parser": "^7.18.11",
+    "@babel/types": "^7.18.10",
     "@qphi/publisher-subscriber": "^1.1.1",
     "acorn": "^8.4.1",
     "dree": "^2.8.3",
