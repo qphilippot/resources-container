@@ -5,6 +5,7 @@ import {expect} from "chai";
 
 const meta = {
     'App/Foo': {
+        kind: 'class',
         superClass: null,
         implements: [],
         namespace: '',
@@ -19,6 +20,7 @@ const meta = {
         }
     },
     'App/Foo1': {
+        kind: 'class',
         superClass: {name: 'Foo', namespace: 'App/Foo'},
         implements: [],
         namespace: '',
@@ -33,6 +35,7 @@ const meta = {
         }
     },
     'App/Foo2': {
+        kind: 'class',
         superClass: {name: 'Foo', namespace: 'App/Foo'},
         implements: [],
         namespace: '',
@@ -47,6 +50,7 @@ const meta = {
         }
     },
     'App/Foo3': {
+        kind: 'class',
         superClass: {name: 'Foo', namespace: 'App/Foo'},
         implements: [{ name: 'SomeInterface', namespace: 'App/SomeInterface' }],
         namespace: '',
@@ -61,6 +65,7 @@ const meta = {
         }
     },
     'App/Bar': {
+        kind: 'class',
         superClass: {name: 'Foo3', namespace: 'App/Foo3'},
         implements: [],
         namespace: '',
@@ -75,6 +80,7 @@ const meta = {
         }
     },
     'App/Bar2': {
+        kind: 'class',
         superClass: {name: 'Bar', namespace: 'App/Bar'},
         implements: [{name: 'SaperlipopetteInterface', namespace: 'App/SaperlipopetteInterface'}],
         namespace: '',
@@ -89,11 +95,10 @@ const meta = {
         }
     },
     'App/SuperCoolInterface': {
-        superClass: null,
+        kind: 'interface',
         implements: [{name: 'SaperlipopetteInterface', namespace: 'App/SaperlipopetteInterface'}],
         namespace: '',
         name: '',
-        abstract: true,
         constructor: [],
         methods: {},
         imports: [],
@@ -103,6 +108,7 @@ const meta = {
         }
     },
     'App/Lascar': {
+        kind: 'class',
         superClass: null,
         implements: [{name: 'SuperCoolInterface', namespace: 'App/SuperCoolInterface'}],
         namespace: '',
@@ -156,5 +162,11 @@ describe('Reflection Helper test', () => {
         expect(inheritanceTree.implementsInterface['App/Lascar']).to.include('App/SuperCoolInterface');
         expect(inheritanceTree.implementsInterface['App/Lascar']).to.include('App/SaperlipopetteInterface');
         expect(inheritanceTree.extendsClass['App/Lascar'].length).to.equals(0);
+
+        expect(inheritanceTree.extendsClass['App/SuperCoolInterface'].length).to.equals(0);
+        expect(inheritanceTree.implementsInterface['App/SuperCoolInterface'].length).to.equals(1);
+        expect(inheritanceTree.implementsInterface['App/SuperCoolInterface']).to.include('App/SaperlipopetteInterface');
     });
+
+    // todo detect circular
 });

@@ -1,15 +1,16 @@
 import ContainerBuilder from "../../src/core/container/container-builder.model";
-import {ClassMetadata, generateClassesMetadata} from "../../src/generate-classes-metadata";
+import {ClassMetadata, CodeElementMetadata, generateClassesMetadata} from "../../src/generate-classes-metadata";
 import {resolve} from "path";
 import ConfigLoaderManager from "../../src/core/models/config-loader/config-loader.manager";
 import YamlContainerConfigLoader from "../../src/core/models/config-loader/yaml-container-config-loader";
 import DefaultContainer from "../../src/core/container/default-container.model";
 import ContainerInterface from "../../src/core/interfaces/container.interface";
+import Reference from "../../src/core/models/reference.model";
 
 export default class Launcher {
     private readonly container: ContainerBuilder;
     private readonly sourcePath: string;
-    private projectFilesMetadata: Record<string, ClassMetadata>;
+    private projectFilesMetadata: Record<string, CodeElementMetadata>;
     private readonly projectNamespace: string;
 
     private readonly configManager = new ConfigLoaderManager('config-loader-manager');
@@ -67,8 +68,17 @@ export default class Launcher {
 
             definition
                 .setFilePath(value.export.path)
-                .setAutowired(true)
-                .setAbstract(value.abstract);
+                .setAutowired(true);
+
+            if (value.kind === 'class') {
+                const valueAsClass = value as ClassMetadata;
+                definition.setAbstract(valueAsClass.abstract);
+
+                // check constructor arguments in order to add arguments
+                valueAsClass.constructor?.forEach((param, index) => {
+                    definition.setArgument(index, new Reference(param.namespace ?? param.type ?? param.name));
+                });
+            }
         });
     }
 

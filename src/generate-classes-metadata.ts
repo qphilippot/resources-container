@@ -14,16 +14,14 @@ import type {
     File,
     ImportDeclaration,
     Program,
-    TSExpressionWithTypeArguments
+    TSExpressionWithTypeArguments, TSMethodSignature
 } from '@babel/types';
 
-export interface ClassMetadata {
+export interface CodeElementMetadata {
+    kind: string,
     namespace: string,
     name: string,
-    superClass:  ObjectLocation | null,
-    abstract: boolean,
     implements: ObjectLocation[],
-    constructor: any[],
     methods: any,
     imports: any,
     export: {
@@ -31,8 +29,19 @@ export interface ClassMetadata {
         path: string
     }
 }
+export interface ClassMetadata extends CodeElementMetadata {
+    superClass:  ObjectLocation | null,
+    abstract: boolean,
+    constructor: any[],
+    kind:'class'
+}
+
+export interface InterfaceMetadata extends CodeElementMetadata {
+    kind:'interface'
+}
 
 interface generateClassesMetadataOptions {
+    separator?: string,
     path: string,
     exclude?: RegExp | RegExp[],
     debug?: boolean,
@@ -142,10 +151,10 @@ function findClassDefinitionsInProgram(program: Program): ClassDeclarationWrappe
     return declarations;
 }
 
-function getNamespaceFromNamespacedEntry(entry: string): string {
-    const tokens = entry.split('/');
+function getNamespaceFromNamespacedEntry(entry: string, separator: string = '/'): string {
+    const tokens = entry.split(separator);
     tokens.pop();
-    return tokens.join('/');
+    return tokens.join(separator);
 }
 
 interface AliasRule {
@@ -153,21 +162,20 @@ interface AliasRule {
     by: string
 }
 
-function getNamespacedEntry(name: string, rules: AliasRule[]): string {
+function getNamespacedEntry(name: string, rules: AliasRule[], separator: string = '/'): string {
     let alias = name;
     rules.forEach(rule => {
         alias = alias.replace(rule.replace, rule.by);
     });
 
-    return alias
-        .replace(/.(min.)?(js|ts|mjs)/, '')
-        .replace(/\\/g, '/')
-        .replace(/([-_.][a-z])/ig, ($1) => {
-            return $1.toUpperCase()
-                .replace('-', '')
-                .replace('.', '')
-                .replace('_', '');
-        });
+    alias = alias.replace(/.(min.)?(js|ts|mjs)/, '').replace(/([-_.][a-z])/ig, ($1) => {
+        return $1.toUpperCase()
+            .replace('-', '')
+            .replace('.', '')
+            .replace('_', '');
+    });
+
+    return alias.replace(/\\/g, separator);
 }
 
 export function generateClassesMetadata(
@@ -175,6 +183,7 @@ export function generateClassesMetadata(
         path,
         exclude = /node_modules/,
         debug = false,
+        separator = '/',
         aliasRules = [
             {
                 replace: __dirname,
@@ -183,8 +192,8 @@ export function generateClassesMetadata(
         ],
         extensions = ['ts']
     }: generateClassesMetadataOptions
-): Record<string, ClassMetadata> {
-    const classesMetadata: Record<string, ClassMetadata> = {};
+): Record<string, CodeElementMetadata> {
+    const projectMetadata: Record<string, CodeElementMetadata> = {};
     const parser = new FunctionDeclarationResolver();
     scan(
         resolve(path),
@@ -205,7 +214,7 @@ export function generateClassesMetadata(
                 ]
             });
 
-            const entryName = getNamespacedEntry(element.path, aliasRules);
+            const entryName = getNamespacedEntry(element.path, aliasRules, separator);
             const programNode: Program = fileNode.program;
             if (debug === true) {
                 writeFile(
@@ -217,14 +226,15 @@ export function generateClassesMetadata(
                 );
             }
 
-            let allClassDeclarationNodes: ClassDeclarationWrapper[] = findClassDefinitionsInProgram(programNode);
+            const allClassDeclarationNodes: ClassDeclarationWrapper[] = findClassDefinitionsInProgram(programNode);
             const hasMultipleDeclarationInProgram = allClassDeclarationNodes.length > 1;
 
             allClassDeclarationNodes.forEach(classDeclarationWrapper => {
                 const classDeclarationNode = classDeclarationWrapper.node;
 
                 const classMeta: ClassMetadata = {
-                    namespace: getNamespaceFromNamespacedEntry(entryName),
+                    kind: 'class',
+                    namespace: getNamespaceFromNamespacedEntry(entryName, separator),
                     name: classDeclarationNode.id.name,
                     superClass: null,
                     abstract: classDeclarationNode.abstract ?? false,
@@ -247,7 +257,8 @@ export function generateClassesMetadata(
                         // } else {
                         _import.namespace = getNamespacedEntry(
                             resolve(element.path, '../', _import.namespace),
-                            aliasRules
+                            aliasRules,
+                            separator
                         );
                     });
                 }
@@ -340,7 +351,111 @@ export function generateClassesMetadata(
                     });
 
                 const finalEntryName = getFinalEntryName(entryName, hasMultipleDeclarationInProgram, classMeta);
-                classesMetadata[finalEntryName] = classMeta;
+                projectMetadata[finalEntryName] = classMeta;
+            });
+
+            const interfaceDeclarationNodes = findInterfaceDefinitionInProgram(programNode);
+
+            interfaceDeclarationNodes.forEach(interfaceDeclaration => {
+                const interfaceNode = interfaceDeclaration.node;
+
+                const interfaceMeta: InterfaceMetadata = {
+                    kind: 'interface',
+                    namespace: getNamespaceFromNamespacedEntry(entryName, separator),
+                    name: interfaceNode.id.name,
+                    implements: [],
+                    methods: {},
+                    imports: retrieveImportsFromProgramNode(programNode),
+                    export: {
+                        path: element.path,
+                        type: 'default'
+                    }
+                };
+
+                // rewrite local import path by their namespace
+                if (interfaceMeta.namespace?.length > 1) {
+                    interfaceMeta.imports.forEach((_import, index) => {
+                        // Path is absolute (add it to path helper)
+                        // if (resolve(_import.path) == path.normalize(_import.path)) {
+                        //     // do some stuff
+                        // } else {
+                        _import.namespace = getNamespacedEntry(
+                            resolve(element.path, '../', _import.namespace),
+                            aliasRules,
+                            separator
+                        );
+                    });
+                }
+
+
+                if (interfaceDeclaration.parentNodeType === 'ExportDefaultDeclaration') {
+                    interfaceMeta.export.type = 'export:default';
+                } else if (interfaceDeclaration.parentNodeType === 'ExportNamedDeclaration') {
+                    interfaceMeta.export.type = 'export:named';
+                } else {
+                    interfaceMeta.export.type = 'inline';
+                }
+
+
+                interfaceNode?.extends?.forEach(node => {
+                    if (node.type === 'TSExpressionWithTypeArguments') {
+                        const expression = (node as TSExpressionWithTypeArguments).expression;
+                        if ("name" in expression) {
+                            interfaceMeta.implements.push(resolveLocalResourceLocation(
+                                expression.name,
+                                interfaceMeta.imports,
+                                entryName
+                            ));
+                        }
+                    }
+                });
+
+
+                interfaceNode.body.body.filter(node => node.type === 'TSMethodSignature').forEach(
+                    (node: TSMethodSignature) => {
+                        if (node.kind === 'method') {
+                            let nodeName = '';
+
+                            if ("name" in node.key) {
+                                nodeName = node.key.name;
+                            }
+
+                            const methodMeta = {
+                                static: false,
+                                computed: node.computed,
+                                async: false, // todo effectuer un test sur le type de retour
+                                name: nodeName,
+                                parameters: node.parameters.map(param => {
+                                    const data = {
+                                        name: '',
+                                        type: 'unkown',
+                                        defaultValue: undefined
+                                    };
+
+
+                                        if ('name' in param) {
+                                            data.name = param.name;
+                                        } else {
+                                            data.name = 'undefined';
+                                        }
+
+
+                                    data.type = parser.retrieveTypeFromNode(param);
+
+
+
+                                    return data;
+                                }),
+
+                                returnType: 'unknown until babel 8.0'
+                            };
+
+                            interfaceMeta.methods[methodMeta.name] = methodMeta;
+                        }
+                    });
+
+                const finalEntryName = getFinalEntryName(entryName, hasMultipleDeclarationInProgram, interfaceMeta);
+                projectMetadata[finalEntryName] = interfaceMeta;
             });
         }
     );
@@ -348,21 +463,21 @@ export function generateClassesMetadata(
     if (debug === true) {
         writeFile(
             'resolved-meta-class.json',
-            JSON.stringify(classesMetadata, null, 4),
+            JSON.stringify(projectMetadata, null, 4),
             err => {
                 console.error(err)
             }
         );
     }
 
-    return classesMetadata;
+    return projectMetadata;
 }
 
 
-function getFinalEntryName(entryName: string, hasMultipleDeclarationInProgram: boolean, classMeta: ClassMetadata): string {
+function getFinalEntryName(entryName: string, hasMultipleDeclarationInProgram: boolean, meta: CodeElementMetadata): string {
     return entryName + (
-        (hasMultipleDeclarationInProgram && classMeta.export.type !== 'export:default')
-            ? `::${classMeta.name.toLowerCase()}`
+        (hasMultipleDeclarationInProgram && meta.export.type !== 'export:default')
+            ? `::${meta.name.toLowerCase()}`
             : ''
     );
 }

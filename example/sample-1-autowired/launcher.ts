@@ -1,5 +1,5 @@
 import ContainerBuilder from "../../src/core/container/container-builder.model";
-import {ClassMetadata, generateClassesMetadata} from "../../src/generate-classes-metadata";
+import {ClassMetadata, CodeElementMetadata, generateClassesMetadata} from "../../src/generate-classes-metadata";
 import {resolve} from "path";
 import ConfigLoaderManager from "../../src/core/models/config-loader/config-loader.manager";
 import YamlContainerConfigLoader from "../../src/core/models/config-loader/yaml-container-config-loader";
@@ -11,7 +11,7 @@ import {buildInheritanceTreeFromClassMetadataCollection} from "../../src/reflect
 export default class Launcher {
     private readonly container: ContainerBuilder;
     private readonly sourcePath: string;
-    private projectFilesMetadata: Record<string, ClassMetadata>;
+    private projectFilesMetadata: Record<string, CodeElementMetadata>;
     private readonly projectNamespace: string;
 
     private readonly configManager = new ConfigLoaderManager('config-loader-manager');
@@ -75,18 +75,17 @@ export default class Launcher {
 
             definition
                 .setFilePath(value.export.path)
-                .setAutowired(true)
-                .setAbstract(value.abstract);
+                .setAutowired(true);
 
+            if (value.kind === 'class') {
+                const valueAsClass = value as ClassMetadata;
+                definition.setAbstract(valueAsClass.abstract);
 
-            // check constructor arguments in order to add arguments
-            value.constructor?.forEach((param, index) => {
-                definition.setArgument(index, new Reference(param.namespace ?? param.type ?? param.name));
-            });
-
-            // if (entry === 'App/src/MainClass') {
-            //     console.log(value);
-            // }
+                // check constructor arguments in order to add arguments
+                valueAsClass.constructor?.forEach((param, index) => {
+                    definition.setArgument(index, new Reference(param.namespace ?? param.type ?? param.name));
+                });
+            }
         });
     }
 

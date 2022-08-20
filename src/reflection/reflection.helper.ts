@@ -1,4 +1,4 @@
-import {ClassMetadata} from "../generate-classes-metadata";
+import {ClassMetadata, CodeElementMetadata} from "../generate-classes-metadata";
 
 export type InheritanceTree = {
     extendsClass: Record<string, string[]>,
@@ -6,9 +6,9 @@ export type InheritanceTree = {
 };
 
 export const buildInheritanceTreeFromClassMetadataCollection = (
-    classMetadataCollection: Record<string, ClassMetadata>
+    codeElementMetadata: Record<string, CodeElementMetadata>
 ): InheritanceTree => {
-    const classes = Object.keys(classMetadataCollection);
+    const classes = Object.keys(codeElementMetadata);
     const inheritanceTree: InheritanceTree = {
         extendsClass: {},
         implementsInterface: {}
@@ -16,10 +16,18 @@ export const buildInheritanceTreeFromClassMetadataCollection = (
 
     // add class node to tree
     classes.forEach(_class => {
-        const meta = classMetadataCollection[_class];
-        inheritanceTree.implementsInterface[_class] = meta.implements.map(
+        inheritanceTree.implementsInterface[_class] = codeElementMetadata[_class].implements.map(
             interfaceLocation => interfaceLocation.namespace
         );
+
+        if (codeElementMetadata[_class].kind === 'interface') {
+            // no extends for interfaces
+            inheritanceTree.extendsClass[_class] = [];
+            return;
+        }
+
+        const meta = codeElementMetadata[_class] as ClassMetadata;
+
 
         inheritanceTree.extendsClass[_class] = meta.superClass ? [meta.superClass.namespace] : [];
     });
