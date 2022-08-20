@@ -1,11 +1,11 @@
 import HandlerB from "./HandlerB";
-import HandlerA from "./HandlerA";
+import HandlerAInterface from "./HandlerA.interface";
 
 export default class MainClass {
-    private handlerA: HandlerA;
+    private handlerA: HandlerAInterface;
     private handlerB: HandlerB;
 
-    constructor(handlerA: HandlerA, handlerB: HandlerB) {
+    constructor(handlerA: HandlerAInterface, handlerB: HandlerB) {
         this.handlerA = handlerA;
         this.handlerB = handlerB;
     }

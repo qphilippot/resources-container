@@ -16,6 +16,7 @@ import type {
     Program,
     TSExpressionWithTypeArguments, TSMethodSignature
 } from '@babel/types';
+import {IS_CLASS, IS_INTERFACE} from "./core/reflexion/reflexion.config";
 
 export interface CodeElementMetadata {
     kind: string,
@@ -233,7 +234,7 @@ export function generateClassesMetadata(
                 const classDeclarationNode = classDeclarationWrapper.node;
 
                 const classMeta: ClassMetadata = {
-                    kind: 'class',
+                    kind: IS_CLASS,
                     namespace: getNamespaceFromNamespacedEntry(entryName, separator),
                     name: classDeclarationNode.id.name,
                     superClass: null,
@@ -360,7 +361,7 @@ export function generateClassesMetadata(
                 const interfaceNode = interfaceDeclaration.node;
 
                 const interfaceMeta: InterfaceMetadata = {
-                    kind: 'interface',
+                    kind: IS_INTERFACE,
                     namespace: getNamespaceFromNamespacedEntry(entryName, separator),
                     name: interfaceNode.id.name,
                     implements: [],

@@ -1,26 +1,44 @@
-import MixedInterface from "../../utils/mixed.interface";
+import {CodeElementMetadata} from "../../generate-classes-metadata";
+import {IS_CLASS, IS_INTERFACE} from "./reflexion.config";
+import {GET_EMPTY_INHERITANCE_TREE, InheritanceTree} from "../../reflection/reflection.helper";
 
 // https://stackoverflow.com/questions/39392853/is-there-a-type-for-class-in-typescript-and-does-any-include-it
 type Class = { new(...args: any[]): any; };
 
-/**
- * todo should detect class name duplication
- */
+
 export default class ReflexionService {
-    private data: MixedInterface = {};
+    private meta: Record<string, CodeElementMetadata> = {};
+    private inheritanceTree: InheritanceTree = GET_EMPTY_INHERITANCE_TREE();
     private dictionary: Map<string, Class> = new Map<string, Class>();
 
-    public recordClass(className: string, theClass: Class): this {
-        this.dictionary.set(className, theClass);
+    public recordClass(name: string, theClass: Class, meta?: CodeElementMetadata): this {
+        this.dictionary.set(name, theClass);
+        if (meta) {
+            this.setCodeElementMeta(name, meta);
+        }
         return this;
     }
 
-    public loadMeta(meta: MixedInterface): void {
-        this.data = meta;
+    public setCodeElementMeta(name: string, meta: CodeElementMetadata): this {
+        this.meta[name] = meta;
+        return this;
     }
 
-    public findClassByAlias(alias: string) {
-        return this.findClass(this.data[alias]?.name);
+    public setInheritanceTree(tree: InheritanceTree): void {
+        this.inheritanceTree = tree;
+    }
+
+    public getImplementationsOf(interfaceName: string): string[] {
+        if (this.meta[interfaceName]?.kind !== IS_INTERFACE) {
+            // todo dedicated error class + check if its class + check typo
+            throw `Interface "${interfaceName}" was not found.`;
+        }
+
+
+
+        return Object.keys(this.inheritanceTree.implementsInterface).filter(entry => {
+            return this.isClass(entry) && this.inheritanceTree.implementsInterface[entry].includes(interfaceName);
+        });
     }
 
     public findClass(className: string): Class | undefined {
@@ -28,9 +46,23 @@ export default class ReflexionService {
             case 'Object':
                 return Object;
             default:
-                return this.dictionary.get(className);
+                const candidate = this.dictionary.get(className);
+                return this.meta[className]?.kind === 'class' ? candidate : undefined;
         }
     }
+
+    public isInterface(name): boolean {
+        return this.meta[name]?.kind === IS_INTERFACE;
+    }
+
+    public isClass(name): boolean {
+        return this.meta[name]?.kind === IS_CLASS;
+    }
+
+    public isKindOf(name: string, kind: string): boolean {
+        return this.meta[name]?.kind === kind;
+    }
+
 
     /**
      * Inspired from: https://davidwalsh.name/javascript-arguments
@@ -58,9 +90,5 @@ export default class ReflexionService {
             // Ensure no undefined values are added.
             return arg;
         }));
-    }
-
-    public find(className: string): Class | undefined {
-        return this.findClass(className) || this.findClassByAlias(className);
     }
 }

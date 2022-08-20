@@ -15,7 +15,7 @@ export default class ResolveClassPass implements CompilerPassInterface
             }
 
             if (isValidDefinitionId(definition.getId())) {
-                const _class = container.getReflexionService().find(definition.getId()) ?? null;
+                const _class = container.getReflexionService().findClass(definition.getId()) ?? null;
 
                 if (
                     false

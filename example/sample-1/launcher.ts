@@ -6,6 +6,7 @@ import YamlContainerConfigLoader from "../../src/core/models/config-loader/yaml-
 import DefaultContainer from "../../src/core/container/default-container.model";
 import ContainerInterface from "../../src/core/interfaces/container.interface";
 import Reference from "../../src/core/models/reference.model";
+import {IS_CLASS} from "../../src/core/reflexion/reflexion.config";
 
 export default class Launcher {
     private readonly container: ContainerBuilder;
@@ -70,7 +71,7 @@ export default class Launcher {
                 .setFilePath(value.export.path)
                 .setAutowired(true);
 
-            if (value.kind === 'class') {
+            if (value.kind === IS_CLASS) {
                 const valueAsClass = value as ClassMetadata;
                 definition.setAbstract(valueAsClass.abstract);
 

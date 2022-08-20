@@ -7,6 +7,7 @@ import DefaultContainer from "../../src/core/container/default-container.model";
 import ContainerInterface from "../../src/core/interfaces/container.interface";
 import Reference from "../../src/core/models/reference.model";
 import {buildInheritanceTreeFromClassMetadataCollection} from "../../src/reflection/reflection.helper";
+import {IS_CLASS} from "../../src/core/reflexion/reflexion.config";
 
 export default class Launcher {
     private readonly container: ContainerBuilder;
@@ -58,12 +59,13 @@ export default class Launcher {
                 _constructor = require(value.export.path)[value.name];
             }
 
-            reflexionService.recordClass(entry, _constructor);
+            reflexionService.recordClass(entry, _constructor, value);
         });
 
         const inheritanceSchema = buildInheritanceTreeFromClassMetadataCollection(this.projectFilesMetadata);
 
 
+        reflexionService.setInheritanceTree(inheritanceSchema);
         console.log('inheritanceSchema', inheritanceSchema);
 
     }
@@ -77,7 +79,7 @@ export default class Launcher {
                 .setFilePath(value.export.path)
                 .setAutowired(true);
 
-            if (value.kind === 'class') {
+            if (value.kind === IS_CLASS) {
                 const valueAsClass = value as ClassMetadata;
                 definition.setAbstract(valueAsClass.abstract);
 
@@ -100,6 +102,11 @@ export default class Launcher {
         // console.log(this.container.getDefinition('App/src/MainClass'));
         // this.container.compile();
         //
+        console.log(
+            "Implementation of App/src/HandlerAInterface'",
+            this.container.getReflexionService().getImplementationsOf('App/src/HandlerAInterface')
+        );
+
         const mainClass = this.container.get('App/src/MainClass');
 
         // if (useConsole) {

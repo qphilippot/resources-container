@@ -1,9 +1,17 @@
 import {ClassMetadata, CodeElementMetadata} from "../generate-classes-metadata";
+import {IS_INTERFACE} from "../core/reflexion/reflexion.config";
 
 export type InheritanceTree = {
     extendsClass: Record<string, string[]>,
     implementsInterface: Record<string, string[]>
 };
+
+export const GET_EMPTY_INHERITANCE_TREE = ():InheritanceTree => {
+    return {
+        extendsClass: {},
+        implementsInterface: {}
+    } as InheritanceTree;
+}
 
 export const buildInheritanceTreeFromClassMetadataCollection = (
     codeElementMetadata: Record<string, CodeElementMetadata>
@@ -20,7 +28,7 @@ export const buildInheritanceTreeFromClassMetadataCollection = (
             interfaceLocation => interfaceLocation.namespace
         );
 
-        if (codeElementMetadata[_class].kind === 'interface') {
+        if (codeElementMetadata[_class].kind === IS_INTERFACE) {
             // no extends for interfaces
             inheritanceTree.extendsClass[_class] = [];
             return;
