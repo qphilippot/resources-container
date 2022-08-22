@@ -1,4 +1,4 @@
-import {CodeElementMetadata} from "../../generate-classes-metadata";
+import {CodeElementMetadata, GET_EMPTY_CODE_ELEMENT_DATA} from "../../generate-classes-metadata";
 import {IS_CLASS, IS_INTERFACE} from "./reflexion.config";
 import {GET_EMPTY_INHERITANCE_TREE, InheritanceTree} from "../../reflection/reflection.helper";
 
@@ -15,8 +15,21 @@ export default class ReflexionService {
         this.dictionary.set(name, theClass);
         if (meta) {
             this.setCodeElementMeta(name, meta);
+        } else {
+            this.setCodeElementMeta(name, this.buildDefaultCodeElementMeta(name, IS_CLASS));
         }
+
         return this;
+    }
+
+    private buildDefaultCodeElementMeta(name: string, kind: string): CodeElementMetadata {
+        return {
+            ...GET_EMPTY_CODE_ELEMENT_DATA(),
+            ...{
+                kind: IS_CLASS,
+                name
+            }
+        };
     }
 
     public setCodeElementMeta(name: string, meta: CodeElementMetadata): this {

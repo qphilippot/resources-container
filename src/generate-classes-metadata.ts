@@ -41,6 +41,17 @@ export interface InterfaceMetadata extends CodeElementMetadata {
     kind:'interface'
 }
 
+export const GET_EMPTY_CODE_ELEMENT_DATA = (): CodeElementMetadata => {
+    return {
+        kind: 'unknown',
+        namespace: '',
+        name: 'anonymous',
+        implements: [] as ObjectLocation[],
+        methods: {} as Record<string, any>,
+        imports: {} as Record<string, any>,
+    } as CodeElementMetadata;
+}
+
 interface generateClassesMetadataOptions {
     separator?: string,
     path: string,

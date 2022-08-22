@@ -44,6 +44,8 @@ export default class Launcher {
                 }
             ]
         });
+
+        console.log(this.projectFilesMetadata['App/src/MainClass'])
     }
 
     private initializeReflexionService(): void {

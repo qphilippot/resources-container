@@ -43,7 +43,7 @@ describe('ResolveClassPass works as expected', () => {
             const pass = new ResolveClassPass();
             pass.process(container);
 
-            expect(definition.getResourceType()).to.equals(type);
+            expect(definition.getResourceType()).to.equals(type, `Invalid class resolved for service "${id}"`);
         });
     });
 
