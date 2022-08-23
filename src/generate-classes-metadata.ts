@@ -7,38 +7,58 @@ import type {ParseResult} from "@babel/parser";
 import {parse} from "@babel/parser";
 import type {
     ClassDeclaration,
-    TSInterfaceDeclaration,
     ClassMethod,
     ExportDefaultDeclaration,
     ExportNamedDeclaration,
     File,
     ImportDeclaration,
     Program,
-    TSExpressionWithTypeArguments, TSMethodSignature
+    TSExpressionWithTypeArguments,
+    TSInterfaceDeclaration,
+    TSMethodSignature
 } from '@babel/types';
 import {IS_CLASS, IS_INTERFACE} from "./core/reflexion/reflexion.config";
+import {ReflexionMethodVisibility} from "./core/reflexion/reflection-method.config";
+
+export type ParameterMetadata = {
+    name: string,
+    type: string,
+    defaultValue: any
+};
+
+export type MethodMetadata = {
+    abstract: boolean,
+    static: boolean,
+    computed: boolean,
+    async: boolean,
+    name: string,
+    parameters: ParameterMetadata[],
+    visibility: ReflexionMethodVisibility,
+    returnType: string
+}
 
 export interface CodeElementMetadata {
     kind: string,
     namespace: string,
     name: string,
     implements: ObjectLocation[],
-    methods: any,
+    methods: Record<string, MethodMetadata>,
     imports: any,
     export: {
         type: string,
         path: string
     }
 }
+
 export interface ClassMetadata extends CodeElementMetadata {
-    superClass:  ObjectLocation | null,
+    superClass: ObjectLocation | null,
     abstract: boolean,
     constructor: any[],
-    kind:'class'
+    kind: 'class'
 }
 
 export interface InterfaceMetadata extends CodeElementMetadata {
-    kind:'interface'
+    kind: 'interface'
 }
 
 export const GET_EMPTY_CODE_ELEMENT_DATA = (): CodeElementMetadata => {
@@ -322,13 +342,15 @@ export function generateClassesMetadata(
                                 nodeName = node.key.name;
                             }
 
-                            const methodMeta = {
+                            const methodMeta: MethodMetadata = {
+                                visibility: ReflexionMethodVisibility.PUBLIC, // todo
+                                abstract: false, // todo
                                 static: node.static,
                                 computed: node.computed,
                                 async: node.async,
                                 name: nodeName,
                                 parameters: node.params.map(param => {
-                                    const data = {
+                                    const data: ParameterMetadata = {
                                         name: '',
                                         type: 'unkown',
                                         defaultValue: undefined
@@ -355,6 +377,7 @@ export function generateClassesMetadata(
 
                                     return data;
                                 }),
+
                                 returnType: node.returnType ? parser.retrieveTypeFromNode(node.returnType) : 'unknown'
                             };
 
@@ -432,28 +455,29 @@ export function generateClassesMetadata(
                                 nodeName = node.key.name;
                             }
 
-                            const methodMeta = {
+                            const methodMeta: MethodMetadata = {
+                                abstract: false, // todo
+                                visibility: ReflexionMethodVisibility.PUBLIC, // todo
                                 static: false,
-                                computed: node.computed,
+                                computed: node.computed ?? false,
                                 async: false, // todo effectuer un test sur le type de retour
                                 name: nodeName,
                                 parameters: node.parameters.map(param => {
                                     const data = {
                                         name: '',
-                                        type: 'unkown',
+                                        type: 'unknown',
                                         defaultValue: undefined
                                     };
 
 
-                                        if ('name' in param) {
-                                            data.name = param.name;
-                                        } else {
-                                            data.name = 'undefined';
-                                        }
+                                    if ('name' in param) {
+                                        data.name = param.name;
+                                    } else {
+                                        data.name = 'undefined';
+                                    }
 
 
                                     data.type = parser.retrieveTypeFromNode(param);
-
 
 
                                     return data;

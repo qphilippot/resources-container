@@ -1,6 +1,8 @@
-import {CodeElementMetadata, GET_EMPTY_CODE_ELEMENT_DATA} from "../../generate-classes-metadata";
+import {ClassMetadata, CodeElementMetadata, GET_EMPTY_CODE_ELEMENT_DATA} from "../../generate-classes-metadata";
 import {IS_CLASS, IS_INTERFACE} from "./reflexion.config";
 import {GET_EMPTY_INHERITANCE_TREE, InheritanceTree} from "../../reflection/reflection.helper";
+import ReflectionMethod from "./reflection-method.model";
+import {CONSTRUCTOR_METHOD_NAME, ReflexionMethodVisibility} from "./reflection-method.config";
 
 // https://stackoverflow.com/questions/39392853/is-there-a-type-for-class-in-typescript-and-does-any-include-it
 type Class = { new(...args: any[]): any; };
@@ -10,9 +12,11 @@ export default class ReflexionService {
     private meta: Record<string, CodeElementMetadata> = {};
     private inheritanceTree: InheritanceTree = GET_EMPTY_INHERITANCE_TREE();
     private dictionary: Map<string, Class> = new Map<string, Class>();
+    private typeToNamespaceMapping: Map<Class, string> = new Map<Class, string>();
 
     public recordClass(name: string, theClass: Class, meta?: CodeElementMetadata): this {
         this.dictionary.set(name, theClass);
+        this.typeToNamespaceMapping.set(theClass, name);
         if (meta) {
             this.setCodeElementMeta(name, meta);
         } else {
@@ -30,6 +34,38 @@ export default class ReflexionService {
                 name
             }
         };
+    }
+
+    public getReflectionMethod(resourceType: InstanceType<any>,  methodName: string): ReflectionMethod {
+        const namespacedResourceName = this.getNamespacedResourceName(resourceType);
+        if (namespacedResourceName === null) {
+            // todo throw dedicated error
+            throw `Cannot find method "${methodName}" of resource "${resourceType.constructor.name}". No namespace was bind to this resource.`;
+        }
+
+        const meta = this.meta[namespacedResourceName] as ClassMetadata;
+        if (methodName === CONSTRUCTOR_METHOD_NAME) {
+            return new ReflectionMethod({
+                visibility: ReflexionMethodVisibility.PUBLIC, // todo support private constructor
+                isStatic: false,
+                isAbstract: false,
+                isConstructor: true
+            });
+        }
+
+
+        const methodMeta = meta.methods[methodName];
+        if (methodName === null) {
+            // todo throw dedicated error
+            throw `Cannot find method "${methodName}" of resource "${resourceType.constructor.name}". No such method found in class metadata.`;
+
+        }
+        return new ReflectionMethod({
+            visibility: methodMeta.visibility,
+            isStatic: methodMeta.static,
+            isAbstract: methodMeta.abstract,
+            isConstructor: false
+        });
     }
 
     public setCodeElementMeta(name: string, meta: CodeElementMetadata): this {
@@ -64,16 +100,24 @@ export default class ReflexionService {
         }
     }
 
-    public isInterface(name): boolean {
-        return this.meta[name]?.kind === IS_INTERFACE;
+    public isInterface(namespacedResourceName): boolean {
+        return this.meta[namespacedResourceName]?.kind === IS_INTERFACE;
     }
 
-    public isClass(name): boolean {
-        return this.meta[name]?.kind === IS_CLASS;
+    public isClass(namespacedResourceName): boolean {
+        return this.meta[namespacedResourceName]?.kind === IS_CLASS;
     }
 
-    public isKindOf(name: string, kind: string): boolean {
-        return this.meta[name]?.kind === kind;
+    public isKindOf(namespacedResourceName: string, kind: string): boolean {
+        return this.meta[namespacedResourceName]?.kind === kind;
+    }
+
+    public getNamespacedResourceName(resourceType: Class): string | null {
+        return this.typeToNamespaceMapping.get(resourceType) ??  null
+    }
+
+    public getConstructorOf(namespacedResourceName: string): CodeElementMetadata | undefined {
+        return this.meta[namespacedResourceName];
     }
 
 
