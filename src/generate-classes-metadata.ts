@@ -6,11 +6,12 @@ import FunctionDeclarationResolver from "./function-declaration-resolver";
 import type {ParseResult} from "@babel/parser";
 import {parse} from "@babel/parser";
 import type {
+    AssignmentPattern,
     ClassDeclaration,
     ClassMethod,
     ExportDefaultDeclaration,
     ExportNamedDeclaration,
-    File,
+    File, Identifier,
     ImportDeclaration,
     Program,
     TSExpressionWithTypeArguments,
@@ -22,6 +23,9 @@ import {ReflexionMethodVisibility} from "./core/reflexion/reflection-method.conf
 
 export type ParameterMetadata = {
     name: string,
+    namespace?: string,
+    optional: boolean,
+    position: number,
     type: string,
     defaultValue: any
 };
@@ -248,7 +252,7 @@ export function generateClassesMetadata(
 
             const entryName = getNamespacedEntry(element.path, aliasRules, separator);
             const programNode: Program = fileNode.program;
-            if (debug === true) {
+            if (debug === true && entryName === "App/src/HandlerB") {
                 writeFile(
                     'program.json',
                     JSON.stringify(programNode, null, 4),
@@ -333,7 +337,11 @@ export function generateClassesMetadata(
                 classDeclarationNode.body.body.filter(node => node.type === 'ClassMethod').forEach(
                     (node: ClassMethod) => {
                         if (node.kind === 'constructor') {
-                            const parameters = parser.retrieveSignature(node, classMeta.imports).parameters;
+                            // const parameters = parser.retrieveSignature(node, classMeta.imports).parameters;
+                            const parameters = node.params.map((param, index) => {
+                                return retrieveParameterMetadataFromNode(param, parser, index, classMeta.imports);
+                            });
+
                             classMeta.constructor = parameters;
                         } else if (node.kind === 'method') {
                             let nodeName = '';
@@ -349,33 +357,8 @@ export function generateClassesMetadata(
                                 computed: node.computed,
                                 async: node.async,
                                 name: nodeName,
-                                parameters: node.params.map(param => {
-                                    const data: ParameterMetadata = {
-                                        name: '',
-                                        type: 'unkown',
-                                        defaultValue: undefined
-                                    };
-
-                                    const isAssignmentPattern = param.type === 'AssignmentPattern';
-
-                                    if (isAssignmentPattern && 'left' in param && 'name' in param.left) {
-                                        data.name = param.left.name;
-                                    } else {
-                                        if ('name' in param) {
-                                            data.name = param.name;
-                                        } else {
-                                            data.name = 'undefined';
-                                        }
-                                    }
-
-                                    data.type = parser.retrieveTypeFromNode(param);
-
-                                    if (isAssignmentPattern) {
-                                        data.defaultValue = parser.retrieveDefaultValueFromNode(param)
-                                    }
-
-
-                                    return data;
+                                parameters: node.params.map((param, index) => {
+                                   return retrieveParameterMetadataFromNode(param, parser, index, classMeta.imports);
                                 }),
 
                                 returnType: node.returnType ? parser.retrieveTypeFromNode(node.returnType) : 'unknown'
@@ -462,25 +445,8 @@ export function generateClassesMetadata(
                                 computed: node.computed ?? false,
                                 async: false, // todo effectuer un test sur le type de retour
                                 name: nodeName,
-                                parameters: node.parameters.map(param => {
-                                    const data = {
-                                        name: '',
-                                        type: 'unknown',
-                                        defaultValue: undefined
-                                    };
-
-
-                                    if ('name' in param) {
-                                        data.name = param.name;
-                                    } else {
-                                        data.name = 'undefined';
-                                    }
-
-
-                                    data.type = parser.retrieveTypeFromNode(param);
-
-
-                                    return data;
+                                parameters: node.parameters.map((param, index) => {
+                                    return retrieveParameterMetadataFromNode(param, parser, index);
                                 }),
 
                                 returnType: 'unknown until babel 8.0'
@@ -507,6 +473,47 @@ export function generateClassesMetadata(
     }
 
     return projectMetadata;
+}
+
+function retrieveParameterMetadataFromNode(node, parser, index: number, importsContext: ObjectLocation[] = []) : ParameterMetadata {
+    const data: ParameterMetadata = {
+        name: '',
+        namespace: undefined,
+        position: index,
+        type: 'unkown',
+        optional: false,
+        defaultValue: undefined
+    };
+
+    const isAssignmentPattern = node.type === 'AssignmentPattern';
+
+    if (node.type === 'Identifier') {
+        data.optional = node.optional ?? false;
+    }
+
+    if (isAssignmentPattern && 'left' in node && 'name' in node.left) {
+        data.name = node.left.name;
+    } else {
+        if ('name' in node) {
+            data.name = node.name;
+        } else {
+            data.name = 'undefined';
+        }
+    }
+
+    data.type = parser.retrieveTypeFromNode(node);
+
+
+
+    if (isAssignmentPattern) {
+        data.defaultValue = parser.retrieveDefaultValueFromNode(node);
+        data.optional = true;
+    }
+
+
+    data.namespace = importsContext.find(_import => _import.name === data.type)?.namespace ?? undefined;
+
+    return data;
 }
 
 

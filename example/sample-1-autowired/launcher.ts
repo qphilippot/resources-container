@@ -45,7 +45,7 @@ export default class Launcher {
             ]
         });
 
-        console.log(this.projectFilesMetadata['App/src/MainClass'])
+        console.log(this.projectFilesMetadata['App/src/HandlerB'])
     }
 
     private initializeReflexionService(): void {
@@ -101,7 +101,17 @@ export default class Launcher {
     }
 
     public start(useConsole = true): void {
-        // console.log(this.container.getDefinition('App/src/MainClass'));
+        // const reflectionService = this.container.getReflexionService();
+        // const methodUsingDefaultValue = reflectionService.getReflectionMethod(
+        //     reflectionService.findClass('App/src/HandlerB'),
+        //     'methodUsingDefaultValue'
+        // );
+        //
+        // const parameterWithDefaultValueReflectionParameter = methodUsingDefaultValue.getParameter('parameterWithDefaultValue');
+        //
+        // console.log(parameterWithDefaultValueReflectionParameter);
+
+        console.log(this.container.getDefinition('App/src/MainClass'));
         // this.container.compile();
         //
         console.log(
@@ -112,7 +122,7 @@ export default class Launcher {
         const mainClass = this.container.get('App/src/MainClass');
 
         // if (useConsole) {
-            console.log(mainClass.hello());
+        //     console.log(mainClass.hello());
         // }
     }
 

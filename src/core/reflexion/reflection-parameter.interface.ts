@@ -6,7 +6,8 @@ export default interface ReflectionParameterInterface {
     // isArray(): boolean;
     // isCallable(): boolean;
     isDefaultValueAvailable(): boolean;
+    getDefaultValue(): any;
     // isDefaultValueConstant(): boolean;
-    // isOptional(): boolean;
+    isOptional(): boolean;
     // isVariadic(): boolean;
 }

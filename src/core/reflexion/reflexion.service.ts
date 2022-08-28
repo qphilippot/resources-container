@@ -1,8 +1,14 @@
-import {ClassMetadata, CodeElementMetadata, GET_EMPTY_CODE_ELEMENT_DATA} from "../../generate-classes-metadata";
+import {
+    ClassMetadata,
+    CodeElementMetadata,
+    GET_EMPTY_CODE_ELEMENT_DATA,
+    ParameterMetadata
+} from "../../generate-classes-metadata";
 import {IS_CLASS, IS_INTERFACE} from "./reflexion.config";
 import {GET_EMPTY_INHERITANCE_TREE, InheritanceTree} from "../../reflection/reflection.helper";
 import ReflectionMethod from "./reflection-method.model";
 import {CONSTRUCTOR_METHOD_NAME, ReflexionMethodVisibility} from "./reflection-method.config";
+import ReflectionParameter from "./reflection-parameter.model";
 
 // https://stackoverflow.com/questions/39392853/is-there-a-type-for-class-in-typescript-and-does-any-include-it
 type Class = { new(...args: any[]): any; };
@@ -49,7 +55,10 @@ export default class ReflexionService {
                 visibility: ReflexionMethodVisibility.PUBLIC, // todo support private constructor
                 isStatic: false,
                 isAbstract: false,
-                isConstructor: true
+                isConstructor: true,
+                parameters: meta.constructor.map((parameter: ParameterMetadata) => {
+                    return new ReflectionParameter({...parameter})
+                })
             });
         }
 
@@ -64,7 +73,10 @@ export default class ReflexionService {
             visibility: methodMeta.visibility,
             isStatic: methodMeta.static,
             isAbstract: methodMeta.abstract,
-            isConstructor: false
+            isConstructor: false,
+            parameters: methodMeta.parameters.map((parameter: ParameterMetadata) => {
+                return new ReflectionParameter({...parameter})
+            })
         });
     }
 
