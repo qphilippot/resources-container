@@ -1,18 +1,26 @@
 import ContainerBuilder from "../../src/core/container/container-builder.model";
-import {ClassMetadata, CodeElementMetadata, generateClassesMetadata} from "../../src/generate-classes-metadata";
 import {resolve} from "path";
 import ConfigLoaderManager from "../../src/core/models/config-loader/config-loader.manager";
 import YamlContainerConfigLoader from "../../src/core/models/config-loader/yaml-container-config-loader";
 import DefaultContainer from "../../src/core/container/default-container.model";
 import ContainerInterface from "../../src/core/interfaces/container.interface";
 import Reference from "../../src/core/models/reference.model";
-import {buildInheritanceTreeFromClassMetadataCollection} from "../../src/reflection/reflection.helper";
-import {IS_CLASS} from "../../src/core/reflexion/reflexion.config";
+
+import {
+    ProjectAnalyzer,
+    ProjectMetadata,
+    // @ts-ignore
+    ReflectionClassInterface,
+    // @ts-ignore
+    ReflectionMethodInterface
+} from "reflection-service";
+import AutowirePass from "../../src/core/compilation-passes/context-aware/autowire.pass";
+import {OPTIMIZATION} from "../../src/core/compiler-step.enum";
 
 export default class Launcher {
     private readonly container: ContainerBuilder;
     private readonly sourcePath: string;
-    private projectFilesMetadata: Record<string, CodeElementMetadata>;
+    private projectFilesMetadata: ProjectMetadata;
     private readonly projectNamespace: string;
 
     private readonly configManager = new ConfigLoaderManager('config-loader-manager');
@@ -21,75 +29,114 @@ export default class Launcher {
         this.sourcePath = absoluteSourcePath;
         this.container = new DefaultContainer();
 
+        this.container.addCompilerPass(
+            new AutowirePass(), OPTIMIZATION
+        );
+
         this.projectNamespace = projectNameSpace;
 
         this.initializeConfigManager();
-        this.analyseProjectFiles();
-        this.initializeReflexionService();
-        this.addDefinitionFromMetadata();
     }
 
     private initializeConfigManager(): void {
         this.configManager.addHandler(new YamlContainerConfigLoader('yaml-config-loader'), 'yaml')
     }
 
-    private analyseProjectFiles(): void {
-        this.projectFilesMetadata = generateClassesMetadata({
+    public async setup() {
+        await this.analyseProjectFiles();
+        this.initializeReflectionService();
+        this.addDefinitionFromMetadata();
+    }
+
+    private async analyseProjectFiles(): Promise<void> {
+        // this.projectFilesMetadata = generateClassesMetadata({
+        //     path: this.sourcePath,
+        //     debug: true,
+        //     aliasRules: [
+        //         {
+        //             replace: resolve(__dirname),
+        //             by: this.projectNamespace
+        //         }
+        //     ]
+        // });
+
+        this.projectFilesMetadata = await ProjectAnalyzer.analyze({
             path: this.sourcePath,
-            debug: true,
+            debug: process.env.NODE_ENV === 'dev',
             aliasRules: [
                 {
                     replace: resolve(__dirname),
                     by: this.projectNamespace
                 }
             ]
-        });
+        })
 
-        console.log(this.projectFilesMetadata['App/src/HandlerB'])
+        console.log(this.projectFilesMetadata);
+        // console.log(this.projectFilesMetadata['App/src/HandlerB'])
     }
 
-    private initializeReflexionService(): void {
-        const reflexionService = this.container.getReflexionService();
-        Object.keys(this.projectFilesMetadata).forEach(entry => {
-            const value = this.projectFilesMetadata[entry];
-            let _constructor;
+    private initializeReflectionService(): void {
+        const reflectionService = this.container.getReflectionService();
 
-            if (value.export.type === 'export:default') {
-                _constructor = require(value.export.path).default;
-            }
-            if (value.export.type === 'export:named') {
-                _constructor = require(value.export.path)[value.name];
-            }
+        console.log(this.projectFilesMetadata);
+        this.projectFilesMetadata.classes.forEach((_class: ReflectionClassInterface) => {
+            reflectionService.addReflectionClass(_class);
 
-            reflexionService.recordClass(entry, _constructor, value);
+
+            // if (_class.export.type === 'export:default') {
+            //     _constructor = require(value.export.path).default;
+            // }
+            // if (_class.export.type === 'export:named') {
+            //     _constructor = require(_class.export.path)[_class.name];
+            // }
+
+            reflectionService.recordClass(_class.getName(), _class.getClass());
         });
 
-        const inheritanceSchema = buildInheritanceTreeFromClassMetadataCollection(this.projectFilesMetadata);
+        this.projectFilesMetadata.interfaces.forEach(_interface => {
+            reflectionService.addReflectionInterface(_interface);
+        });
+
+        // const inheritanceSchema = buildInheritanceTreeFromClassMetadataCollection(this.projectFilesMetadata);
 
 
-        reflexionService.setInheritanceTree(inheritanceSchema);
-        console.log('inheritanceSchema', inheritanceSchema);
+        // reflectionService.setInheritanceTree(inheritanceSchema);
+        // console.log('inheritanceSchema', inheritanceSchema);
 
     }
 
     private addDefinitionFromMetadata(): void {
-        Object.keys(this.projectFilesMetadata).forEach(entry => {
-            const value = this.projectFilesMetadata[entry];
-            const definition = this.container.register(entry, entry);
+        this.projectFilesMetadata.classes.forEach((entry: ReflectionClassInterface) => {
+            const definition = this.container.register(entry.getName(), entry.getClass());
+
+
+            definition.setPublic(true);
 
             definition
-                .setFilePath(value.export.path)
+                .setFilePath(entry.getFilePath())
                 .setAutowired(true);
 
-            if (value.kind === IS_CLASS) {
-                const valueAsClass = value as ClassMetadata;
-                definition.setAbstract(valueAsClass.abstract);
+            // if (value.kind === IS_CLASS) {
 
+            definition.setAbstract(entry.isAbstract());
+
+            if (entry.hasMethod('constructor')) {
+                const _constructor: ReflectionMethodInterface = entry.getMethod('constructor');
                 // check constructor arguments in order to add arguments
-                valueAsClass.constructor?.forEach((param, index) => {
-                    definition.setArgument(index, new Reference(param.namespace ?? param.type ?? param.name));
+                _constructor?.getParameters().forEach((param, index) => {
+                    console.log('set constructor param',param);
+                    const itUseNamespace = param.getNamespacedName() != param.getName();
+                    definition.setArgument(
+                        index,
+                        // todo
+                        new Reference(
+                            itUseNamespace ? param.getNamespacedName() : param.getType() ?? param.getName()
+                        )
+                    );
                 });
             }
+
+            // }
         });
     }
 
@@ -101,7 +148,7 @@ export default class Launcher {
     }
 
     public start(useConsole = true): void {
-        // const reflectionService = this.container.getReflexionService();
+        // const reflectionService = this.container.getReflectionService();
         // const methodUsingDefaultValue = reflectionService.getReflectionMethod(
         //     reflectionService.findClass('App/src/HandlerB'),
         //     'methodUsingDefaultValue'
@@ -111,19 +158,25 @@ export default class Launcher {
         //
         // console.log(parameterWithDefaultValueReflectionParameter);
 
-        console.log(this.container.getDefinition('App/src/MainClass'));
-        // this.container.compile();
+        // console.log(this.container.getDefinitions());
+        // console.log(this.container.getDefinition('App/src/MainClass'));
+        // console.log({ ...this.container.getDefinition('App/src/MainClass') })
+        this.container.compile();
+        // console.log(this.container.getDefinition('App/src/MainClass'));
+        // console.log(this.container.getDefinitions());
         //
-        console.log(
-            "Implementation of App/src/HandlerAInterface'",
-            this.container.getReflexionService().getImplementationsOf('App/src/HandlerAInterface')
-        );
-
+        // console.log(
+        //     "Implementation of App/src/HandlerAInterface'",
+        //     this.container.getReflectionService().getImplementationsOf('App/src/HandlerAInterface')
+        // );
+        //
         const mainClass = this.container.get('App/src/MainClass');
-
-        // if (useConsole) {
-        //     console.log(mainClass.hello());
-        // }
+        //
+        console.log(mainClass);
+        // console.log(this.container.getDefinition('App/src/MainClass'));
+        if (useConsole) {
+            console.log(mainClass.hello());
+        }
     }
 
     public getContainer(): ContainerInterface {

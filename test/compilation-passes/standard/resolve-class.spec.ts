@@ -37,7 +37,7 @@ describe('ResolveClassPass works as expected', () => {
     provideValidClass().forEach(({ id, type }) => {
         it('resolves class from id', () => {
             const container = new ContainerBuilder();
-            container.getReflexionService().recordClass(id, type);
+            container.getReflectionService().recordClass(id, type);
             const definition = container.register(id);
 
             const pass = new ResolveClassPass();

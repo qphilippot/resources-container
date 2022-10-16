@@ -1,9 +1,9 @@
-import CompilerInterface from "./compiler.interface";
+import type CompilerInterface from "./compiler.interface";
 import ContainerInterface from "./container.interface";
-import Definition from "../models/definition.model";
-import ReflexionService from "../reflexion/reflexion.service";
-import ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
-import MixedInterface from "../../utils/mixed.interface";
+import type Definition from "../models/definition.model";
+import type {ReflectionService} from "reflection-service";
+import type ParameterBagInterface from "../parameter-bag/parameter-bag.interface";
+import type MixedInterface from "../../utils/mixed.interface";
 
 interface ContainerBuilderInterface extends ContainerInterface {
     getCompiler(): CompilerInterface;
@@ -15,7 +15,7 @@ interface ContainerBuilderInterface extends ContainerInterface {
     resolveEnvPlaceholders(value: any, format: string | boolean | null, usedEnvs?: any[]): MixedInterface;
 
 
-    getReflexionService(): ReflexionService;
+    getReflectionService(): ReflectionService;
 
     /**
      * Gets a resource definition.

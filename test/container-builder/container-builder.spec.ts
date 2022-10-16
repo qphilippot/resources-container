@@ -48,7 +48,7 @@ describe('container-builder tests', function () {
             };
 
             // emulate reflexivity
-            container.getReflexionService()
+            container.getReflectionService()
                 .recordClass('Bar\FooClass', FooClass)
                 .recordClass('BarClass', BarClass)
                 .recordClass('FooBarClass', FooBarClass);
@@ -141,7 +141,7 @@ describe('container-builder tests', function () {
 
         it('returns same instance when service is shared', function () {
             const container = new ContainerBuilder();
-            container.getReflexionService()
+            container.getReflectionService()
                 .recordClass('FooClass', FooClass);
 
             container.register('bar', 'FooClass');
@@ -150,7 +150,7 @@ describe('container-builder tests', function () {
 
         it('returns different instances with non shared services', function () {
             const container = new ContainerBuilder();
-            container.getReflexionService()
+            container.getReflectionService()
                 .recordClass('FooClass', FooClass);
 
             container.register('bar', 'FooClass').setShared(false);
@@ -161,7 +161,7 @@ describe('container-builder tests', function () {
 
         it('creates service based on definition', function () {
             const container = new ContainerBuilder();
-            container.getReflexionService()
+            container.getReflectionService()
                 .recordClass('FooClass', FooClass);
 
             container.register('foo', 'FooClass');
@@ -180,7 +180,7 @@ describe('container-builder tests', function () {
 
         it('throws an exception by getting private service after compilation', function () {
             const container = new ContainerBuilder();
-            container.getReflexionService()
+            container.getReflectionService()
                 .recordClass('FooClass', FooClass);
             container.register('foo', 'FooClass').setPublic(false);
 
@@ -201,7 +201,7 @@ describe('container-builder tests', function () {
 
         it('unset loading service when create service throws an exception', function () {
             const container = new ContainerBuilder();
-            container.getReflexionService()
+            container.getReflectionService()
                 .recordClass('FooClass', FooClass);
 
             container.register('foo', 'FooClass').setSynthetic(true);
@@ -232,7 +232,7 @@ describe('container-builder tests', function () {
 
         it('does not override existing resource', function () {
             const container = new ContainerBuilder();
-            container.getReflexionService()
+            container.getReflectionService()
                 .recordClass('FooClass', FooClass);
 
             const foo = new FooClass();
@@ -279,7 +279,7 @@ describe('container-builder tests', function () {
     describe('alias', function () {
         it('basic test', function () {
             const container = new ContainerBuilder();
-            container.getReflexionService()
+            container.getReflectionService()
                 .recordClass('FooClass', FooClass);
             container.register('foo', 'FooClass');
             container.setAlias('bar', new Alias('foo'));
@@ -340,7 +340,7 @@ describe('container-builder tests', function () {
 
         it('keeps invalid behavior setting', function () {
             const container = new ContainerBuilder();
-            container.getReflexionService().recordClass('FooClass', FooClass);
+            container.getReflectionService().recordClass('FooClass', FooClass);
             const definition = new Definition('FooClass');
             definition.addMethodCall(
                 'setBar',
@@ -404,7 +404,7 @@ describe('container-builder tests', function () {
             builder.register('foo1', '%class%');
             builder.setParameter('class', 'FooClass');
             // emulate reflexivity
-            builder.getReflexionService().recordClass('FooClass', FooClass)
+            builder.getReflectionService().recordClass('FooClass', FooClass)
             expect(builder.get('foo1')).to.be.instanceof(FooClass);
         });
 
@@ -420,7 +420,7 @@ describe('container-builder tests', function () {
             });
 
 
-            builder.getReflexionService()
+            builder.getReflectionService()
                 .recordClass('BarClass', BarClass)
                 .recordClass('FooClass', FooClass);
 
@@ -439,7 +439,7 @@ describe('container-builder tests', function () {
         // factory
         it('create services using factory', function () {
             const builder = new ContainerBuilder();
-            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.getReflectionService().recordClass('FooClass', FooClass);
             builder.register('foo', 'FooClass').setFactory('FooClass::getInstance');
             builder.register('qux', 'FooClass').setFactory(['FooClass', 'getInstance']);
             builder.register('bar', 'FooClass').setFactory([new Definition('FooClass'), 'getInstance']);
@@ -456,7 +456,7 @@ describe('container-builder tests', function () {
             const builder = new ContainerBuilder();
             builder.register('bar', 'Object');
 
-            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.getReflectionService().recordClass('FooClass', FooClass);
             builder.register('foo1', 'FooClass').addMethodCall('setBar', [['%%unescape_it%%']]);
             expect(JSON.stringify(['%unescape_it%'])).to.equals(JSON.stringify(builder.get('foo1').bar));
         });
@@ -465,7 +465,7 @@ describe('container-builder tests', function () {
             const builder = new ContainerBuilder();
             builder.register('bar', 'Object');
 
-            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.getReflectionService().recordClass('FooClass', FooClass);
             builder.register('foo1', 'FooClass').setInjectionProperty(
                 'bar',
                 [
@@ -482,7 +482,7 @@ describe('container-builder tests', function () {
 
         it('can configure service using configurator registered into definition', function () {
             const builder = new ContainerBuilder();
-            builder.getReflexionService()
+            builder.getReflectionService()
                 .recordClass('FooClass', FooClass)
                 .recordClass('BazClass', BazClass);
 
@@ -534,7 +534,7 @@ describe('container-builder tests', function () {
     describe('resolve service in depth', function () {
         it('resolves service from valid reference', function () {
             const builder = new ContainerBuilder();
-            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.getReflectionService().recordClass('FooClass', FooClass);
             builder.register('foo', 'FooClass');
 
             expect(builder.get('foo')).to.equals(builder.resolveServices(new Reference('foo')));
@@ -542,7 +542,7 @@ describe('container-builder tests', function () {
 
         it('resolves service from nested object', function () {
             const builder = new ContainerBuilder();
-            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.getReflectionService().recordClass('FooClass', FooClass);
             builder.register('foo', 'FooClass');
 
             const obj = {foo: ['foo', builder.get('foo')]};
@@ -592,7 +592,7 @@ describe('container-builder tests', function () {
             class CustomDefinition extends Definition {
             };
             const builder = new ContainerBuilder();
-            builder.getReflexionService().recordClass('FooClass', FooClass);
+            builder.getReflectionService().recordClass('FooClass', FooClass);
             builder.setDefinition('foo', new CustomDefinition('FooClass'));
             expect(builder.get('foo') instanceof FooClass).to.be.true;
         })
@@ -728,7 +728,7 @@ describe('container-builder tests', function () {
             container.setParameter('env(HTTP_DUMMY_VAR)', '123');
             container.register('teatime', 'Footable').setInjectionProperty('foo', '%env(DUMMY_ENV_VAR)%').setPublic(true);
 
-            container.getReflexionService().recordClass('Footable', class Footable {
+            container.getReflectionService().recordClass('Footable', class Footable {
                 // each parameters should have a value
                 foo = undefined;
             });

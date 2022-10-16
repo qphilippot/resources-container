@@ -1,7 +1,7 @@
 services:
 #  App/src/MainClass:
-#    # might be omitted and filled on compilation by ResolveClassPass
-#    class: App/src/MainClass
+##    # might be omitted and filled on compilation by ResolveClassPass
+##    class: App/src/MainClass
 #    public: true
 #    arguments:
 #      - '@App/src/HandlerA'

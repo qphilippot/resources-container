@@ -13,15 +13,26 @@ export const getConstructor = (definition: Definition, isRequired: boolean, cont
         // todo / reflection is too weak for now
     }
 
-    const reflectionService = container.getReflexionService();
-    const resourceConstructorMetadata = reflectionService.getConstructorOf(definition.getResourceType());
+    const reflectionService = container.getReflectionService();
+    console.log('search', definition.getId());
+    // todo maybe search ReflectionClass by Class will be required
+    const reflectionClassRelativeToDefinition = reflectionService.getReflectionClass(definition.getId());
 
-    if (typeof resourceConstructorMetadata === 'undefined') {
+
+    if (reflectionClassRelativeToDefinition !== null && !reflectionClassRelativeToDefinition.hasMethod('constructor')) {
         // todo fix error message
+
         throw new RuntimeException(`Invalid service "${definition.getId()}": class "${undefined}" has no constructor.`);
     }
     // todo check if constructor is public
 
-    return definition.getResourceType().constructor;
+    if (definition.getResourceType()?.constructor) {
+
+        return definition.getResourceType().constructor;
+    }
+    else {
+        console.log(definition);
+        return definition.getResourceType().constructor;
+    }
     // if ()
 }

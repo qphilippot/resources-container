@@ -23,14 +23,14 @@ const content = loader.process({
 
 // console.log('parameters', container.getParameterBag().all());
 
-// const reflexionService = new ReflexionService();
+// const reflectionService = new ReflectionService();
 // const meta = generateClassesMetadata({
 //     path: "C:\\Users\\Quentin\\resources-container\\src\\core\\models\\config-loader\\yaml-config-loader.ts",
 //     debug: true
 // });
 
 
-// reflexionService.setMetadata(meta);
+// reflectionService.setMetadata(meta);
 
 // const loader = new YamlLoader();
 // const filepath = resolve(__dirname, './core/models/config-loader/config-loader-manager.subscriptions.yaml');
@@ -66,7 +66,7 @@ Object.keys(meta).forEach(async entry => {
         _constructor = require(value.export.path)[value.name];
     }
 
-    container.getReflexionService().recordClass(entry, _constructor);
+    container.getReflectionService().recordClass(entry, _constructor);
 
     const definition = container.register(entry, entry);
     if (entry === debugDefinitionName) {

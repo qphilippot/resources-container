@@ -16,9 +16,9 @@ describe('Autowire compulation pass checking', function () {
         const barDefinition = container.register('bar', Bar);
         barDefinition.setAutowired(true);
 
-        const reflexionService = container.getReflexionService();
-        reflexionService.recordClass('Foo', Foo);
-        reflexionService.recordClass('Bar', Bar, {
+        const reflectionService = container.getReflectionService();
+        reflectionService.recordClass('Foo', Foo);
+        reflectionService.recordClass('Bar', Bar, {
             ...GET_EMPTY_CODE_ELEMENT_DATA(),
             ...{
                 kind: IS_CLASS,

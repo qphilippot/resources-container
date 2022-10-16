@@ -1,17 +1,19 @@
 import ContainerBuilder from "../../src/core/container/container-builder.model";
-import {ClassMetadata, CodeElementMetadata, generateClassesMetadata} from "../../src/generate-classes-metadata";
 import {resolve} from "path";
+import {ProjectAnalyzer, ProjectMetadata, ReflectionMethodInterface} from "reflection-service";
+import type {ReflectionClassInterface} from "reflection-service";
+
+
 import ConfigLoaderManager from "../../src/core/models/config-loader/config-loader.manager";
 import YamlContainerConfigLoader from "../../src/core/models/config-loader/yaml-container-config-loader";
 import DefaultContainer from "../../src/core/container/default-container.model";
 import ContainerInterface from "../../src/core/interfaces/container.interface";
 import Reference from "../../src/core/models/reference.model";
-import {IS_CLASS} from "../../src/core/reflexion/reflexion.config";
 
 export default class Launcher {
     private readonly container: ContainerBuilder;
     private readonly sourcePath: string;
-    private projectFilesMetadata: Record<string, CodeElementMetadata>;
+    private projectFilesMetadata: ProjectMetadata;
     private readonly projectNamespace: string;
 
     private readonly configManager = new ConfigLoaderManager('config-loader-manager');
@@ -23,16 +25,20 @@ export default class Launcher {
         this.projectNamespace = projectNameSpace;
 
         this.initializeConfigManager();
-        this.analyseProjectFiles();
-        this.initializeReflexionService();
+
+    }
+
+    public async setup() {
+        await this.analyseProjectFiles();
+        this.initializeReflectionService();
     }
 
     private initializeConfigManager(): void {
         this.configManager.addHandler(new YamlContainerConfigLoader('yaml-config-loader'), 'yaml')
     }
 
-    private analyseProjectFiles(): void {
-        this.projectFilesMetadata = generateClassesMetadata({
+    private async analyseProjectFiles(): Promise<void> {
+        this.projectFilesMetadata = await ProjectAnalyzer.analyze({
             path: this.sourcePath,
             debug: process.env.NODE_ENV === 'dev',
             aliasRules: [
@@ -41,45 +47,41 @@ export default class Launcher {
                     by: this.projectNamespace
                 }
             ]
-        });
+        })
     }
 
-    private initializeReflexionService(): void {
-        const reflexionService = this.container.getReflexionService();
-        Object.keys(this.projectFilesMetadata).forEach(entry => {
-            const value = this.projectFilesMetadata[entry];
-            let _constructor;
+    private initializeReflectionService(): void {
+        const reflectionService = this.container.getReflectionService();
 
-            if (value.export.type === 'export:default') {
-                _constructor = require(value.export.path).default;
-            }
-            if (value.export.type === 'export:named') {
-                _constructor = require(value.export.path)[value.name];
-            }
+        this.projectFilesMetadata.classes.forEach((_class: ReflectionClassInterface) => {
+            reflectionService.addReflectionClass(_class);
+            reflectionService.recordClass(_class.getName(), _class.getClass());
+        });
 
-            reflexionService.recordClass(entry, _constructor);
+        this.projectFilesMetadata.interfaces.forEach(_interface => {
+            reflectionService.addReflectionInterface(_interface);
         });
     }
 
     private addDefinitionFromMetadata(): void {
-        Object.keys(this.projectFilesMetadata).forEach(entry => {
-            const value = this.projectFilesMetadata[entry];
-            const definition = this.container.register(entry, entry);
+        this.projectFilesMetadata.classes.forEach((entry: ReflectionClassInterface) => {
+            const definition = this.container.register(entry.getName(), entry.getClass());
 
 
             definition
-                .setFilePath(value.export.path)
+                .setFilePath(entry.getFilePath())
                 .setAutowired(true);
 
-            if (value.kind === IS_CLASS) {
-                const valueAsClass = value as ClassMetadata;
-                definition.setAbstract(valueAsClass.abstract);
-
+                definition.setAbstract(entry.isAbstract());
+                const _constructor: ReflectionMethodInterface = entry.getMethod('constructor');
                 // check constructor arguments in order to add arguments
-                valueAsClass.constructor?.forEach((param, index) => {
-                    definition.setArgument(index, new Reference(param.namespace ?? param.type ?? param.name));
+                _constructor?.getParameters().forEach((param, index) => {
+                    console.log('set constructor param', param.getName());
+                    definition.setArgument(
+                        index,
+                        // todo
+                        new Reference(param.getName()));
                 });
-            }
         });
     }
 

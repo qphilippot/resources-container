@@ -2,7 +2,7 @@ import Container from "./container.model";
 import FlexibleService from "../../utils/flexible.service";
 import Component from "../models/component/component.model";
 import MixedInterface from "../../utils/mixed.interface";
-import ReflexionService from "../reflexion/reflexion.service";
+import {ReflectionService} from "reflection-service";
 import Definition from "../models/definition.model";
 import ContainerBuilderInterface from "../interfaces/container-builder.interface";
 import CompilerInterface from "../interfaces/compiler.interface";
@@ -21,7 +21,7 @@ import RuntimeException from "../exception/runtime.exception";
 import NullOnInvalidReferenceFeature from "./features/null-on-invalid-reference.feature";
 import InlineContextualServices from "./inline-contextual-services";
 import Reference from "../models/reference.model";
-import {checkValidId, resolveAlias, setupDefaultParameterBagExclusionRules} from "./container.helper";
+import {checkValidId, setupDefaultParameterBagExclusionRules} from "./container.helper";
 import AliasNotFoundException from "../exception/alias-not-found.exception";
 import CompilerPassInterface from "../interfaces/compiler-pass.interface";
 import {BEFORE_OPTIMIZATION, DEFAULT_COMPILER_STEP} from "../compiler-step.enum";
@@ -45,7 +45,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
     private removedIds: Set<string> = new Set<string>();
     private flexible: FlexibleService;
 
-    private reflexionService: ReflexionService = new ReflexionService();
+    private reflectionService: ReflectionService = new ReflectionService([], []);
     // definitions: Array<MixedInterface> = [];
     private definitions: Record<string, Definition> = {};
 
@@ -63,7 +63,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
         this.container = settings.container || new Container(settings);
         this.flexible = new FlexibleService();
 
-        this.reflexionService = new ReflexionService();
 
         const serviceContainerDefinition = (new Definition(ContainerBuilder))
             .setSynthetic(true)
@@ -135,8 +134,8 @@ class ContainerBuilder implements ContainerBuilderInterface {
         )
     }
 
-    public getReflexionService(): ReflexionService {
-        return this.reflexionService;
+    public getReflectionService(): ReflectionService {
+        return this.reflectionService;
     }
 
 
@@ -576,8 +575,8 @@ class ContainerBuilder implements ContainerBuilderInterface {
             );
 
             const type = definition.getResourceType();
-            if (typeof this.reflexionService.findClass(type) === 'undefined') {
-                this.reflexionService.recordClass(type, data.default);
+            if (typeof this.reflectionService.findClass(type) === 'undefined') {
+                this.reflectionService.recordClass(type, data.default);
             }
         }
 
@@ -647,7 +646,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
 
                 switch (typeof definitionFactory[0]) {
                     case 'string':
-                        factoryClass = this.reflexionService.findClass(definitionFactory[0]);
+                        factoryClass = this.reflectionService.findClass(definitionFactory[0]);
                         break;
                     default:
                         factoryClass = definitionFactory[0];
@@ -687,7 +686,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
             //         //                 }
             //         //             }
         } else {
-            const reflexionClass = this.reflexionService.findClass(
+            const reflexionClass = this.reflectionService.findClass(
                 parameterBag.resolveValue(definition.getResourceType())
             );
 
@@ -765,7 +764,7 @@ class ContainerBuilder implements ContainerBuilderInterface {
                         inlineContextualServices
                     );
                 } else if (typeof callable === 'string' && callable.length > 0) {
-                    configurator = this.reflexionService.findClass(callable);
+                    configurator = this.reflectionService.findClass(callable);
                 } else {
                     if (callable instanceof Definition) {
                         configurator = this.createServiceFromDefinition(definition, inlineContextualServices);
@@ -1123,9 +1122,9 @@ class ContainerBuilder implements ContainerBuilderInterface {
                 const oldBagData = bag.all();
                 Object.keys(oldBagData).forEach(propertyName => {
                     const resolvedProperty = bag.resolveValue(
-                            // @variation
-                            this.resolveEnvPlaceholders(bag.get(propertyName), true)
-                        );
+                        // @variation
+                        this.resolveEnvPlaceholders(bag.get(propertyName), true)
+                    );
 
                     bagData[propertyName] = resolvedProperty;
                 });

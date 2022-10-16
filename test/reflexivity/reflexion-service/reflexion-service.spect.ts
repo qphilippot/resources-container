@@ -1,15 +1,15 @@
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
-import ReflexionService from "../../../src/core/reflexion/reflexion.service";
+import ReflectionService from "../../../src/core/reflexion/reflexion.service";
 import Foo from "./fixtures/foo.model";
 
 
-describe('ReflexionService test', () => {
+describe('ReflectionService test', () => {
     it('find a class by name', () => {
-        const reflexionService = new ReflexionService();
-        reflexionService.recordClass('Foo', Foo);
+        const reflectionService = new ReflectionService();
+        reflectionService.recordClass('Foo', Foo);
 
-        const theClass = reflexionService.findClass('Foo');
+        const theClass = reflectionService.findClass('Foo');
 
         expect(typeof theClass).to.equals('function');
 
@@ -23,15 +23,15 @@ describe('ReflexionService test', () => {
     });
 
     it('find a class by alias', () => {
-        const reflexionService = new ReflexionService();
-        reflexionService.recordClass('Foo', Foo);
-        reflexionService.loadMeta({
+        const reflectionService = new ReflectionService();
+        reflectionService.recordClass('Foo', Foo);
+        reflectionService.loadMeta({
             bar: {
                 name: 'Foo'
             }
         });
 
-        const theClass = reflexionService.findClassByAlias('bar');
+        const theClass = reflectionService.findClassByAlias('bar');
 
         expect(typeof theClass).to.equals('function');
         if (typeof theClass === 'undefined') {

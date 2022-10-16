@@ -77,7 +77,12 @@ export default class PassesManager extends Subscriber {
                 prioritiesAvailables.sort((a, b) => parseInt(a) - parseInt(b));
 
                 prioritiesAvailables.forEach(priority => {
-                    passesByPriority[priority].forEach(passe => passe.process(containerBuilder));
+
+
+                    passesByPriority[priority].forEach(passe => {
+                        console.log('process compilation pass:', passe);
+                        passe.process(containerBuilder)
+                    });
                 });
             }
         )

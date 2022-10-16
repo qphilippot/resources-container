@@ -34,6 +34,7 @@ class Compiler extends Publisher implements CompilerInterface {
 
     compile(containerBuilder: ContainerBuilderInterface) {
         this.steps.forEach(async step => {
+            console.log('compilation step:', step);
             await this.publish(step, containerBuilder);
         });
     }
