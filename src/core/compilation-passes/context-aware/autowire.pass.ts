@@ -107,7 +107,7 @@ export default class AutowirePass implements CompilerPassInterface {
                     } else {
                         if (reflectionService.isInterface(reflectionParameter.getNamespacedName())) {
                             const candidates = reflectionService
-                                .getImplementationsOf(reflectionParameter.getNamespacedName())
+                                .getClassImplementationsOf(reflectionParameter.getNamespacedName())
                                 .filter(reflectionClass => !reflectionClass.isAbstract());
 
                             if (candidates.length === 1) {
