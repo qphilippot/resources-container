@@ -70,15 +70,12 @@ export default class Launcher {
                 }
             ]
         })
-
-        console.log(this.projectFilesMetadata);
         // console.log(this.projectFilesMetadata['App/src/HandlerB'])
     }
 
     private initializeReflectionService(): void {
         const reflectionService = this.container.getReflectionService();
 
-        console.log(this.projectFilesMetadata);
         this.projectFilesMetadata.classes.forEach((_class: ReflectionClassInterface) => {
             reflectionService.addReflectionClass(_class);
 
@@ -124,7 +121,6 @@ export default class Launcher {
                 const _constructor: ReflectionMethodInterface = entry.getMethod('constructor');
                 // check constructor arguments in order to add arguments
                 _constructor?.getParameters().forEach((param, index) => {
-                    console.log('set constructor param',param);
                     const itUseNamespace = param.getNamespacedName() != param.getName();
                     definition.setArgument(
                         index,
@@ -172,7 +168,6 @@ export default class Launcher {
         //
         const mainClass = this.container.get('App/src/MainClass');
         //
-        console.log(mainClass);
         // console.log(this.container.getDefinition('App/src/MainClass'));
         if (useConsole) {
             console.log(mainClass.hello());

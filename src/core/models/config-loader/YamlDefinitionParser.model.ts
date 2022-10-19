@@ -397,9 +397,9 @@ export default class YamlDefinitionParser {
         //             definition.setDecoratedService(decorates, renameId, priority, invalidBehavior);
         //         }
         //
-        //         if (resource['autowire']) {
-        //             definition.setAutowired(service['autowire']);
-        //         }
+                if (resource['autowire']) {
+                    definition.setAutowired(resource['autowire']);
+                }
         //
         //         if (defaults['bind'] || resource['bind']) {
         //             // deep clone, to avoid multiple process of the same instance in the passes

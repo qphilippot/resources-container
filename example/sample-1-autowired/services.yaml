@@ -1,9 +1,9 @@
+parameters:
+  developer: "qphi"
 services:
-#  App/src/MainClass:
-##    # might be omitted and filled on compilation by ResolveClassPass
-##    class: App/src/MainClass
-#    public: true
-#    arguments:
-#      - '@App/src/HandlerA'
-#      - '@App/src/HandlerB'
+  App/src/MainClass:
+    arguments:
+      $str: "%developer%"
+    autowire: true
+    public: true
 

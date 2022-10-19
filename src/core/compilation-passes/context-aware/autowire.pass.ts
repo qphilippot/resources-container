@@ -51,7 +51,7 @@ export default class AutowirePass implements CompilerPassInterface {
 
                 if (_constructor) {
                     methodCallsToResolve.unshift(
-                        [ 'constructor', definition.getArguments() ]
+                        ['constructor', definition.getArguments()]
                     );
                 }
 
@@ -78,43 +78,52 @@ export default class AutowirePass implements CompilerPassInterface {
 
         for (const call of callsToResolve) {
             const [methodName, argumentsProvided] = call;
-            const reflexionMethod = this.builder.getReflectionService().getReflectionMethod(
-                definition.getResourceType(),
-                methodName
-            );
+            const reflexionMethod = this.builder
+                .getReflectionService()
+                .getReflectionClass(definition.getId())
+                .getMethod(
+                    methodName
+                )
+            ;
 
-            const reflectionParameters =  reflexionMethod.getParameters();
+            const reflectionParameters = reflexionMethod.getParameters();
             const parametersProvided = Object.keys(argumentsProvided);
             const reflectionService = this.builder.getReflectionService();
 
             reflectionParameters.forEach((reflectionParameter, index) => {
-                if (parametersProvided.length > index) {
-                    if (reflectionService.isClass(reflectionParameter.getNamespacedName())) {
-                        const targetReflectionClass = reflectionService.getReflectionClass(reflectionParameter.getNamespacedName());
-                        if (targetReflectionClass.isAbstract()) {
-                            const candidates = reflectionService
-                                .getClassExtensionOf(targetReflectionClass.getName())
-                                .filter(reflectionClass => !reflectionClass.isAbstract())
+                // no or only some arguments are set, write only missing parameters
+                const indexOfProvidedParameter = Math.max(parametersProvided.indexOf(index.toString()), parametersProvided.indexOf(reflectionParameter.getName()));
+                const providedParameter = argumentsProvided[parametersProvided[indexOfProvidedParameter]];
 
-                            if (candidates.length === 1) {
-                                argumentsProvided[parametersProvided[index]] = new Reference(candidates[0].getName());
-                            }
-                        } else {
-                            argumentsProvided[parametersProvided[index]] = new Reference(targetReflectionClass.getName());
+                // If definition give a valid reference to its parameter, does not process it
+                if (providedParameter && reflectionService.isClass(providedParameter.id)) {
+                    return;
+                }
+
+                if (reflectionService.isClass(reflectionParameter.getNamespacedName())) {
+                    const targetReflectionClass = reflectionService.getReflectionClass(reflectionParameter.getNamespacedName());
+                    if (targetReflectionClass.isAbstract()) {
+                        const candidates = reflectionService
+                            .getClassExtensionOf(targetReflectionClass.getName())
+                            .filter(reflectionClass => !reflectionClass.isAbstract())
+
+                        if (candidates.length === 1) {
+                            argumentsProvided[index] = new Reference(candidates[0].getName());
                         }
-                        // if builder doest not resolved this class anymore
-
                     } else {
-                        if (reflectionService.isInterface(reflectionParameter.getNamespacedName())) {
-                            const candidates = reflectionService
-                                .getClassImplementationsOf(reflectionParameter.getNamespacedName())
-                                .filter(reflectionClass => !reflectionClass.isAbstract());
+                        argumentsProvided[index] = new Reference(targetReflectionClass.getName());
+                    }
+                    // if builder doest not resolved this class anymore
 
-                            if (candidates.length === 1) {
-                                argumentsProvided[parametersProvided[index]] = new Reference(candidates[0].getName())
-                            }
+                } else {
+                    if (reflectionService.isInterface(reflectionParameter.getNamespacedName())) {
+                        const candidates = reflectionService
+                            .getClassImplementationsOf(reflectionParameter.getNamespacedName())
+                            .filter(reflectionClass => !reflectionClass.isAbstract());
+
+                        if (candidates.length === 1) {
+                            argumentsProvided[index] = new Reference(candidates[0].getName())
                         }
-
                     }
                 }
             })

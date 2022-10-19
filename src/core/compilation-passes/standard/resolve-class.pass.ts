@@ -1,18 +1,19 @@
 import CompilerPassInterface from "../../interfaces/compiler-pass.interface";
 import ContainerBuilderInterface from "../../interfaces/container-builder.interface";
-import InvalidArgumentException from "../../exception/invalid-argument.exception";
 import {isValidDefinitionId} from "../../container/container.helper";
 
 /**
- * Replace literal definition class name by related class type
+ * Replace literal definition class name by related class type.
+ * If no class set but some reflection class matches with definition id set empty definition class to related class.
  */
 
-//Replace definition with missing class by a class with same name that definition id or throw an error if no class match
-export default class ResolveClassPass implements CompilerPassInterface
-{
+export default class ResolveClassPass implements CompilerPassInterface {
     public process(container: ContainerBuilderInterface) {
         container.getDefinitions().forEach(definition => {
-            if (definition.isSynthetic() || definition.getResourceType() !== null) {
+            if (
+                definition.isSynthetic() ||
+                (definition.getResourceType() !== null && typeof definition.getResourceType() !== 'undefined')
+            ) {
                 return;
             }
 

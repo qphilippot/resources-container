@@ -76,7 +76,6 @@ export default class Launcher {
                 const _constructor: ReflectionMethodInterface = entry.getMethod('constructor');
                 // check constructor arguments in order to add arguments
                 _constructor?.getParameters().forEach((param, index) => {
-                    console.log('set constructor param', param.getName());
                     definition.setArgument(
                         index,
                         // todo

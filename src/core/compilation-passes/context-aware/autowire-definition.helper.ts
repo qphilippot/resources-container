@@ -14,7 +14,6 @@ export const getConstructor = (definition: Definition, isRequired: boolean, cont
     }
 
     const reflectionService = container.getReflectionService();
-    console.log('search', definition.getId());
     // todo maybe search ReflectionClass by Class will be required
     const reflectionClassRelativeToDefinition = reflectionService.getReflectionClass(definition.getId());
 
@@ -31,8 +30,6 @@ export const getConstructor = (definition: Definition, isRequired: boolean, cont
         return definition.getResourceType().constructor;
     }
     else {
-        console.log(definition);
-        return definition.getResourceType().constructor;
+        return reflectionClassRelativeToDefinition.getClass().constructor;
     }
-    // if ()
 }

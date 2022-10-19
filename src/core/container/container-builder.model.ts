@@ -686,9 +686,10 @@ class ContainerBuilder implements ContainerBuilderInterface {
             //         //                 }
             //         //             }
         } else {
-            const reflexionClass = this.reflectionService.findClass(
-                parameterBag.resolveValue(definition.getResourceType())
-            );
+            const reflexionClass = typeof definition.getResourceType() === "string"
+                    ? this.reflectionService.findClass(parameterBag.resolveValue(definition.getResourceType()))
+                    : definition.getResourceType();
+
 
             if (reflexionClass) {
                 service = new reflexionClass(...Object.values(definitionArguments));
@@ -803,7 +804,6 @@ class ContainerBuilder implements ContainerBuilderInterface {
         }
 
         return service;
-
     }
 
     private callInitializerMethod(

@@ -80,7 +80,6 @@ export default class PassesManager extends Subscriber {
 
 
                     passesByPriority[priority].forEach(passe => {
-                        console.log('process compilation pass:', passe);
                         passe.process(containerBuilder)
                     });
                 });
