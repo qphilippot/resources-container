@@ -13,3 +13,6 @@ services:
 
   App/src/HandlerB:
     class: App/src/HandlerB
+
+  main:
+    alias: App/src/MainClass
