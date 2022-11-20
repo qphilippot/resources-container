@@ -1,5 +1,5 @@
 import ContainerBuilder from "../../src/core/container/container-builder.model";
-import {resolve} from "path";
+import {join, resolve} from "path";
 import ConfigLoaderManager from "../../src/core/models/config-loader/config-loader.manager";
 import YamlContainerConfigLoader from "../../src/core/models/config-loader/yaml-container-config-loader";
 import DefaultContainer from "../../src/core/container/default-container.model";
@@ -16,6 +16,7 @@ import {
 } from "reflection-service";
 import AutowirePass from "../../src/core/compilation-passes/context-aware/autowire.pass";
 import {OPTIMIZATION} from "../../src/core/compiler-step.enum";
+import TsDumperService from "../../src/core/dumper/TsDumperService";
 
 export default class Launcher {
     private readonly container: ContainerBuilder;
@@ -172,6 +173,11 @@ export default class Launcher {
         if (useConsole) {
             console.log(mainClass.hello());
         }
+
+        TsDumperService.dump(
+            this.container,
+            join(__dirname, './dumped_container.ts')
+        );
     }
 
     public getContainer(): ContainerInterface {

@@ -7,3 +7,5 @@ services:
     autowire: true
     public: true
 
+  main:
+    alias: App/src/MainClass

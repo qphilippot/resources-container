@@ -31,6 +31,13 @@ export default class ResolveClassPass implements CompilerPassInterface {
 
 
                 definition.setResourceType(_class);
+
+                if (_class !== null) {
+                    const reflectionClass = container.getReflectionService().getReflectionClass(definition.getId());
+                    if (reflectionClass.getFilePath() && definition.getFilePath().length === 0) {
+                        definition.setFilePath(reflectionClass.getFilePath());
+                    }
+                }
             }
         });
     }

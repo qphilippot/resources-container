@@ -18,7 +18,7 @@ export const getConstructor = (definition: Definition, isRequired: boolean, cont
     const reflectionClassRelativeToDefinition = reflectionService.getReflectionClass(definition.getId());
 
 
-    if (reflectionClassRelativeToDefinition !== null && !reflectionClassRelativeToDefinition.hasMethod('constructor')) {
+    if (reflectionClassRelativeToDefinition === null || !reflectionClassRelativeToDefinition.hasMethod('constructor')) {
         // todo fix error message
 
         throw new RuntimeException(`Invalid service "${definition.getId()}": class "${undefined}" has no constructor.`);
@@ -29,7 +29,7 @@ export const getConstructor = (definition: Definition, isRequired: boolean, cont
 
         return definition.getResourceType().constructor;
     }
-    else {
-        return reflectionClassRelativeToDefinition.getClass().constructor;
+    else  {
+       return reflectionClassRelativeToDefinition.constructor;
     }
 }
